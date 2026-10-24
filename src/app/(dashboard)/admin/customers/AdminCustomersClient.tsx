@@ -195,14 +195,23 @@ export default function AdminCustomersClient({
       
       setPreviewData(null);
 
-      if (data.duplicates && data.duplicates.length > 0) {
-        const dupNames = data.duplicates.slice(0, 3).map((d: any) => d.name).join("، ");
+      if (data.status === "PENDING") {
+        // ملف كبير — بيتوزع في الخلفية، مش فورًا
+        showAlert(
+          "جارٍ الرفع والتوزيع",
+          `${data.message || "الملف كبير، جارٍ توزيعه في الخلفية."}\nعدد العملاء في الملف: ${data.totalLeads}.`
+        );
+      } else if (data.duplicates && data.duplicates.length > 0) {
+        const dupSample = data.duplicates.slice(0, 3).join("، ");
         const moreCount = data.duplicates.length > 3 ? ` و ${data.duplicates.length - 3} آخرين` : "";
-        showAlert("تم بنجاح مع وجود مكررين", `تم رفع ${data.count} عميل جديد بنجاح.\nتم استبعاد ${data.duplicates.length} عميل لأنهم مسجلين مسبقاً في النظام (مثل: ${dupNames}${moreCount}).`);
+        showAlert(
+          "تم بنجاح مع وجود مكررين",
+          `تم رفع وتوزيع ${data.count} عميل جديد تلقائيًا على موظفي Tele-Sales.\nتم استبعاد ${data.duplicates.length} رقم لأنه مسجل مسبقاً في النظام (مثل: ${dupSample}${moreCount}).`
+        );
       } else {
-        showAlert("تم بنجاح", `تم رفع ${data.count} عميل بنجاح!`);
+        showAlert("تم بنجاح", `تم رفع وتوزيع ${data.count} عميل تلقائيًا على موظفي Tele-Sales!`);
       }
-      
+
       router.refresh();
     } catch (error: any) {
       showAlert("خطأ", "حدث خطأ أثناء الرفع: " + error.message);
