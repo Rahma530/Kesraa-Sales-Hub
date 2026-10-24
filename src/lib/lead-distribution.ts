@@ -1,7 +1,6 @@
 import { Role, LeadSource } from "@/lib/enums";
 import { prisma } from "@/lib/prisma";
 
-
 interface RawLeadInput {
   name: string;
   phone: string;
@@ -12,19 +11,38 @@ interface RawLeadInput {
   socialMediaUrl?: string;
 }
 
+// عدد الصفوف اللي بتتعالج مع بعض في كل دفعة داخلية.
+// رقم صغير يكفي عشان محدش "Query" يفضل شغال لمدة طويلة أو يقفل جدول الـ Lead.
+const CHUNK_SIZE = 500;
+
+// فوق الحجم ده، الرفع بيتحول لمعالجة في الخلفية بدل ما الموظف يستنى قدام الشاشة.
+export const BACKGROUND_PROCESSING_THRESHOLD = 300;
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
 /**
- * يوزع مجموعة ليدز جديدة بالتساوي (Round-robin) على كل موظفي التيلي سيلز
- * النشطين حاليًا. لو عدد الليدز مش قابل للقسمة بالظبط، الفرق بيتوزع بالتساوي
- * كمان بحيث محدش ياخد أكتر من التاني بأكثر من ليد واحد.
+ * يوزع مجموعة ليدز (ممكن تكون عشرات الآلاف) بالتساوي (Round-robin) على كل
+ * موظفي التيلي سيلز النشطين — على دفعات داخلية صغيرة بدل محاولة واحدة ضخمة.
  *
- * مثال: 100 ليد / 5 موظفين = 20 لكل واحد بالظبط.
- * 102 ليد / 5 موظفين = 3 موظفين ياخدوا 21 و2 ياخدوا 20.
+ * ليه بالشكل ده:
+ * - الكود القديم كان بيحط كل الصفوف جوه معاملة (transaction) واحدة ضخمة،
+ *   وده بيقفل جدول الـ Lead لحد ما كل الصفوف تخلص؛ في آلاف الصفوف ده بيفشل
+ *   أو يستهلك وقت طويل جدًا وممكن يوقع الطلب كله.
+ * - هنا كل دفعة (CHUNK_SIZE صف) بتتعالج وتتسجل لوحدها، فلو حصل أي عطل في
+ *   النص، الدفعات اللي خلصت فعلاً متسجلة ومش بترجع صفر.
+ * - لو uploadBatchId موجود، بيتسجل تقدم العملية أول بأول في UploadBatch.processedLeads
+ *   عشان الواجهة تقدر تعرض "اترفع كام من أصل كام" أثناء المعالجة.
  */
 export async function distributeLeads(
   rawLeads: RawLeadInput[],
   createdById: string,
   source: LeadSource,
-  uploadBatchId?: string
+  uploadBatchId?: string,
+  tier?: string
 ) {
   const teleSalesTeam = await prisma.user.findMany({
     where: { role: Role.TELE_SALES, isActive: true },
@@ -36,68 +54,106 @@ export async function distributeLeads(
     throw new Error("لا يوجد موظفين Tele-Sales نشطين لتوزيع الليدز عليهم");
   }
 
-  // منع تكرار نفس رقم الهاتف كليد جديد لو موجود بالفعل في النظام
-  const existingPhones = new Set(
-    (
-      await prisma.lead.findMany({
-        where: { phone: { in: rawLeads.map((l) => l.phone) } },
-        select: { phone: true },
-      })
-    ).map((l) => l.phone)
-  );
-
-  // ومنع تكرار نفس الرقم أكتر من مرة داخل نفس الملف/الطلب
-  const seenInBatch = new Set<string>();
+  // منع تكرار نفس الرقم أكتر من مرة داخل نفس الملف/الطلب (قبل ما نلمس الداتابيز خالص)
+  const seenInThisUpload = new Set<string>();
   const duplicatePhones: string[] = [];
-  const uniqueLeads = rawLeads.filter((lead) => {
-    if (existingPhones.has(lead.phone) || seenInBatch.has(lead.phone)) {
+  const candidateLeads = rawLeads.filter((lead) => {
+    if (seenInThisUpload.has(lead.phone)) {
       duplicatePhones.push(lead.phone);
       return false;
     }
-    seenInBatch.add(lead.phone);
+    seenInThisUpload.add(lead.phone);
     return true;
   });
 
-  if (uniqueLeads.length === 0) {
-    return { leads: [], distribution: {}, teamSize: teleSalesTeam.length, duplicatePhones };
-  }
+  const distribution: Record<string, number> = {};
+  const createdLeadIds: string[] = [];
+  let insertedCount = 0;
+  let globalIndex = 0; // بيحافظ على استمرارية الـ round-robin عبر الدفعات كلها
 
-  const created = await prisma.$transaction(
-    uniqueLeads.map((lead, index) => {
-      const assignee = teleSalesTeam[index % teleSalesTeam.length];
-      return prisma.lead.create({
-        data: {
+  for (const batch of chunk(candidateLeads, CHUNK_SIZE)) {
+    // استبعاد أي رقم موجود بالفعل في النظام من رفعات سابقة
+    const existing = await prisma.lead.findMany({
+      where: { phone: { in: batch.map((l) => l.phone) } },
+      select: { phone: true },
+    });
+    const existingPhones = new Set(existing.map((l) => l.phone));
+
+    const toInsert = batch.filter((lead) => {
+      if (existingPhones.has(lead.phone)) {
+        duplicatePhones.push(lead.phone);
+        return false;
+      }
+      return true;
+    });
+
+    if (toInsert.length > 0) {
+      const dataWithIds = toInsert.map((lead, i) => {
+        const assignee = teleSalesTeam[(globalIndex + i) % teleSalesTeam.length];
+        return {
+          id: crypto.randomUUID(),
           name: lead.name,
           phone: lead.phone,
-          email: lead.email,
-          company: lead.company,
-          need: lead.need,
-          storeUrl: lead.storeUrl,
-          socialMediaUrl: lead.socialMediaUrl,
+          email: lead.email || null,
+          company: lead.company || null,
+          need: lead.need || null,
+          storeUrl: lead.storeUrl || null,
+          socialMediaUrl: lead.socialMediaUrl || null,
           source,
+          ...(tier ? { tier } : {}),
           createdById,
           assignedToId: assignee.id,
           currentStage: Role.TELE_SALES,
           uploadBatchId,
-          activities: {
-            create: {
-              userId: createdById,
-              type: "LEAD_ASSIGNED",
-              message: `تم توزيع الليد تلقائيًا على موظف Tele-Sales`,
-            },
-          },
-        },
+        };
       });
-    })
-  );
 
-  // ملخص التوزيع — مفيد للعرض في الداشبورد بعد الرفع مباشرة
-  const distribution: Record<string, number> = {};
-  created.forEach((lead) => {
-    if (lead.assignedToId) {
-      distribution[lead.assignedToId] = (distribution[lead.assignedToId] ?? 0) + 1;
+      // skipDuplicates كشبكة أمان إضافية لو حصل تعارض لحظي (رفعين في نفس الوقت
+      // بينهم رقم متشابه) — بيحمي من كراش الدفعة كلها بسبب صف واحد متكرر.
+      await prisma.lead.createMany({ data: dataWithIds, skipDuplicates: true });
+
+      // بنتأكد مين اللي فعلاً اتسجل (ممكن صف يتستبعد لو حصل التعارض فوق)
+      const actuallyCreated = await prisma.lead.findMany({
+        where: { phone: { in: dataWithIds.map((d) => d.phone) } },
+        select: { id: true, phone: true, assignedToId: true },
+      });
+
+      if (actuallyCreated.length > 0) {
+        await prisma.activity.createMany({
+          data: actuallyCreated.map((lead) => ({
+            leadId: lead.id,
+            userId: createdById,
+            type: "LEAD_ASSIGNED",
+            message: "تم توزيع الليد تلقائيًا على موظف Tele-Sales",
+          })),
+        });
+      }
+
+      actuallyCreated.forEach((lead) => {
+        if (lead.assignedToId) {
+          distribution[lead.assignedToId] = (distribution[lead.assignedToId] ?? 0) + 1;
+        }
+        createdLeadIds.push(lead.id);
+      });
+
+      insertedCount += actuallyCreated.length;
     }
-  });
 
-  return { leads: created, distribution, teamSize: teleSalesTeam.length, duplicatePhones };
+    globalIndex += batch.length;
+
+    if (uploadBatchId) {
+      await prisma.uploadBatch.update({
+        where: { id: uploadBatchId },
+        data: { processedLeads: { increment: batch.length } },
+      });
+    }
+  }
+
+  return {
+    insertedCount,
+    createdLeadIds,
+    distribution,
+    teamSize: teleSalesTeam.length,
+    duplicatePhones,
+  };
 }

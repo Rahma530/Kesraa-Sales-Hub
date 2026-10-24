@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const { leads, distribution, teamSize, duplicatePhones } = await distributeLeads(
+  const { insertedCount, distribution, teamSize, duplicatePhones } = await distributeLeads(
     validRows,
     session.user.id,
     LeadSource.EXCEL_UPLOAD,
@@ -103,10 +103,10 @@ export async function POST(req: NextRequest) {
   );
 
   // حدّث عدد الليدز الفعلي في الـ batch لو اتجاهل بعض الصفوف كتكرار
-  if (leads.length !== batch.totalLeads) {
+  if (insertedCount !== batch.totalLeads) {
     await prisma.uploadBatch.update({
       where: { id: batch.id },
-      data: { totalLeads: leads.length },
+      data: { totalLeads: insertedCount },
     });
   }
 
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    totalUploaded: leads.length,
+    totalUploaded: insertedCount,
     skipped: invalidRows.length + duplicatePhones.length,
     invalidRows,
     duplicatePhones,
