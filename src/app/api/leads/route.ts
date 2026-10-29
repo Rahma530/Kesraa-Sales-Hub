@@ -95,13 +95,13 @@ export async function POST(req: NextRequest) {
   }
 
   // Otherwise (Admin/Head of Sales), distribute across Telesales.
-  const { leads, duplicatePhones, distribution } = await distributeLeads(
+  const { insertedCount, createdLeadIds, duplicatePhones, distribution } = await distributeLeads(
     [parsed.data],
     session.user.id,
     LeadSource.MANUAL
   );
 
-  if (leads.length === 0) {
+  if (insertedCount === 0) {
     return NextResponse.json(
       { error: "يوجد عميل بنفس رقم الهاتف مسجل بالفعل في النظام" },
       { status: 409 }
@@ -120,5 +120,7 @@ export async function POST(req: NextRequest) {
     await prisma.notification.createMany({ data: notificationsToCreate });
   }
 
-  return NextResponse.json({ success: true, lead: leads[0], duplicatePhones });
+  const lead = await prisma.lead.findUnique({ where: { id: createdLeadIds[0] } });
+
+  return NextResponse.json({ success: true, lead, duplicatePhones });
 }
