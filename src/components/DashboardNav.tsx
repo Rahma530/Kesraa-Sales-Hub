@@ -27,7 +27,11 @@ export default function DashboardNav({ role }: { role: string }) {
   if (role === "ADMIN") {
     links.push({ href: "/account", label: "حسابي" });
   }
-  links.push({ href: "/whatsapp-inbox", label: "💬 واتساب ويب" });
+  // WhatsApp temporarily disabled: this host can't run the persistent
+  // Chrome/Puppeteer session whatsapp-web.js needs (confirmed with
+  // Hostinger support). Hidden here rather than removed so it's a one-line
+  // revert once a VPS or the official WhatsApp Cloud API is wired in.
+  // links.push({ href: "/whatsapp-inbox", label: "💬 واتساب ويب" });
 
   return (
     <nav className="flex items-center gap-1 overflow-x-auto">
