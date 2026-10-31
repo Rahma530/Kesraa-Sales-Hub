@@ -107,13 +107,8 @@ export default function TodoList({ leads, isSalesView = false }: { leads: any[],
               </Link>
 
               <div className="mt-4 flex gap-2">
-                <a 
-                  href={`/whatsapp-inbox?phone=${task.leadPhone}`}
-                  className="flex-1 bg-[#1e293b] hover:bg-[#2d3748] text-white text-xs font-bold py-2.5 rounded-xl text-center transition-colors"
-                >
-                  رسالة 💬
-                </a>
-                <Link 
+                {/* WhatsApp temporarily disabled — see DashboardNav.tsx for why */}
+                <Link
                   href={`?search=${task.leadPhone}`}
                   className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2.5 rounded-xl text-center transition-colors"
                 >

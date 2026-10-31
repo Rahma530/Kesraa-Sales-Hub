@@ -686,15 +686,10 @@ export default function LeadTable({
 
                 {/* Actions */}
                 <div className="mt-2 pt-4 flex gap-2 border-t border-white/[0.03]">
-                  <a 
-                    href={`/whatsapp-inbox?phone=${lead.phone}`}
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-3 text-[13px] transition-colors text-center flex items-center justify-center gap-1.5 font-semibold shadow-[0_4px_12px_rgba(79,70,229,0.3)]"
-                  >
-                    واتساب 💬
-                  </a>
-                  <button 
-                    onClick={() => { setOpenId(lead.id); setModalMode("details"); }} 
-                    className="flex-[0.8] bg-[#1f2937] hover:bg-[#374151] text-slate-300 rounded-xl py-3 text-[13px] transition-colors font-semibold"
+                  {/* WhatsApp temporarily disabled — see DashboardNav.tsx for why */}
+                  <button
+                    onClick={() => { setOpenId(lead.id); setModalMode("details"); }}
+                    className="flex-1 bg-[#1f2937] hover:bg-[#374151] text-slate-300 rounded-xl py-3 text-[13px] transition-colors font-semibold"
                   >
                     التفاصيل
                   </button>
