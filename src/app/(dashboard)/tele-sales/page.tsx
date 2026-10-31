@@ -8,6 +8,7 @@ import LeadTable from "@/components/LeadTable";
 
 
 import TeleSalesClient from "./TeleSalesClient";
+import FollowUpReminderChecker from "@/components/FollowUpReminderChecker";
 
 export default async function TeleSalesDashboard() {
   const session = await getServerSession(authOptions);
@@ -56,6 +57,8 @@ export default async function TeleSalesDashboard() {
 
   return (
     <DashboardShell title="لوحة العمليات (Tele-Sales)">
+      <FollowUpReminderChecker />
+
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="إجمالي عملائي" value={myLeads.length} icon="👤" />
         <StatCard label="متابعات اليوم" value={todaysFollowUps} icon="📌" accent="text-accent-soft" />

@@ -122,6 +122,11 @@ model FollowUp {
   isCompleted Boolean   @default(false)
   completedAt DateTime?
 
+  // Set once a "your follow-up is due" Notification has been created for
+  // this row, so the due-check (run on every tele-sales/sales dashboard
+  // load) doesn't notify the same employee twice for the same follow-up.
+  reminderSentAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
