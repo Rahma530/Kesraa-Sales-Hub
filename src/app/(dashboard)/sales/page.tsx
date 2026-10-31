@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import DashboardShell from "@/components/DashboardShell";
 import StatCard from "@/components/StatCard";
 import SalesClient from "./SalesClient";
+import FollowUpReminderChecker from "@/components/FollowUpReminderChecker";
 
 export default async function SalesDashboard() {
   const session = await getServerSession(authOptions);
@@ -38,6 +39,8 @@ export default async function SalesDashboard() {
 
   return (
     <DashboardShell title="لوحة المبيعات (Sales)">
+      <FollowUpReminderChecker />
+
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
         <StatCard label="إجمالي عملائي" value={myLeads.length} icon="🤝" />
         <StatCard label="مواعيد الميتنج اليوم" value={meetingsToday} icon="📅" accent="text-accent-soft" />
