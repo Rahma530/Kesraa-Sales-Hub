@@ -5,6 +5,17 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Hostinger's build container has a very low OS thread/process limit.
+  // The default "library" engine embeds Prisma's Rust query engine
+  // directly inside the Node.js process and spins up its own internal
+  // thread pool the moment PrismaClient is instantiated — which happens
+  // during Next.js's "Collecting page data" build step (every API route
+  // gets imported, and src/lib/prisma.ts creates the client at module
+  // scope). That crashes the build there with "OS can't spawn worker
+  // thread: Resource temporarily unavailable". The "binary" engine runs
+  // the query engine as a separate OS process instead, which avoids
+  // competing with the build process for the same thread/process quota.
+  engineType = "binary"
 }
 
 datasource db {
