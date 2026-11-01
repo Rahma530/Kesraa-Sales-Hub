@@ -14,6 +14,7 @@ import {
   Legend,
   AreaChart,
   Area,
+  LabelList,
 } from "recharts";
 
 // Kesra brand palette — see public/branding/kesra-design-tokens.css
@@ -63,10 +64,12 @@ export function StatusBarChart({ data }: { data: { status: string; count: number
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-25} textAnchor="end" height={60} />
-        <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} allowDecimals={false} />
+        <XAxis dataKey="name" tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} interval={0} angle={-25} textAnchor="end" height={60} />
+        <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} />
         <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-        <Bar dataKey="count" fill={COLORS.accent} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="count" fill={COLORS.accent} radius={[6, 6, 0, 0]}>
+          <LabelList dataKey="count" position="top" fill="#ffffff" fontSize={12} fontWeight={700} />
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
@@ -86,12 +89,15 @@ export function TierPieChart({ data }: { data: { tier: string; count: number }[]
           innerRadius={55}
           outerRadius={90}
           paddingAngle={3}
+          label={({ value }) => value}
+          labelLine={false}
+          style={{ fontSize: "13px", fontWeight: 700, fill: "#ffffff" }}
         >
           {chartData.map((entry) => (
             <Cell key={entry.name} fill={TIER_COLORS[entry.name] ?? COLORS.accent} />
           ))}
         </Pie>
-        <Legend wrapperStyle={{ fontSize: "12px", color: "#94a3b8" }} />
+        <Legend wrapperStyle={{ fontSize: "13px", color: "#d8cdee", fontWeight: 600 }} />
         <Tooltip contentStyle={tooltipStyle} />
       </PieChart>
     </ResponsiveContainer>
@@ -107,10 +113,11 @@ export function TeamPerformanceChart({
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-        <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} allowDecimals={false} />
+        <XAxis dataKey="name" tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} />
+        <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} />
         <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
         <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+          <LabelList dataKey="count" position="top" fill="#ffffff" fontSize={12} fontWeight={700} />
           {data.map((entry) => (
             <Cell key={entry.name} fill={entry.role === "SALES" ? COLORS.accentGlow : COLORS.accent} />
           ))}
@@ -131,8 +138,8 @@ export function LeadsOverTimeChart({ data }: { data: { date: string; count: numb
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-        <XAxis dataKey="date" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-        <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} allowDecimals={false} />
+        <XAxis dataKey="date" tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} />
+        <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} />
         <Tooltip contentStyle={tooltipStyle} />
         <Area type="monotone" dataKey="count" stroke={COLORS.accent} fill="url(#leadsGradient)" strokeWidth={2} />
       </AreaChart>
