@@ -21,11 +21,18 @@ export default async function UsersPage() {
       role: true,
       isActive: true,
       createdAt: true,
+      passwordHash: true,
       _count: { select: { assignedLeads: true } },
     },
   });
 
-  const serialized = users.map((u) => ({ ...u, createdAt: u.createdAt.toISOString() }));
+  // Never send the hash itself to the client — just whether the account
+  // still needs to go through the invite flow.
+  const serialized = users.map(({ passwordHash, ...u }) => ({
+    ...u,
+    needsActivation: !passwordHash,
+    createdAt: u.createdAt.toISOString(),
+  }));
 
   return (
     <DashboardShell title="Employee Management">

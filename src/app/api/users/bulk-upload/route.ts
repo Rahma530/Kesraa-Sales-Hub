@@ -6,14 +6,13 @@ import { can } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import Papa from "papaparse";
 import { z } from "zod";
-import bcrypt from "bcryptjs";
+import { generateInviteToken, getInviteExpiry, buildInviteLink } from "@/lib/invite-token";
 
 const rowSchema = z.object({
   name: z.string().min(1),
   username: z.string().min(1),
   email: z.string().email(),
   phone: z.string().optional().or(z.literal("")),
-  password: z.string().min(6),
   role: z.nativeEnum(Role).optional().default(Role.TELE_SALES),
 });
 
@@ -28,8 +27,6 @@ function normalizeHeader(h: string) {
     "الايميل": "email",
     "رقم الهاتف": "phone",
     "الهاتف": "phone",
-    "كلمة المرور": "password",
-    "الباسورد": "password",
     "الدور": "role",
     "الرتبة": "role",
   };
@@ -67,12 +64,19 @@ export async function POST(req: NextRequest) {
   const invalidRows: { row: number; error: string }[] = [];
 
   (parsed.data as any[]).forEach((row, i) => {
-    let mappedRole = row.role;
-    if (mappedRole === "ادمن" || mappedRole === "أدمن" || mappedRole === "مدير النظام") mappedRole = "ADMIN";
-    if (mappedRole === "موظف" || mappedRole === "مبيعات" || mappedRole === "تيلي سيلز") mappedRole = "TELE_SALES";
-    if (mappedRole === "كاستمر سيرفيس" || mappedRole === "خدمة عملاء") mappedRole = "CUSTOMER_SERVICE";
-    
-    if(mappedRole) row.role = mappedRole;
+    let mappedRole = typeof row.role === "string" ? row.role.trim() : row.role;
+    const normalizedRole = typeof mappedRole === "string" ? mappedRole.toLowerCase() : mappedRole;
+    if (["ادمن", "أدمن", "مدير النظام", "مدير", "admin"].includes(normalizedRole)) {
+      mappedRole = "ADMIN";
+    } else if (["رئيس المبيعات", "رئيس مبيعات", "هيد سيلز", "head of sales", "head_of_sales"].includes(normalizedRole)) {
+      mappedRole = "HEAD_OF_SALES";
+    } else if (["تيلي سيلز", "موظف تيلي سيلز", "تيلي", "tele-sales", "tele sales", "tele_sales"].includes(normalizedRole)) {
+      mappedRole = "TELE_SALES";
+    } else if (["مبيعات", "سيلز", "موظف مبيعات", "موظف سيلز", "sales"].includes(normalizedRole)) {
+      mappedRole = "SALES";
+    }
+
+    if (mappedRole) row.role = mappedRole;
 
     const result = rowSchema.safeParse(row);
     if (result.success) {
@@ -90,7 +94,7 @@ export async function POST(req: NextRequest) {
   }
 
   const duplicateUsers = [];
-  const insertedUsers = [];
+  const insertedUsers: { name: string; username: string; inviteLink: string }[] = [];
 
   for (const row of validRows) {
     const existing = await prisma.user.findFirst({
@@ -107,18 +111,23 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
-    const hashedPassword = await bcrypt.hash(row.password, 10);
+    const inviteToken = generateInviteToken();
     const user = await prisma.user.create({
       data: {
         name: row.name,
         username: row.username,
         email: row.email,
         phone: row.phone || null,
-        passwordHash: hashedPassword,
         role: row.role as Role,
+        inviteToken,
+        inviteTokenExpiresAt: getInviteExpiry(),
       }
     });
-    insertedUsers.push(user);
+    insertedUsers.push({
+      name: user.name,
+      username: user.username,
+      inviteLink: buildInviteLink(inviteToken, req.nextUrl.origin),
+    });
   }
 
   return NextResponse.json({
@@ -127,5 +136,6 @@ export async function POST(req: NextRequest) {
     skipped: invalidRows.length + duplicateUsers.length,
     invalidRows,
     duplicateUsers,
+    insertedUsers,
   });
 }

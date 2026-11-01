@@ -24,6 +24,12 @@ export const authOptions: NextAuthOptions = {
 
         if (!user || !user.isActive) return null;
 
+        if (!user.passwordHash) {
+          throw new Error(
+            "This account hasn't been activated yet. Please use your invite link to set a password first."
+          );
+        }
+
         const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
 

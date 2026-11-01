@@ -5,8 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-
-import bcrypt from "bcryptjs";
+import { generateInviteToken, getInviteExpiry, buildInviteLink } from "@/lib/invite-token";
 
 // GET /api/users — all users (Admin only)
 export async function GET() {
@@ -26,11 +25,19 @@ export async function GET() {
       role: true,
       isActive: true,
       createdAt: true,
+      passwordHash: true,
       _count: { select: { assignedLeads: true } },
     },
   });
 
-  return NextResponse.json(users);
+  // Never send the hash itself to the client — just whether the account
+  // still needs to go through the invite flow.
+  const result = users.map(({ passwordHash, ...u }) => ({
+    ...u,
+    needsActivation: !passwordHash,
+  }));
+
+  return NextResponse.json(result);
 }
 
 const createUserSchema = z.object({
@@ -42,7 +49,6 @@ const createUserSchema = z.object({
   email: z.string().email("Invalid email"),
   phone: z.string().optional(),
   role: z.nativeEnum(Role),
-  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 // POST /api/users — create a new user (Admin only)
@@ -68,7 +74,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+  const inviteToken = generateInviteToken();
+  const inviteTokenExpiresAt = getInviteExpiry();
 
   const user = await prisma.user.create({
     data: {
@@ -77,7 +84,8 @@ export async function POST(req: NextRequest) {
       email: parsed.data.email,
       phone: parsed.data.phone || null,
       role: parsed.data.role,
-      passwordHash,
+      inviteToken,
+      inviteTokenExpiresAt,
     },
     select: {
       id: true,
@@ -90,5 +98,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ success: true, user });
+  const inviteLink = buildInviteLink(inviteToken, req.nextUrl.origin);
+
+  return NextResponse.json({ success: true, user, inviteLink });
 }
