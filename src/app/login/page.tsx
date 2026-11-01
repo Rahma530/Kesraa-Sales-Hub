@@ -26,7 +26,11 @@ export default function LoginPage() {
     setLoading(false);
 
     if (res?.error) {
-      setError("Incorrect username or password");
+      setError(
+        res.error === "CredentialsSignin"
+          ? "Incorrect username or password"
+          : res.error
+      );
       return;
     }
 

@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, CheckCircle2, Download, Settings, FileText, XCircle, Ban } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Download, Settings, FileText, XCircle, Ban, Copy, Link2, Clock, Send } from "lucide-react";
 
 export interface UserRow {
   id: string;
@@ -13,11 +13,13 @@ export interface UserRow {
   role: string;
   isActive: boolean;
   createdAt: string;
+  needsActivation?: boolean;
   _count: { assignedLeads: number };
 }
 
 const ROLE_OPTIONS = [
   { value: "ADMIN", label: "Admin" },
+  { value: "HEAD_OF_SALES", label: "Head of Sales" },
   { value: "TELE_SALES", label: "Tele-Sales" },
   { value: "SALES", label: "Sales" },
 ];
@@ -34,7 +36,6 @@ export default function UserManagementTable({
   const [openId, setOpenId] = useState<string | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [newUser, setNewUser] = useState({
     name: "",
@@ -42,12 +43,22 @@ export default function UserManagementTable({
     email: "",
     phone: "",
     role: "TELE_SALES",
-    password: "",
   });
   const [createError, setCreateError] = useState<string | null>(null);
-  
+  const [createdInviteLink, setCreatedInviteLink] = useState<string | null>(null);
+
   const [file, setFile] = useState<File | null>(null);
   const [uploadResult, setUploadResult] = useState<string | null>(null);
+  const [uploadInviteLinks, setUploadInviteLinks] = useState<{ name: string; username: string; inviteLink: string }[]>([]);
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const [resendLinkFor, setResendLinkFor] = useState<{ id: string; link: string } | null>(null);
+
+  function copyToClipboard(text: string) {
+    navigator.clipboard?.writeText(text).then(
+      () => showToast("Invite link copied", "success"),
+      () => showToast("Could not copy the link")
+    );
+  }
 
   const [toast, setToast] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
   const showToast = (text: string, type: 'error' | 'success' = 'error') => {
@@ -111,8 +122,8 @@ export default function UserManagementTable({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "An error occurred");
-      setNewUser({ name: "", username: "", email: "", phone: "", role: "TELE_SALES", password: "" });
-      setShowCreate(false);
+      setNewUser({ name: "", username: "", email: "", phone: "", role: "TELE_SALES" });
+      setCreatedInviteLink(data.inviteLink ?? null);
       router.refresh();
     } catch (e: any) {
       setCreateError(e.message);
@@ -121,10 +132,32 @@ export default function UserManagementTable({
     }
   }
 
+  function closeCreateModal() {
+    setShowCreate(false);
+    setCreatedInviteLink(null);
+    setCreateError(null);
+  }
+
+  async function handleResendInvite(id: string) {
+    setResendingId(id);
+    try {
+      const res = await fetch(`/api/users/${id}/resend-invite`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "An error occurred");
+      setResendLinkFor({ id, link: data.inviteLink });
+      setMenuOpenId(null);
+    } catch (e: any) {
+      showToast(e.message);
+    } finally {
+      setResendingId(null);
+    }
+  }
+
   async function handleUpload() {
     if (!file) return;
     setBusy(true);
     setUploadResult(null);
+    setUploadInviteLinks([]);
     const formData = new FormData();
     formData.append("file", file);
     try {
@@ -142,6 +175,7 @@ export default function UserManagementTable({
       setUploadResult(
         `Successfully added ${data.totalUploaded} employees${notes ? ` — skipped: ${notes}` : ""}`
       );
+      setUploadInviteLinks(data.insertedUsers ?? []);
       router.refresh();
       setFile(null);
     } catch (e: any) {
@@ -214,19 +248,24 @@ export default function UserManagementTable({
           >
             {/* Header: Status & Role */}
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold border ${u.isActive ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-rose-500/10 text-rose-400 border-rose-500/20"}`}>
                   {u.isActive ? "Active" : "Disabled"}
                 </span>
+                {u.needsActivation && (
+                  <span className="px-3 py-1 rounded-full text-xs font-bold border bg-amber-500/10 text-amber-400 border-amber-500/20 flex items-center gap-1">
+                    <Clock size={12} /> Pending Activation
+                  </span>
+                )}
                 <span className="text-xs font-semibold text-slate-400 bg-white/5 px-3 py-1 rounded-full">
                   {ROLE_OPTIONS.find((r) => r.value === u.role)?.label ?? u.role}
                 </span>
               </div>
-              
+
               {/* Three dots menu */}
               {u.id !== currentUserId && (
                 <div className="relative">
-                  <button 
+                  <button
                     onClick={() => setMenuOpenId(menuOpenId === u.id ? null : u.id)}
                     className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                   >
@@ -236,10 +275,20 @@ export default function UserManagementTable({
                       <circle cx="12" cy="19" r="1"></circle>
                     </svg>
                   </button>
-                  
+
                   {menuOpenId === u.id && (
-                    <div className="absolute left-0 mt-1 w-36 bg-[#182032] border border-white/10 rounded-xl shadow-2xl z-20 py-1">
-                      <button 
+                    <div className="absolute left-0 mt-1 w-48 bg-[#182032] border border-white/10 rounded-xl shadow-2xl z-20 py-1">
+                      {u.needsActivation && (
+                        <button
+                          onClick={() => handleResendInvite(u.id)}
+                          disabled={resendingId === u.id}
+                          className="w-full text-right px-4 py-2 text-sm text-accent-soft hover:bg-white/5 transition-colors flex items-center gap-2 font-medium disabled:opacity-50"
+                        >
+                          <Send size={14} />
+                          {resendingId === u.id ? "Generating..." : "Resend Invite Link"}
+                        </button>
+                      )}
+                      <button
                         onClick={() => deleteUser(u.id)}
                         className="w-full text-right px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors flex items-center gap-2 font-medium"
                       >
@@ -320,18 +369,42 @@ export default function UserManagementTable({
 
       {/* Add User Modal */}
       {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm overflow-y-auto" onClick={() => setShowCreate(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm overflow-y-auto" onClick={closeCreateModal}>
           <div className="bg-[#182032] border border-white/10 p-6 rounded-3xl shadow-2xl w-full max-w-md relative my-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
               <h3 className="text-xl font-bold text-white">Add New Employee Manually</h3>
-              <button onClick={() => setShowCreate(false)} className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-colors bg-[#0f1523] border border-white/5">
+              <button onClick={closeCreateModal} className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-colors bg-[#0f1523] border border-white/5">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
               </button>
             </div>
-            
+
+            {createdInviteLink ? (
+              <div className="flex flex-col gap-4 text-center">
+                <div className="bg-[#0f1523] p-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-3">
+                  <CheckCircle2 size={40} className="text-emerald-400" />
+                  <p className="text-sm font-semibold text-white">Employee created. Copy the invite link below and send it to them so they can set their own password.</p>
+                </div>
+                <div className="bg-[#0f1523] p-4 rounded-2xl border border-white/5 flex items-center gap-2">
+                  <Link2 size={16} className="text-accent-soft shrink-0" />
+                  <p dir="ltr" className="text-xs text-slate-300 truncate flex-1 text-left">{createdInviteLink}</p>
+                  <button
+                    onClick={() => copyToClipboard(createdInviteLink!)}
+                    className="shrink-0 bg-[#1e293b] hover:bg-slate-700 text-white p-2 rounded-lg transition-colors"
+                  >
+                    <Copy size={14} />
+                  </button>
+                </div>
+                <button
+                  onClick={closeCreateModal}
+                  className="bg-[#1e293b] hover:bg-slate-700 text-white w-full py-3.5 rounded-xl text-base font-medium transition-colors border border-white/5"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
             <form className="flex flex-col gap-4" autoComplete="off" onSubmit={(e) => e.preventDefault()}>
               <input
                 autoComplete="new-password"
@@ -374,46 +447,61 @@ export default function UserManagementTable({
                   </option>
                 ))}
               </select>
-              <div className="relative">
-                <input
-                  autoComplete="new-password"
-                  type={showCreatePassword ? "text" : "password"}
-                  className="input-field w-full text-sm bg-[#0f1523] py-3 pl-10"
-                  placeholder="Initial Password *"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                />
-                <button
-                  type="button"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white focus:outline-none"
-                  onClick={() => setShowCreatePassword(!showCreatePassword)}
-                  tabIndex={-1}
-                >
-                  {showCreatePassword ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                      <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  )}
-                </button>
-              </div>
-              
+
+              <p className="text-xs text-slate-500 -mt-1 flex items-center gap-1.5">
+                <Link2 size={12} /> An invite link will be generated so the employee can set their own password.
+              </p>
+
               {createError && <p className="text-sm text-status-hot mt-2">{createError}</p>}
-              
+
               <button
                 type="button"
-                disabled={busy || !newUser.name || !newUser.username || !newUser.email || !newUser.password}
+                disabled={busy || !newUser.name || !newUser.username || !newUser.email}
                 onClick={handleCreate}
                 className="bg-[#3b82f6] hover:bg-blue-600 disabled:bg-slate-700 disabled:text-slate-400 text-white w-full mt-4 py-3.5 rounded-xl text-base font-medium transition-colors"
               >
                 {busy ? "Creating..." : "Create Account"}
               </button>
             </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Resend Invite Result Modal */}
+      {resendLinkFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm overflow-y-auto" onClick={() => setResendLinkFor(null)}>
+          <div className="bg-[#182032] border border-white/10 p-6 rounded-3xl shadow-2xl w-full max-w-md relative my-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Send size={18} /> New Invite Link
+              </h3>
+              <button onClick={() => setResendLinkFor(null)} className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-colors bg-[#0f1523] border border-white/5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-slate-300">Copy this link and send it to the employee so they can set their password.</p>
+              <div className="bg-[#0f1523] p-4 rounded-2xl border border-white/5 flex items-center gap-2">
+                <Link2 size={16} className="text-accent-soft shrink-0" />
+                <p dir="ltr" className="text-xs text-slate-300 truncate flex-1 text-left">{resendLinkFor.link}</p>
+                <button
+                  onClick={() => copyToClipboard(resendLinkFor.link)}
+                  className="shrink-0 bg-[#1e293b] hover:bg-slate-700 text-white p-2 rounded-lg transition-colors"
+                >
+                  <Copy size={14} />
+                </button>
+              </div>
+              <button
+                onClick={() => setResendLinkFor(null)}
+                className="bg-[#1e293b] hover:bg-slate-700 text-white w-full py-3.5 rounded-xl text-base font-medium transition-colors border border-white/5"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -433,14 +521,14 @@ export default function UserManagementTable({
                 </svg>
               </button>
             </div>
-            
+
             <div className="flex flex-col gap-6 text-center">
               {!uploadResult ? (
                 <>
                   <p className="text-sm text-slate-300">
                     You can upload a CSV file containing employee data to add them all at once.
                   </p>
-                  
+
                   <div className="bg-[#0f1523] p-10 rounded-2xl border-2 border-dashed border-accent/30 flex flex-col items-center justify-center gap-4">
                     <FileText size={44} className="text-accent-soft" />
                     <input
@@ -450,10 +538,13 @@ export default function UserManagementTable({
                       className="text-sm text-slate-400 file:btn-ghost file:mr-3 file:border-0 file:text-sm file:font-semibold"
                     />
                     <p className="text-xs text-slate-500 mt-2">
-                      Required columns: Name, Username, Email, Phone Number, Password, Role
+                      Required columns: Name, Username, Email, Phone Number (optional), Role (optional)
+                    </p>
+                    <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                      <Link2 size={12} /> No password column — each employee gets an invite link to set their own.
                     </p>
                   </div>
-                  
+
                   <button
                     disabled={!file || busy}
                     onClick={handleUpload}
@@ -468,10 +559,34 @@ export default function UserManagementTable({
                     {uploadResult.includes("Error") ? <XCircle size={40} className="text-rose-400" /> : <CheckCircle2 size={40} className="text-emerald-400" />}
                     <p className="text-sm font-semibold text-white mt-2 leading-relaxed">{uploadResult}</p>
                   </div>
+
+                  {uploadInviteLinks.length > 0 && (
+                    <div className="flex flex-col gap-2 text-left max-h-64 overflow-y-auto">
+                      <p className="text-xs text-slate-400 flex items-center gap-1.5">
+                        <Link2 size={12} /> Copy each invite link and send it to that employee:
+                      </p>
+                      {uploadInviteLinks.map((u) => (
+                        <div key={u.username} className="bg-[#0f1523] p-3 rounded-xl border border-white/5 flex items-center gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-white truncate">{u.name} <span className="text-slate-500" dir="ltr">({u.username})</span></p>
+                            <p dir="ltr" className="text-xs text-slate-400 truncate">{u.inviteLink}</p>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard(u.inviteLink)}
+                            className="shrink-0 bg-[#1e293b] hover:bg-slate-700 text-white p-2 rounded-lg transition-colors"
+                          >
+                            <Copy size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <button
                     onClick={() => {
                       setShowUpload(false);
                       setUploadResult(null);
+                      setUploadInviteLinks([]);
                     }}
                     className="bg-[#1e293b] hover:bg-slate-700 text-white w-full py-3.5 rounded-xl text-base font-medium transition-colors border border-white/5"
                   >

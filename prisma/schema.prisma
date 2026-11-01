@@ -44,7 +44,12 @@ model User {
   name          String
   email         String   @unique
   username      String   @unique
-  passwordHash  String
+  // Null until the employee sets their own password via their invite link.
+  passwordHash  String?
+  // Invitation system: set when an account is created (or an invite is
+  // resent), cleared once the employee sets their password.
+  inviteToken          String?   @unique
+  inviteTokenExpiresAt DateTime?
   role          String
   isActive      Boolean  @default(true)
   lastActiveAt  DateTime?
