@@ -1,10 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import AdminCustomersClient from "@/app/(dashboard)/admin/customers/AdminCustomersClient";
-
-const prisma = new PrismaClient();
 
 import DashboardShell from "@/components/DashboardShell";
 
