@@ -67,7 +67,7 @@ export default function SheetsClient({ initialBatches }: { initialBatches: any[]
                   setModal({ ...modal, isOpen: false });
                 }}
                 className={`px-6 py-2 rounded-xl text-sm font-bold text-white transition-colors shadow-lg ${
-                  modal.type === "confirm" ? "bg-rose-600 hover:bg-rose-500" : "bg-indigo-600 hover:bg-indigo-500"
+                  modal.type === "confirm" ? "bg-rose-600 hover:bg-rose-500" : "bg-accent hover:bg-accent"
                 }`}
               >
                 {modal.type === "confirm" ? "نعم، متأكد" : "حسناً"}
@@ -79,7 +79,7 @@ export default function SheetsClient({ initialBatches }: { initialBatches: any[]
 
       <div className="bg-[#121826] p-6 rounded-3xl border border-white/5 shadow-xl">
         <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-          <span className="text-indigo-500">📄</span> إدارة شيتات الإكسيل المرفوعة
+          <span className="text-accent">📄</span> إدارة شيتات الإكسيل المرفوعة
         </h2>
         <p className="text-slate-400 text-sm mb-6">
           يمكنك هنا رؤية جميع الشيتات التي تم رفعها مسبقاً، وإذا اكتشفت خطأ في الداتا يمكنك حذف الشيت بالكامل بضغطة زر.
@@ -111,9 +111,9 @@ export default function SheetsClient({ initialBatches }: { initialBatches: any[]
                       <span className="text-emerald-500">📊</span> {batch.fileName}
                     </td>
                     <td className="px-6 py-4 text-slate-400">{batch.totalLeads} عميل</td>
-                    <td className="px-6 py-4 text-indigo-400 font-bold">{batch._count.leads} عميل</td>
+                    <td className="px-6 py-4 text-accent-soft font-bold">{batch._count.leads} عميل</td>
                     <td className="px-6 py-4">
-                      <span className="bg-indigo-500/10 text-indigo-300 px-3 py-1 rounded-full text-xs border border-indigo-500/20">
+                      <span className="bg-accent/10 text-accent-soft px-3 py-1 rounded-full text-xs border border-accent/20">
                         {batch.uploadedBy.name}
                       </span>
                     </td>

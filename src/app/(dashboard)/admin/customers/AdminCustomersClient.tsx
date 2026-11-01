@@ -375,7 +375,7 @@ export default function AdminCustomersClient({
                   setModal({ ...modal, isOpen: false });
                 }}
                 className={`px-6 py-2 rounded-xl text-sm font-bold text-white transition-colors shadow-lg ${
-                  modal.type === "confirm" ? "bg-rose-600 hover:bg-rose-500" : "bg-indigo-600 hover:bg-indigo-500"
+                  modal.type === "confirm" ? "bg-rose-600 hover:bg-rose-500" : "bg-accent hover:bg-accent"
                 }`}
               >
                 {modal.type === "confirm" ? "نعم، متأكد" : "حسناً"}
@@ -411,7 +411,7 @@ export default function AdminCustomersClient({
             {/* Column Mapping Selectors */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
               {[
-                { label: "عمود الاسم *", value: previewNameKey, setter: setPreviewNameKey, color: "indigo" },
+                { label: "عمود الاسم *", value: previewNameKey, setter: setPreviewNameKey, color: "purple" },
                 { label: "عمود التليفون *", value: previewPhoneKey, setter: setPreviewPhoneKey, color: "emerald" },
                 { label: "عمود الإيميل", value: previewEmailKey, setter: setPreviewEmailKey, color: "cyan" },
                 { label: "عمود الشركة", value: previewCompanyKey, setter: setPreviewCompanyKey, color: "sky" },
@@ -424,7 +424,7 @@ export default function AdminCustomersClient({
                   <select
                     value={value}
                     onChange={e => setter(e.target.value)}
-                    className="w-full bg-[#0f1523] border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-indigo-500/50"
+                    className="w-full bg-[#0f1523] border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-accent/50"
                   >
                     <option value="">-- لا يوجد --</option>
                     {previewData.allKeys.map(k => (
@@ -464,7 +464,7 @@ export default function AdminCustomersClient({
                 <table className="w-full text-xs text-right">
                   <thead className="bg-[#0a0f1a]">
                     <tr>
-                      <th className="px-3 py-2 text-indigo-400 font-bold">الاسم</th>
+                      <th className="px-3 py-2 text-accent-soft font-bold">الاسم</th>
                       <th className="px-3 py-2 text-emerald-400 font-bold">التليفون</th>
                       <th className="px-3 py-2 text-sky-400 font-bold">الشركة</th>
                       <th className="px-3 py-2 text-violet-400 font-bold">الملاحظات</th>
@@ -512,7 +512,7 @@ export default function AdminCustomersClient({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121826] p-6 rounded-3xl border border-white/5 shadow-xl">
         <div>
           <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-            <span className="text-indigo-500">👥</span> إدارة وتوزيع العملاء
+            <span className="text-accent">👥</span> إدارة وتوزيع العملاء
           </h1>
           <p className="text-slate-400 text-sm">ارفع شيت الإكسيل وقم بتوزيع العملاء على موظفي المبيعات والتيلي سيلز.</p>
         </div>
@@ -548,7 +548,7 @@ export default function AdminCustomersClient({
       <div className="flex border-b border-white/10">
         <button
           className={`px-6 py-3 font-bold text-sm transition-colors border-b-2 ${
-            activeTab === "table" ? "border-indigo-500 text-indigo-400" : "border-transparent text-slate-400 hover:text-white"
+            activeTab === "table" ? "border-accent text-accent-soft" : "border-transparent text-slate-400 hover:text-white"
           }`}
           onClick={() => setActiveTab("table")}
         >
@@ -556,7 +556,7 @@ export default function AdminCustomersClient({
         </button>
         <button
           className={`px-6 py-3 font-bold text-sm transition-colors border-b-2 ${
-            activeTab === "cards" ? "border-indigo-500 text-indigo-400" : "border-transparent text-slate-400 hover:text-white"
+            activeTab === "cards" ? "border-accent text-accent-soft" : "border-transparent text-slate-400 hover:text-white"
           }`}
           onClick={() => setActiveTab("cards")}
         >
@@ -575,12 +575,12 @@ export default function AdminCustomersClient({
             <input 
               type="text" placeholder="بحث بالاسم أو الرقم..." 
               value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500/50"
+              className="w-full bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-accent/50"
             />
           </div>
           <select 
             value={filterEmployee} onChange={e => setFilterEmployee(e.target.value)}
-            className="bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500/50 min-w-[150px]"
+            className="bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-accent/50 min-w-[150px]"
           >
             <option value="ALL">كل الموظفين</option>
             <option value="UNASSIGNED">غير معين (جديد)</option>
@@ -590,7 +590,7 @@ export default function AdminCustomersClient({
           </select>
           <select 
             value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-            className="bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500/50 min-w-[150px]"
+            className="bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-accent/50 min-w-[150px]"
           >
             <option value="ALL">كل الحالات</option>
             <option value="UNASSIGNED">غير موزع فقط</option>
@@ -603,7 +603,7 @@ export default function AdminCustomersClient({
         </div>
 
         {/* Bulk Actions */}
-        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto p-3 bg-accent/10 rounded-2xl border border-accent/20">
           
           <button 
             onClick={handleExport}
@@ -613,12 +613,12 @@ export default function AdminCustomersClient({
             <span>📥</span> تصدير الداتا
           </button>
 
-          <div className="text-sm text-indigo-300 font-bold px-2 whitespace-nowrap border-r border-indigo-500/30 pr-3">
+          <div className="text-sm text-accent-soft font-bold px-2 whitespace-nowrap border-r border-accent/30 pr-3">
             محدد: {selectedLeads.size}
           </div>
           <select 
             value={assignTarget} onChange={e => setAssignTarget(e.target.value)}
-            className="bg-[#182032] border border-indigo-500/30 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 flex-1 min-w-[180px]"
+            className="bg-[#182032] border border-accent/30 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-accent flex-1 min-w-[180px]"
           >
             <option value="">-- اختر الموظف للتحويل --</option>
             <option value="AUTO" className="text-amber-400 font-bold">🤖 توزيع تلقائي (بالتساوي على التيلي سيلز)</option>
@@ -629,7 +629,7 @@ export default function AdminCustomersClient({
           <button 
             onClick={handleBulkAssign}
             disabled={isAssigning || selectedLeads.size === 0 || !assignTarget}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-6 rounded-xl shadow-md transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="bg-accent hover:bg-accent text-white font-bold py-2 px-6 rounded-xl shadow-md transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             {isAssigning ? "جاري..." : "توزيع"}
           </button>
@@ -658,7 +658,7 @@ export default function AdminCustomersClient({
                     type="checkbox" 
                     checked={selectedLeads.size > 0 && selectedLeads.size === filteredLeads.length}
                     onChange={() => toggleSelectAll(filteredLeads)}
-                    className="w-4 h-4 rounded bg-[#182032] border-white/20 text-indigo-500 focus:ring-indigo-500/50 cursor-pointer"
+                    className="w-4 h-4 rounded bg-[#182032] border-white/20 text-accent focus:ring-accent/50 cursor-pointer"
                   />
                 </th>
                 <th className="px-6 py-4">العميل</th>
@@ -684,7 +684,7 @@ export default function AdminCustomersClient({
                         type="checkbox" 
                         checked={selectedLeads.has(lead.id)}
                         onChange={() => toggleSelect(lead.id)}
-                        className="w-4 h-4 rounded bg-[#182032] border-white/20 text-indigo-500 focus:ring-indigo-500/50 cursor-pointer"
+                        className="w-4 h-4 rounded bg-[#182032] border-white/20 text-accent focus:ring-accent/50 cursor-pointer"
                       />
                     </td>
                     <td className="px-6 py-4 font-bold text-white">{lead.name}</td>

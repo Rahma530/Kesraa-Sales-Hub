@@ -122,7 +122,7 @@ export default function NotificationBell() {
               notifications.map((notif) => (
                 <div 
                   key={notif.id} 
-                  className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${notif.isRead ? 'opacity-70' : 'bg-indigo-900/10'}`}
+                  className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${notif.isRead ? 'opacity-70' : 'bg-accent-deep/10'}`}
                   onClick={() => handleNotificationClick(notif)}
                 >
                   <div className="flex justify-between items-start mb-1">

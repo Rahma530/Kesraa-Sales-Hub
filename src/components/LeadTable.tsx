@@ -361,7 +361,7 @@ export default function LeadTable({
   };
 
   const AVATAR_COLORS = [
-    "bg-indigo-500", "bg-blue-500", "bg-emerald-500", "bg-orange-400", "bg-pink-500", "bg-yellow-500", "bg-purple-500"
+    "bg-accent", "bg-blue-500", "bg-emerald-500", "bg-orange-400", "bg-pink-500", "bg-yellow-500", "bg-purple-500"
   ];
   function getAvatarColor(id: string) {
     let hash = 0;
@@ -401,7 +401,7 @@ export default function LeadTable({
                 placeholder="بحث بالاسم، الهاتف، أو الحالة..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-[#1e293b] border border-slate-700/50 text-slate-200 text-base rounded-xl pl-4 pr-12 py-3.5 outline-none focus:border-indigo-500/50 transition-colors placeholder:text-slate-400 shadow-sm"
+                className="w-full bg-[#1e293b] border border-slate-700/50 text-slate-200 text-base rounded-xl pl-4 pr-12 py-3.5 outline-none focus:border-accent/50 transition-colors placeholder:text-slate-400 shadow-sm"
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -559,7 +559,7 @@ export default function LeadTable({
                             )}
 
                             {allowTransfer && (
-                              <button onClick={(e) => { e.stopPropagation(); setOpenId(lead.id); setModalMode("transfer"); setOpenDropdown(null); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-indigo-500/20 hover:text-indigo-400 transition-colors text-right w-full">
+                              <button onClick={(e) => { e.stopPropagation(); setOpenId(lead.id); setModalMode("transfer"); setOpenDropdown(null); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-accent/20 hover:text-accent-soft transition-colors text-right w-full">
                                 <span>👥</span> تحويل إلى موظف سيلز
                               </button>
                             )}
@@ -603,12 +603,12 @@ export default function LeadTable({
                       <span className="text-slate-500 text-sm mt-0.5">🔗</span>
                       <div className="flex flex-col min-w-0 flex-1 gap-1.5">
                         {lead.storeUrl && lead.storeUrl.split(',').filter(Boolean).map((url, idx) => (
-                          <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 transition-colors truncate w-full block" dir="ltr" title={`المتجر ${idx + 1}`}>
+                          <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="text-accent-soft hover:text-accent-soft transition-colors truncate w-full block" dir="ltr" title={`المتجر ${idx + 1}`}>
                             {url}
                           </a>
                         ))}
                         {lead.socialMediaUrl && lead.socialMediaUrl.split(',').filter(Boolean).map((url, idx) => (
-                          <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 transition-colors truncate w-full block" dir="ltr" title={`سوشيال ميديا ${idx + 1}`}>
+                          <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="text-accent-soft hover:text-accent-soft transition-colors truncate w-full block" dir="ltr" title={`سوشيال ميديا ${idx + 1}`}>
                             {url}
                           </a>
                         ))}
@@ -635,7 +635,7 @@ export default function LeadTable({
                             <h4 className="text-xs font-bold text-emerald-300 flex items-center gap-1"><span>🤖</span> تسجيل وتحليل الذكاء الاصطناعي</h4>
                             
                             {lead.meetings[0].recordingUrl && (
-                              <a href={lead.meetings[0].recordingUrl} target="_blank" className="flex items-center justify-center gap-2 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 py-2 rounded-lg text-[11px] font-bold transition-colors">
+                              <a href={lead.meetings[0].recordingUrl} target="_blank" className="flex items-center justify-center gap-2 bg-accent/20 hover:bg-accent/30 text-accent-soft py-2 rounded-lg text-[11px] font-bold transition-colors">
                                 <span>▶️</span> مشاهدة تسجيل الميتنج
                               </a>
                             )}
@@ -733,7 +733,7 @@ export default function LeadTable({
                       }).catch(() => {});
                       window.open(jitsiUrl, "_blank");
                     }}
-                    className="bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 text-indigo-400 rounded-xl w-10 flex items-center justify-center transition-colors"
+                    className="bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent-soft rounded-xl w-10 flex items-center justify-center transition-colors"
                     title="Jitsi (ميتنج أوتوماتيك)"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15.6 11.6L22 7v10l-6.4-4.5v-1z"/><circle cx="8" cy="12" r="5"/></svg>
@@ -827,9 +827,9 @@ export default function LeadTable({
       {aiInviteModalOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
           <div className="bg-[#0f1523] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden">
-            <div className="p-5 border-b border-white/10 flex justify-between items-center bg-indigo-900/20">
+            <div className="p-5 border-b border-white/10 flex justify-between items-center bg-accent-deep/20">
               <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                <span className="text-indigo-400">🤖</span> دعوة البوت لـ {aiInviteProvider}
+                <span className="text-accent-soft">🤖</span> دعوة البوت لـ {aiInviteProvider}
               </h3>
               <button onClick={() => setAiInviteModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">✕</button>
             </div>
@@ -841,7 +841,7 @@ export default function LeadTable({
               <input
                 type="text"
                 dir="ltr"
-                className="w-full bg-[#0e1320] border border-white/10 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-indigo-500 mb-4"
+                className="w-full bg-[#0e1320] border border-white/10 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-accent mb-4"
                 placeholder="https://meet.google.com/xxx-xxxx-xxx"
                 value={aiInviteUrl}
                 onChange={(e) => setAiInviteUrl(e.target.value)}
@@ -863,7 +863,7 @@ export default function LeadTable({
                   }
                 }}
                 disabled={aiInviteLoading || !aiInviteUrl.trim()}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl disabled:opacity-50 transition-colors"
+                className="w-full bg-accent hover:bg-accent text-white font-bold py-3 rounded-xl disabled:opacity-50 transition-colors"
               >
                 {aiInviteLoading ? "جاري دعوة البوت..." : "دعوة البوت الآن 🚀"}
               </button>
@@ -932,7 +932,7 @@ export default function LeadTable({
               <div>
                 <p className="text-sm font-medium text-slate-300 mb-1">اسم العميل *</p>
                 <input
-                  className="w-full bg-[#1e293b] border border-slate-700/50 text-slate-200 text-sm rounded-xl px-4 py-3 outline-none focus:border-indigo-500/50 transition-colors placeholder:text-slate-500"
+                  className="w-full bg-[#1e293b] border border-slate-700/50 text-slate-200 text-sm rounded-xl px-4 py-3 outline-none focus:border-accent/50 transition-colors placeholder:text-slate-500"
                   placeholder="الاسم"
                   value={newLead.name}
                   onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
@@ -941,7 +941,7 @@ export default function LeadTable({
               <div>
                 <p className="text-sm font-medium text-slate-300 mb-1">رقم الهاتف *</p>
                 <input
-                  className="w-full bg-[#1e293b] border border-slate-700/50 text-slate-200 text-sm rounded-xl px-4 py-3 outline-none focus:border-indigo-500/50 transition-colors placeholder:text-slate-500"
+                  className="w-full bg-[#1e293b] border border-slate-700/50 text-slate-200 text-sm rounded-xl px-4 py-3 outline-none focus:border-accent/50 transition-colors placeholder:text-slate-500"
                   placeholder="رقم الهاتف"
                   value={newLead.phone}
                   onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
@@ -950,7 +950,7 @@ export default function LeadTable({
               <div>
                 <p className="text-sm font-medium text-slate-300 mb-1">الشركة (اختياري)</p>
                 <input
-                  className="w-full bg-[#1e293b] border border-slate-700/50 text-slate-200 text-sm rounded-xl px-4 py-3 outline-none focus:border-indigo-500/50 transition-colors placeholder:text-slate-500"
+                  className="w-full bg-[#1e293b] border border-slate-700/50 text-slate-200 text-sm rounded-xl px-4 py-3 outline-none focus:border-accent/50 transition-colors placeholder:text-slate-500"
                   placeholder="الشركة"
                   value={newLead.company}
                   onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
@@ -959,7 +959,7 @@ export default function LeadTable({
               <div>
                 <p className="text-sm font-medium text-slate-300 mb-1">الاحتياج (اختياري)</p>
                 <input
-                  className="w-full bg-[#1e293b] border border-slate-700/50 text-slate-200 text-sm rounded-xl px-4 py-3 outline-none focus:border-indigo-500/50 transition-colors placeholder:text-slate-500"
+                  className="w-full bg-[#1e293b] border border-slate-700/50 text-slate-200 text-sm rounded-xl px-4 py-3 outline-none focus:border-accent/50 transition-colors placeholder:text-slate-500"
                   placeholder="الاحتياج"
                   value={newLead.need}
                   onChange={(e) => setNewLead({ ...newLead, need: e.target.value })}
@@ -976,7 +976,7 @@ export default function LeadTable({
               </button>
               <button
                 onClick={handleAddLead}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                className="bg-accent hover:bg-accent text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-colors"
                 disabled={busy || !newLead.name || !newLead.phone}
               >
                 {busy ? "جاري الإضافة..." : "إضافة العميل"}
@@ -1414,7 +1414,7 @@ function LeadActions({
             {lead.contractUrl && (
               <div className="flex flex-col gap-2 mb-4 mt-2">
                 {lead.contractUrl.split(',').filter(Boolean).map((url, idx) => (
-                  <a key={idx} href={url} target="_blank" className="flex items-center justify-center gap-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 rounded-xl py-2.5 px-4 text-sm font-semibold transition-colors">
+                  <a key={idx} href={url} target="_blank" className="flex items-center justify-center gap-2 bg-accent/10 hover:bg-accent/20 text-accent-soft border border-accent/20 rounded-xl py-2.5 px-4 text-sm font-semibold transition-colors">
                     <span>📄</span> عرض العقد رقم {idx + 1}
                   </a>
                 ))}
@@ -1463,7 +1463,7 @@ function LeadActions({
 
       {mode === "transfer" && allowTransfer && (
         <div className="space-y-6 max-w-md mx-auto">
-          <h3 className="text-lg font-bold text-indigo-400 mb-4 border-b border-white/5 pb-2">تحويل العميل إلى موظف Sales</h3>
+          <h3 className="text-lg font-bold text-accent-soft mb-4 border-b border-white/5 pb-2">تحويل العميل إلى موظف Sales</h3>
           
           <div className="space-y-2">
             <p className="text-sm font-semibold text-slate-400">تحويل إلى Sales</p>
@@ -1579,10 +1579,10 @@ function LeadActions({
               <div className="relative border-r-2 border-white/10 pr-6 space-y-6">
                 {lead.activities.map((a) => (
                   <div key={a.id} className="relative">
-                    <span className="absolute -right-[31px] top-1.5 w-3.5 h-3.5 rounded-full bg-indigo-500 ring-4 ring-[#0f1523]"></span>
+                    <span className="absolute -right-[31px] top-1.5 w-3.5 h-3.5 rounded-full bg-accent ring-4 ring-[#0f1523]"></span>
                     <div className="bg-[#121826] border border-white/5 rounded-xl p-4 shadow-sm hover:border-white/10 transition-colors">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
-                        <span className="text-sm font-bold text-indigo-400">{a.user?.name || "النظام"}</span>
+                        <span className="text-sm font-bold text-accent-soft">{a.user?.name || "النظام"}</span>
                         <span className="text-xs font-medium text-slate-500 bg-white/5 px-2 py-1 rounded-md" dir="ltr">{formatDateTime(a.createdAt)}</span>
                       </div>
                       <p className="text-sm text-slate-300 leading-relaxed">{a.message}</p>

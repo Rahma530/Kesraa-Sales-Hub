@@ -424,7 +424,7 @@ export default function ChatBox() {
                   </svg>
                 </button>
                 <div className="relative">
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-full text-white font-bold text-sm ${selectedChat.isGroup ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-full text-white font-bold text-sm ${selectedChat.isGroup ? 'bg-emerald-600' : 'bg-accent'}`}>
                     {selectedChat.isGroup ? '👥' : selectedChat.name.charAt(0)}
                   </div>
                   {!selectedChat.isGroup && <span className={`absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-[#121927] ${isOnline(selectedChat.lastActiveAt || null) ? 'bg-green-500' : 'bg-slate-500'}`} />}
@@ -454,7 +454,7 @@ export default function ChatBox() {
                     <h3 className="text-white font-bold text-sm">الرسائل والمحادثات</h3>
                   </div>
                   {activeTab === "groups" && (
-                    <button onClick={() => setIsCreatingGroup(true)} className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded">
+                    <button onClick={() => setIsCreatingGroup(true)} className="text-xs bg-accent hover:bg-accent text-white px-2 py-1 rounded">
                       + مجموعة
                     </button>
                   )}
@@ -462,7 +462,7 @@ export default function ChatBox() {
                 <div className="flex bg-[#0b1120] rounded-lg p-1 border border-white/5">
                   <button 
                     onClick={() => setActiveTab("users")}
-                    className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-colors ${activeTab === "users" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-white"}`}
+                    className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-colors ${activeTab === "users" ? "bg-accent text-white" : "text-slate-400 hover:text-white"}`}
                   >
                     الموظفين
                   </button>
@@ -506,7 +506,7 @@ export default function ChatBox() {
                             if (e.target.checked) setSelectedGroupMembers(prev => [...prev, c.user!.id]);
                             else setSelectedGroupMembers(prev => prev.filter(id => id !== c.user!.id));
                           }}
-                          className="w-4 h-4 rounded border-slate-600 text-indigo-600 focus:ring-indigo-600 bg-slate-700"
+                          className="w-4 h-4 rounded border-slate-600 text-accent focus:ring-accent bg-slate-700"
                         />
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 text-white font-bold text-sm">
                           {c.user!.name.charAt(0)}
@@ -543,7 +543,7 @@ export default function ChatBox() {
                     setIsLoading(false);
                   }}
                   disabled={isLoading}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg mt-auto disabled:opacity-50"
+                  className="w-full bg-accent hover:bg-accent text-white font-bold py-2 rounded-lg mt-auto disabled:opacity-50"
                 >
                   {isLoading ? 'جاري الإنشاء...' : 'إنشاء المجموعة'}
                 </button>
@@ -558,7 +558,7 @@ export default function ChatBox() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="ابحث عن مستخدم أو مجموعة..."
-                    className="w-full bg-[#1a2235] text-white text-sm rounded-lg pl-10 pr-4 py-2 border border-white/10 focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-[#1a2235] text-white text-sm rounded-lg pl-10 pr-4 py-2 border border-white/10 focus:outline-none focus:border-accent"
                     dir="rtl"
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -595,7 +595,7 @@ export default function ChatBox() {
                   return (
                   <div 
                     key={id} 
-                    className={`p-4 border-b transition-colors cursor-pointer flex items-center justify-between ${isPinned ? 'bg-indigo-900/20 border-indigo-500/30' : 'border-white/5 hover:bg-white/5'}`}
+                    className={`p-4 border-b transition-colors cursor-pointer flex items-center justify-between ${isPinned ? 'bg-accent-deep/20 border-accent/30' : 'border-white/5 hover:bg-white/5'}`}
                     onClick={() => setSelectedChat({
                       id, name, isGroup: conv.isGroup,
                       role: conv.isGroup ? undefined : conv.user!.role,

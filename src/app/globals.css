@@ -13,17 +13,17 @@
   }
 
   body {
-    @apply bg-base-950 text-slate-200;
+    @apply bg-kesra-page text-[#e9d9fb] bg-fixed;
   }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-[#0e1320] border border-[#1b2438] rounded-xl shadow-md;
+    @apply bg-[#151318] border border-[#7b2ff7]/25 rounded-xl shadow-md;
   }
 
   .glass-card {
-    @apply glass-panel p-5 transition-colors hover:bg-[#131a2b];
+    @apply glass-panel p-5 transition-colors hover:bg-[#1c1224];
   }
 
   .btn-primary {
@@ -31,11 +31,18 @@
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-[#1b2438] bg-[#0a0e18] px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-[#131a2b];
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-[#7b2ff7]/25 bg-[#0a0a0d] px-4 py-2.5 text-sm font-medium text-[#e9d9fb] transition hover:bg-[#1c1224];
   }
 
   .input-field {
-    @apply w-full rounded-xl border border-[#1b2438] bg-[#05070d] px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus:border-accent/60 focus:ring-2 focus:ring-accent/20;
+    @apply w-full rounded-xl border border-[#7b2ff7]/25 bg-[#0a0a0d] px-4 py-2.5 text-sm text-[#e9d9fb] placeholder:text-[#a89bb8] outline-none transition focus:border-accent/60 focus:ring-2 focus:ring-accent/20;
+  }
+
+  /* Kesra brand logo mark — the source PNG is black-on-transparent, so on
+     our dark theme we flip it to white with a CSS filter instead of
+     keeping a second light/dark asset in sync. */
+  .kesra-logo {
+    filter: invert(1);
   }
 
   .badge {

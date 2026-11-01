@@ -227,8 +227,8 @@ export default async function AdminDashboard() {
                       <p className="text-lg font-bold text-amber-400 mt-0.5">{emp.followUpsCount}</p>
                     </div>
                     <div className="text-left">
-                      <p className="text-[10px] text-indigo-500/80 font-medium">عقود مرفوعة</p>
-                      <p className="text-lg font-bold text-indigo-400 mt-0.5">{emp.uploadedContractsCount}</p>
+                      <p className="text-[10px] text-accent/80 font-medium">عقود مرفوعة</p>
+                      <p className="text-lg font-bold text-accent-soft mt-0.5">{emp.uploadedContractsCount}</p>
                     </div>
                   </div>
                 )}

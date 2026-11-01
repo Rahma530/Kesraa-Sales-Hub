@@ -42,7 +42,7 @@ function formatChatTime(ts: number) {
 function getInitials(name: string) {
   return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 }
-const COLORS = ["bg-indigo-500", "bg-emerald-500", "bg-rose-500", "bg-amber-500", "bg-sky-500", "bg-purple-500"];
+const COLORS = ["bg-accent", "bg-emerald-500", "bg-rose-500", "bg-amber-500", "bg-sky-500", "bg-purple-500"];
 function avatarColor(id: string) {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = id.charCodeAt(i) + ((h << 5) - h);
@@ -260,7 +260,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
           <input
             type="text" value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="🔍 بحث..."
-            className="w-full bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 transition-colors"
+            className="w-full bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-accent/50 transition-colors"
           />
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar">
