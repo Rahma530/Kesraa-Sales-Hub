@@ -64,7 +64,7 @@ export default async function MeetingsReportPage() {
                 </div>
 
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-xs font-bold shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-accent/20 text-accent-soft flex items-center justify-center text-xs font-bold shrink-0">
                     {meeting.owner?.name?.charAt(0).toUpperCase()}
                   </div>
                   <div className="text-sm text-slate-300 font-medium truncate">

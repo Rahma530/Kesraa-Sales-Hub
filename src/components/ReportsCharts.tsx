@@ -16,14 +16,15 @@ import {
   Area,
 } from "recharts";
 
+// Kesra brand palette — see public/branding/kesra-design-tokens.css
 const COLORS = {
-  accent: "#7c5cff",
-  accentGlow: "#5eead4",
-  hot: "#ff6b6b",
-  gold: "#facc15",
+  accent: "#7b2ff7",
+  accentGlow: "#b98cf0",
+  hot: "#f5a3a3",
+  gold: "#f5e29a",
   new: "#60a5fa",
-  won: "#4ade80",
-  lost: "#94a3b8",
+  won: "#a9f5c1",
+  lost: "#a89bb8",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -48,11 +49,11 @@ const TIER_COLORS: Record<string, string> = {
 };
 
 const tooltipStyle = {
-  backgroundColor: "#0e1320",
-  border: "1px solid rgba(255,255,255,0.08)",
+  backgroundColor: "#151318",
+  border: "1px solid rgba(123,47,247,0.25)",
   borderRadius: "0.75rem",
   fontSize: "12px",
-  color: "#e2e8f0",
+  color: "#e9d9fb",
   direction: "rtl" as const,
 };
 

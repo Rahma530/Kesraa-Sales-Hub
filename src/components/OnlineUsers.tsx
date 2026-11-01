@@ -90,7 +90,7 @@ export default function OnlineUsers({ currentUserRole }: { currentUserRole?: str
               users.map((u) => (
                 <div key={u.id} className="p-3 border-b border-white/5 flex items-center gap-3">
                   <div className="relative">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-700/50 text-white font-bold text-sm">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/50 text-white font-bold text-sm">
                       {u.name.charAt(0)}
                     </div>
                     <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-[#161f33]" />

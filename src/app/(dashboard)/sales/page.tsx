@@ -47,7 +47,7 @@ export default async function SalesDashboard() {
         <StatCard label="العقود" value={closedWon} icon="🤑" accent="text-status-won" />
         <StatCard label="تم دخول ميتنج" value={enteredMeetings} icon="📹" accent="text-blue-400" />
         <StatCard label="تم تحديد متابعة" value={followUpsScheduled} icon="📆" accent="text-amber-400" />
-        <StatCard label="عقود مرفوعة" value={uploadedContracts} icon="📄" accent="text-indigo-400" />
+        <StatCard label="عقود مرفوعة" value={uploadedContracts} icon="📄" accent="text-accent-soft" />
       </div>
 
       <div className="glass-panel p-5">

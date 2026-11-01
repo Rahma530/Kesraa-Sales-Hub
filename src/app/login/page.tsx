@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -36,14 +37,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="flex min-h-screen items-center justify-center bg-kesra-hero px-4">
       <div className="glass-panel w-full max-w-md p-10 py-12">
         <div className="mb-10 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/20 text-3xl">
-            📞
+          <div className="mx-auto mb-5 flex h-16 w-32 items-center justify-center">
+            <Image
+              src="/branding/kesra-logo.png"
+              alt="Kesra"
+              width={320}
+              height={110}
+              className="kesra-logo h-auto w-full"
+              priority
+            />
           </div>
           <h1 className="text-2xl font-bold text-white">TeleSales CRM</h1>
-          <p className="mt-1 text-sm text-slate-400">تسجيل الدخول إلى حسابك</p>
+          <p className="mt-1 text-sm text-[#a89bb8]">تسجيل الدخول إلى حسابك</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

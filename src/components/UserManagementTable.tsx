@@ -266,7 +266,7 @@ export default function UserManagementTable({
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-500">العملاء الحاليين:</span>
-                  <span className="text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded-lg border border-indigo-500/20">
+                  <span className="text-accent-soft font-bold bg-accent/10 px-2 py-0.5 rounded-lg border border-accent/20">
                     {u._count.assignedLeads} عميل
                   </span>
                 </div>
@@ -295,8 +295,8 @@ export default function UserManagementTable({
               <div className="bg-[#182032] border border-white/10 p-6 rounded-3xl shadow-2xl w-full max-w-4xl relative my-auto" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <span className="text-indigo-400">⚙️</span> 
-                    <span>إعدادات الموظف: <span className="text-indigo-300">{u.name}</span></span>
+                    <span className="text-accent-soft">⚙️</span> 
+                    <span>إعدادات الموظف: <span className="text-accent-soft">{u.name}</span></span>
                   </h3>
                   <button onClick={() => setOpenId(null)} className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-colors shrink-0 bg-[#0f1523] border border-white/5 mr-4">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -440,7 +440,7 @@ export default function UserManagementTable({
                     يمكنك رفع ملف بصيغة CSV يحتوي على بيانات الموظفين ليتم إضافتهم دفعة واحدة.
                   </p>
                   
-                  <div className="bg-[#0f1523] p-10 rounded-2xl border-2 border-dashed border-indigo-500/30 flex flex-col items-center justify-center gap-4">
+                  <div className="bg-[#0f1523] p-10 rounded-2xl border-2 border-dashed border-accent/30 flex flex-col items-center justify-center gap-4">
                     <span className="text-5xl">📄</span>
                     <input
                       type="file"

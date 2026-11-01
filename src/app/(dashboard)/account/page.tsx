@@ -28,7 +28,7 @@ export default async function AccountPage() {
     <DashboardShell title="حسابي">
       <div className="mb-6 max-w-md">
         <div className="flex items-center gap-4 mb-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-700 text-white font-bold text-2xl shadow-inner border-2 border-white/10">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-white font-bold text-2xl shadow-inner border-2 border-white/10">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div>

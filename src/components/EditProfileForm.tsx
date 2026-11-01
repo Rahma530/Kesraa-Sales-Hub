@@ -55,7 +55,7 @@ export default function EditProfileForm({ user }: { user: any }) {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-[#121927] border border-white/10 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-indigo-500"
+            className="w-full bg-[#121927] border border-white/10 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-accent"
           />
         </div>
 
@@ -66,7 +66,7 @@ export default function EditProfileForm({ user }: { user: any }) {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-[#121927] border border-white/10 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-indigo-500"
+            className="w-full bg-[#121927] border border-white/10 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-accent"
             dir="ltr"
           />
         </div>
@@ -77,7 +77,7 @@ export default function EditProfileForm({ user }: { user: any }) {
             type="text"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="w-full bg-[#121927] border border-white/10 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-indigo-500"
+            className="w-full bg-[#121927] border border-white/10 rounded-lg p-2.5 text-white text-sm focus:outline-none focus:border-accent"
             dir="ltr"
             placeholder="مثال: 01012345678"
           />
@@ -86,7 +86,7 @@ export default function EditProfileForm({ user }: { user: any }) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg mt-2 disabled:opacity-50 transition-colors"
+          className="w-full bg-accent hover:bg-accent text-white font-bold py-2.5 rounded-lg mt-2 disabled:opacity-50 transition-colors"
         >
           {isSubmitting ? "جاري الحفظ..." : "حفظ التعديلات"}
         </button>
