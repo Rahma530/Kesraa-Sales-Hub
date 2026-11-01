@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import SignOutButton from "@/components/SignOutButton";
@@ -48,15 +47,7 @@ export default async function DashboardShell({
 
           <div className="flex items-center gap-5">
             <SignOutButton />
-            <div className="flex h-14 w-20 items-center justify-center">
-              <Image
-                src="/branding/kesra-logo.png"
-                alt="Kesra CRM"
-                width={200}
-                height={70}
-                className="kesra-logo h-auto w-full"
-              />
-            </div>
+            <p className="text-lg font-bold text-white tracking-wide">Kesra CRM</p>
           </div>
         </div>
         <div className="mx-auto w-full max-w-[96%] px-6 pb-2">
