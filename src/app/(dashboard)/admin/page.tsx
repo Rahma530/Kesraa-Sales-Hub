@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import DashboardShell from "@/components/DashboardShell";
 import StatCard from "@/components/StatCard";
+import { ClipboardList, Flame, Calendar, Handshake, CheckCircle2, TrendingUp } from "lucide-react";
 import LeadTable from "@/components/LeadTable";
 import {
   StatusBarChart,
@@ -147,12 +148,12 @@ export default async function AdminDashboard() {
       <AdminTodoList followUps={todayFollowUps} meetings={todayMeetings} />
 
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-6">
-        <StatCard label="إجمالي الليدز" value={totalLeads} icon="📋" />
-        <StatCard label="Hot / Cold" value={hotGold} icon="🔥" accent="text-status-hot" />
-        <StatCard label="Meetings اليوم" value={meetingsToday} icon="📅" />
-        <StatCard label="تم التحويل" value={transferred} icon="🤝" />
-        <StatCard label="العقود" value={closedWon} icon="✅" accent="text-status-won" />
-        <StatCard label="نسبة التحويل" value={`${conversionRate}%`} icon="📈" accent="text-accent-soft" />
+        <StatCard label="إجمالي الليدز" value={totalLeads} icon={<ClipboardList size={18} />} />
+        <StatCard label="Hot / Cold" value={hotGold} icon={<Flame size={18} />} accent="text-status-hot" />
+        <StatCard label="Meetings اليوم" value={meetingsToday} icon={<Calendar size={18} />} />
+        <StatCard label="تم التحويل" value={transferred} icon={<Handshake size={18} />} />
+        <StatCard label="العقود" value={closedWon} icon={<CheckCircle2 size={18} />} accent="text-status-won" />
+        <StatCard label="نسبة التحويل" value={`${conversionRate}%`} icon={<TrendingUp size={18} />} accent="text-accent-soft" />
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { playNotificationSound } from "@/lib/audio";
 import dynamic from "next/dynamic";
+import { Users, MessageCircle, X, Check, CheckCheck } from "lucide-react";
 
 const EmojiPicker = dynamic(
   () => {
@@ -425,7 +426,7 @@ export default function ChatBox() {
                 </button>
                 <div className="relative">
                   <div className={`flex h-9 w-9 items-center justify-center rounded-full text-white font-bold text-sm ${selectedChat.isGroup ? 'bg-emerald-600' : 'bg-accent'}`}>
-                    {selectedChat.isGroup ? '👥' : selectedChat.name.charAt(0)}
+                    {selectedChat.isGroup ? <Users size={16} /> : selectedChat.name.charAt(0)}
                   </div>
                   {!selectedChat.isGroup && <span className={`absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-[#121927] ${isOnline(selectedChat.lastActiveAt || null) ? 'bg-green-500' : 'bg-slate-500'}`} />}
                 </div>
@@ -450,7 +451,7 @@ export default function ChatBox() {
               <div className="flex flex-col w-full gap-3 mt-1">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
-                    <span className="text-xl">💬</span>
+                    <MessageCircle size={20} className="text-slate-200" />
                     <h3 className="text-white font-bold text-sm">الرسائل والمحادثات</h3>
                   </div>
                   {activeTab === "groups" && (
@@ -476,8 +477,8 @@ export default function ChatBox() {
               </div>
             )}
             
-            <button onClick={() => setIsOpen(false)} className="absolute top-4 left-4 text-red-500 hover:text-red-400 hover:scale-110 transition-transform font-bold text-lg p-1">
-              ✕
+            <button onClick={() => setIsOpen(false)} className="absolute top-4 left-4 text-red-500 hover:text-red-400 hover:scale-110 transition-transform p-1">
+              <X size={18} />
             </button>
           </div>
           
@@ -605,7 +606,7 @@ export default function ChatBox() {
                     <div className="flex items-center gap-3 overflow-hidden">
                       <div className="relative shrink-0">
                         <div className={`flex h-11 w-11 items-center justify-center rounded-full text-white font-bold text-lg border border-white/10 ${conv.isGroup ? 'bg-emerald-800' : 'bg-slate-800'}`}>
-                          {conv.isGroup ? '👥' : name.charAt(0)}
+                          {conv.isGroup ? <Users size={16} /> : name.charAt(0)}
                         </div>
                         {!conv.isGroup && <span className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-[#0b1120] ${isOnline(conv.user!.lastActiveAt) ? 'bg-green-500' : 'bg-slate-500'}`} />}
                       </div>
@@ -615,9 +616,9 @@ export default function ChatBox() {
                         </h4>
                         {conv.latestMessage && (
                           <p className="text-xs text-slate-400 truncate mt-1" dir="rtl">
-                            {conv.latestMessage.content.startsWith("data:audio") 
-                              ? "🎤 رسالة صوتية" 
-                              : conv.latestMessage.content.startsWith("[FILE:") ? "📎 ملف مرفق" : conv.latestMessage.content}
+                            {conv.latestMessage.content.startsWith("data:audio")
+                              ? "رسالة صوتية"
+                              : conv.latestMessage.content.startsWith("[FILE:") ? "ملف مرفق" : conv.latestMessage.content}
                           </p>
                         )}
                       </div>
@@ -741,8 +742,8 @@ export default function ChatBox() {
                             {new Date(msg.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           {isMe && (
-                            <span className={`text-[12px] flex items-center ${msg.isRead ? 'text-blue-500' : 'text-slate-500'}`}>
-                              {msg.isRead ? '✓✓' : '✓'}
+                            <span className={`flex items-center ${msg.isRead ? 'text-blue-500' : 'text-slate-500'}`}>
+                              {msg.isRead ? <CheckCheck size={13} /> : <Check size={13} />}
                             </span>
                           )}
                         </div>

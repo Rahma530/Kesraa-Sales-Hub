@@ -11,7 +11,7 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
-  title: "TeleSales CRM",
+  title: "Kesra CRM",
   description: "نظام إدارة فريق التيلي سيلز والسيلز",
 };
 

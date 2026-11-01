@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import DashboardShell from "@/components/DashboardShell";
 import StatCard from "@/components/StatCard";
+import { Handshake, Calendar, Trophy, Video, CalendarCheck, FileText } from "lucide-react";
 import SalesClient from "./SalesClient";
 import FollowUpReminderChecker from "@/components/FollowUpReminderChecker";
 
@@ -42,12 +43,12 @@ export default async function SalesDashboard() {
       <FollowUpReminderChecker />
 
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <StatCard label="إجمالي عملائي" value={myLeads.length} icon="🤝" />
-        <StatCard label="مواعيد الميتنج اليوم" value={meetingsToday} icon="📅" accent="text-accent-soft" />
-        <StatCard label="العقود" value={closedWon} icon="🤑" accent="text-status-won" />
-        <StatCard label="تم دخول ميتنج" value={enteredMeetings} icon="📹" accent="text-blue-400" />
-        <StatCard label="تم تحديد متابعة" value={followUpsScheduled} icon="📆" accent="text-amber-400" />
-        <StatCard label="عقود مرفوعة" value={uploadedContracts} icon="📄" accent="text-accent-soft" />
+        <StatCard label="إجمالي عملائي" value={myLeads.length} icon={<Handshake size={18} />} />
+        <StatCard label="مواعيد الميتنج اليوم" value={meetingsToday} icon={<Calendar size={18} />} accent="text-accent-soft" />
+        <StatCard label="العقود" value={closedWon} icon={<Trophy size={18} />} accent="text-status-won" />
+        <StatCard label="تم دخول ميتنج" value={enteredMeetings} icon={<Video size={18} />} accent="text-blue-400" />
+        <StatCard label="تم تحديد متابعة" value={followUpsScheduled} icon={<CalendarCheck size={18} />} accent="text-amber-400" />
+        <StatCard label="عقود مرفوعة" value={uploadedContracts} icon={<FileText size={18} />} accent="text-accent-soft" />
       </div>
 
       <div className="glass-panel p-5">

@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 import StatusBadge from "@/components/StatusBadge";
 import TierBadge from "@/components/TierBadge";
 import LeadTable from "@/components/LeadTable";
+import { Search, Users, Download } from "lucide-react";
 
 type Employee = { id: string; name: string; role: string; lastActiveAt?: Date | null };
 type Lead = {
@@ -391,7 +392,7 @@ export default function AdminCustomersClient({
           <div className="bg-[#182032] border border-white/10 p-6 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-1">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <span className="text-amber-400">🔍</span> معاينة الشيت قبل الرفع
+                <Search size={16} className="text-amber-400" /> معاينة الشيت قبل الرفع
               </h3>
               <button
                 onClick={() => setPreviewData(null)}
@@ -440,9 +441,9 @@ export default function AdminCustomersClient({
               <p className="text-xs font-bold text-slate-400 mb-3">حالة العملاء بعد الرفع (Tier)</p>
               <div className="flex gap-3">
                 {[
-                  { value: "HOT", label: "🔥 Hot", bg: "bg-rose-500/20 border-rose-500/40 text-rose-400", active: "bg-rose-500 text-white border-rose-500" },
-                  { value: "WARM", label: "🌡️ Warm", bg: "bg-amber-500/20 border-amber-500/40 text-amber-400", active: "bg-amber-500 text-white border-amber-500" },
-                  { value: "COLD", label: "❄️ Cold", bg: "bg-sky-500/20 border-sky-500/40 text-sky-400", active: "bg-sky-500 text-white border-sky-500" },
+                  { value: "HOT", label: "Hot", bg: "bg-rose-500/20 border-rose-500/40 text-rose-400", active: "bg-rose-500 text-white border-rose-500" },
+                  { value: "WARM", label: "Warm", bg: "bg-amber-500/20 border-amber-500/40 text-amber-400", active: "bg-amber-500 text-white border-amber-500" },
+                  { value: "COLD", label: "Cold", bg: "bg-sky-500/20 border-sky-500/40 text-sky-400", active: "bg-sky-500 text-white border-sky-500" },
                 ].map(t => (
                   <button
                     key={t.value}
@@ -501,7 +502,7 @@ export default function AdminCustomersClient({
                 disabled={isUploading || !previewNameKey || !previewPhoneKey}
                 className="px-6 py-2 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors shadow-lg disabled:opacity-50 flex items-center gap-2"
               >
-                {isUploading ? "جاري الرفع..." : `✅ رفع ${previewData.rawJson.length} عميل`}
+                {isUploading ? "جاري الرفع..." : `رفع ${previewData.rawJson.length} عميل`}
               </button>
             </div>
           </div>
@@ -512,7 +513,7 @@ export default function AdminCustomersClient({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121826] p-6 rounded-3xl border border-white/5 shadow-xl">
         <div>
           <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-            <span className="text-accent">👥</span> إدارة وتوزيع العملاء
+            <Users size={18} className="text-accent" /> إدارة وتوزيع العملاء
           </h1>
           <p className="text-slate-400 text-sm">ارفع شيت الإكسيل وقم بتوزيع العملاء على موظفي المبيعات والتيلي سيلز.</p>
         </div>
@@ -610,7 +611,7 @@ export default function AdminCustomersClient({
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl shadow-md transition-colors whitespace-nowrap flex items-center gap-2"
             title="تصدير النتائج الحالية لإكسيل"
           >
-            <span>📥</span> تصدير الداتا
+            <Download size={14} /> تصدير الداتا
           </button>
 
           <div className="text-sm text-accent-soft font-bold px-2 whitespace-nowrap border-r border-accent/30 pr-3">
@@ -621,7 +622,7 @@ export default function AdminCustomersClient({
             className="bg-[#182032] border border-accent/30 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-accent flex-1 min-w-[180px]"
           >
             <option value="">-- اختر الموظف للتحويل --</option>
-            <option value="AUTO" className="text-amber-400 font-bold">🤖 توزيع تلقائي (بالتساوي على التيلي سيلز)</option>
+            <option value="AUTO" className="text-amber-400 font-bold">توزيع تلقائي (بالتساوي على التيلي سيلز)</option>
             {employees.map(emp => (
               <option key={emp.id} value={emp.id}>{emp.name} ({emp.role === "TELE_SALES" ? "Tele" : "Sales"})</option>
             ))}

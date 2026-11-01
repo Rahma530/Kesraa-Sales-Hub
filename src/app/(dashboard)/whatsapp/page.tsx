@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import DashboardShell from "@/components/DashboardShell";
 import Image from "next/image";
+import { CheckCircle2 } from "lucide-react";
 
 type WaState = {
   status: "DISCONNECTED" | "INITIALIZING" | "QR_READY" | "CONNECTED";
@@ -88,7 +89,7 @@ export default function WhatsAppSetupPage() {
               </div>
               <div className="text-right text-sm text-slate-300 space-y-3 max-w-sm mx-auto bg-white/5 p-4 rounded-xl border border-white/10">
                 <p>1️⃣ افتح تطبيق <strong>واتساب</strong> على هاتفك</p>
-                <p>2️⃣ اضغط على <strong>القائمة</strong> (⋮) أو <strong>الإعدادات</strong> (⚙️) واختر <strong>الأجهزة المرتبطة</strong> (Linked Devices)</p>
+                <p>2. اضغط على <strong>القائمة</strong> (⋮) أو <strong>الإعدادات</strong> واختر <strong>الأجهزة المرتبطة</strong> (Linked Devices)</p>
                 <p>3️⃣ اضغط على <strong>ربط جهاز</strong> وقم بتوجيه الكاميرا إلى هذا الرمز أعلاه</p>
               </div>
             </div>
@@ -101,7 +102,7 @@ export default function WhatsAppSetupPage() {
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-green-400 mb-2">تم الربط بنجاح! 🎉</h3>
+              <h3 className="text-2xl font-bold text-green-400 mb-2 flex items-center justify-center gap-2"><CheckCircle2 size={24} /> تم الربط بنجاح!</h3>
               <p className="text-slate-300">السيستم الآن متصل بحساب الواتساب الخاص بك.</p>
               <p className="text-sm text-slate-500 mt-2">يمكنك الآن التوجه لجدول العملاء وإرسال الرسائل بضغطة زر.</p>
             </div>

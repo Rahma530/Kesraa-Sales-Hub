@@ -6,6 +6,7 @@ import { can } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import DashboardShell from "@/components/DashboardShell";
 import StatCard from "@/components/StatCard";
+import { ClipboardList, Handshake, CheckCircle2, TrendingUp } from "lucide-react";
 import {
   StatusBarChart,
   TierPieChart,
@@ -77,10 +78,10 @@ export default async function ReportsPage() {
   return (
     <DashboardShell title="التقارير والتحليلات">
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="إجمالي الليدز" value={totalLeads} icon="📋" />
-        <StatCard label="تم التحويل لـ Sales" value={transferred} icon="🤝" />
-        <StatCard label="العقود" value={closedWon} icon="✅" accent="text-status-won" />
-        <StatCard label="نسبة التحويل لصفقة" value={`${conversionRate}%`} icon="📈" accent="text-accent-soft" />
+        <StatCard label="إجمالي الليدز" value={totalLeads} icon={<ClipboardList size={18} />} />
+        <StatCard label="تم التحويل لـ Sales" value={transferred} icon={<Handshake size={18} />} />
+        <StatCard label="العقود" value={closedWon} icon={<CheckCircle2 size={18} />} accent="text-status-won" />
+        <StatCard label="نسبة التحويل لصفقة" value={`${conversionRate}%`} icon={<TrendingUp size={18} />} accent="text-accent-soft" />
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import DashboardShell from "@/components/DashboardShell";
+import { ClipboardList, Calendar } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
@@ -44,7 +45,7 @@ export default async function MeetingsReportPage() {
         
         {completedMeetings.length === 0 ? (
           <div className="py-12 text-center text-slate-500">
-            <span className="text-3xl block mb-2">📋</span>
+            <ClipboardList size={32} className="mx-auto mb-2 text-slate-400" />
             لا يوجد تقارير مقابلات مسجلة حتى الآن
           </div>
         ) : (
@@ -80,7 +81,7 @@ export default async function MeetingsReportPage() {
                 </div>
 
                 <div className="mt-auto pt-3 border-t border-white/5 text-[11px] text-slate-500 flex items-center justify-between">
-                  <span>📅 موعد المقابلة الأساسي:</span>
+                  <span className="flex items-center gap-1.5"><Calendar size={14} /> موعد المقابلة الأساسي:</span>
                   <span className="text-slate-400">{formatDateTime(meeting.scheduledAt)}</span>
                 </div>
               </div>

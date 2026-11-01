@@ -48,14 +48,10 @@ export default async function DashboardShell({
 
           <div className="flex items-center gap-5">
             <SignOutButton />
-            <div className="text-right border-l border-[#b98cf0]/15 pl-5">
-              <p className="text-xl font-extrabold text-white leading-tight tracking-wide">TeleSales CRM</p>
-              <p className="text-sm text-[#a89bb8] font-medium mt-1">{title.replace("لوحة ", "")}</p>
-            </div>
             <div className="flex h-14 w-20 items-center justify-center">
               <Image
                 src="/branding/kesra-logo.png"
-                alt="Kesra"
+                alt="Kesra CRM"
                 width={200}
                 height={70}
                 className="kesra-logo h-auto w-full"
