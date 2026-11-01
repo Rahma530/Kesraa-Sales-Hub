@@ -62,16 +62,28 @@ export function StatusBarChart({ data }: { data: { status: string; count: number
   const chartData = data.map((d) => ({ name: STATUS_LABELS[d.status] ?? d.status, count: d.count }));
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 8 }}>
+      <BarChart data={chartData} margin={{ top: 28, right: 8, left: -20, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
         <XAxis dataKey="name" tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} interval={0} angle={-25} textAnchor="end" height={60} />
-        <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} />
+        <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} domain={[0, (max: number) => Math.ceil(max * 1.2) || 1]} />
         <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
         <Bar dataKey="count" fill={COLORS.accent} radius={[6, 6, 0, 0]}>
           <LabelList dataKey="count" position="top" fill="#ffffff" fontSize={12} fontWeight={700} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+  );
+}
+
+function renderPieValueLabel({ cx, cy, midAngle, innerRadius, outerRadius, value }: any) {
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) / 2;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="#ffffff" fontSize={13} fontWeight={700} textAnchor="middle" dominantBaseline="central">
+      {value}
+    </text>
   );
 }
 
@@ -89,9 +101,8 @@ export function TierPieChart({ data }: { data: { tier: string; count: number }[]
           innerRadius={55}
           outerRadius={90}
           paddingAngle={3}
-          label={({ value }) => value}
+          label={renderPieValueLabel}
           labelLine={false}
-          style={{ fontSize: "13px", fontWeight: 700, fill: "#ffffff" }}
         >
           {chartData.map((entry) => (
             <Cell key={entry.name} fill={TIER_COLORS[entry.name] ?? COLORS.accent} />
@@ -111,10 +122,10 @@ export function TeamPerformanceChart({
 }) {
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 8 }}>
+      <BarChart data={data} margin={{ top: 28, right: 8, left: -20, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
         <XAxis dataKey="name" tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} />
-        <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} />
+        <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} domain={[0, (max: number) => Math.ceil(max * 1.2) || 1]} />
         <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
         <Bar dataKey="count" radius={[6, 6, 0, 0]}>
           <LabelList dataKey="count" position="top" fill="#ffffff" fontSize={12} fontWeight={700} />
