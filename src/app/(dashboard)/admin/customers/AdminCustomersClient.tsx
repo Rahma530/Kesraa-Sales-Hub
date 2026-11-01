@@ -92,7 +92,7 @@ export default function AdminCustomersClient({
         
         const rawJson: any[] = XLSX.utils.sheet_to_json(sheet);
         if (rawJson.length === 0) {
-          showAlert("خطأ", "الملف فارغ أو لا يحتوي على بيانات.");
+          showAlert("Error", "The file is empty or contains no data.");
           setIsUploading(false);
           return;
         }
@@ -142,7 +142,7 @@ export default function AdminCustomersClient({
         setPreviewEmailKey(emailKey);
 
       } catch (error: any) {
-        showAlert("خطأ", "حدث خطأ أثناء قراءة الملف: " + error.message);
+        showAlert("Error", "An error occurred while reading the file: " + error.message);
       } finally {
         setIsUploading(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -180,7 +180,7 @@ export default function AdminCustomersClient({
     }).filter(l => l.name && l.phone && l.phone.length >= 11);
 
     if (mappedLeads.length === 0) {
-      showAlert("خطأ في البيانات", "لم يتم العثور على بيانات صالحة. تأكد من اختيار الأعمدة الصحيحة.");
+      showAlert("Data Error", "No valid data found. Make sure you've selected the correct columns.");
       return;
     }
 
@@ -192,30 +192,30 @@ export default function AdminCustomersClient({
         body: JSON.stringify({ leads: mappedLeads, fileName, tier: previewTier }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "خطأ غير معروف");
-      
+      if (!res.ok) throw new Error(data.error || "Unknown error");
+
       setPreviewData(null);
 
       if (data.status === "PENDING") {
-        // ملف كبير — بيتوزع في الخلفية، مش فورًا
+        // Large file — distributed in the background, not immediately
         showAlert(
-          "جارٍ الرفع والتوزيع",
-          `${data.message || "الملف كبير، جارٍ توزيعه في الخلفية."}\nعدد العملاء في الملف: ${data.totalLeads}.`
+          "Uploading and Distributing",
+          `${data.message || "The file is large, distributing it in the background."}\nNumber of leads in the file: ${data.totalLeads}.`
         );
       } else if (data.duplicates && data.duplicates.length > 0) {
-        const dupSample = data.duplicates.slice(0, 3).join("، ");
-        const moreCount = data.duplicates.length > 3 ? ` و ${data.duplicates.length - 3} آخرين` : "";
+        const dupSample = data.duplicates.slice(0, 3).join(", ");
+        const moreCount = data.duplicates.length > 3 ? ` and ${data.duplicates.length - 3} others` : "";
         showAlert(
-          "تم بنجاح مع وجود مكررين",
-          `تم رفع وتوزيع ${data.count} عميل جديد تلقائيًا على موظفي Tele-Sales.\nتم استبعاد ${data.duplicates.length} رقم لأنه مسجل مسبقاً في النظام (مثل: ${dupSample}${moreCount}).`
+          "Success, with Some Duplicates",
+          `${data.count} new leads were uploaded and automatically distributed to Tele-Sales staff.\n${data.duplicates.length} number(s) were excluded because they already exist in the system (e.g.: ${dupSample}${moreCount}).`
         );
       } else {
-        showAlert("تم بنجاح", `تم رفع وتوزيع ${data.count} عميل تلقائيًا على موظفي Tele-Sales!`);
+        showAlert("Success", `${data.count} leads were uploaded and automatically distributed to Tele-Sales staff!`);
       }
 
       router.refresh();
     } catch (error: any) {
-      showAlert("خطأ", "حدث خطأ أثناء الرفع: " + error.message);
+      showAlert("Error", "An error occurred during upload: " + error.message);
     } finally {
       setIsUploading(false);
     }
@@ -224,8 +224,8 @@ export default function AdminCustomersClient({
 
   // Bulk Assign
   const handleBulkAssign = async () => {
-    if (selectedLeads.size === 0) return showAlert("تنبيه", "يرجى تحديد العملاء أولاً.");
-    if (!assignTarget) return showAlert("تنبيه", "يرجى اختيار الموظف.");
+    if (selectedLeads.size === 0) return showAlert("Notice", "Please select leads first.");
+    if (!assignTarget) return showAlert("Notice", "Please select an employee.");
 
     setIsAssigning(true);
     try {
@@ -241,10 +241,10 @@ export default function AdminCustomersClient({
       if (!res.ok) throw new Error(await res.text());
       
       if (assignTarget === "AUTO") {
-        showAlert("تم بنجاح", `تم توزيع ${selectedLeads.size} عميل بالتساوي على موظفين التيلي سيلز بنجاح!`);
+        showAlert("Success", `${selectedLeads.size} leads were distributed equally among Tele-Sales staff!`);
         // For auto, we wait for router.refresh since we don't know exactly who got what, but we can clear them from UNASSIGNED
       } else {
-        showAlert("تم بنجاح", `تم تحويل ${selectedLeads.size} عميل للموظف بنجاح!`);
+        showAlert("Success", `${selectedLeads.size} leads were transferred to the employee successfully!`);
         // Optimistic update
         const emp = employees.find(e => e.id === assignTarget);
         if (emp) {
@@ -255,7 +255,7 @@ export default function AdminCustomersClient({
       setAssignTarget("");
       router.refresh();
     } catch (error: any) {
-      showAlert("خطأ", "حدث خطأ أثناء التحويل: " + error.message);
+      showAlert("Error", "An error occurred during the transfer: " + error.message);
     } finally {
       setIsAssigning(false);
     }
@@ -263,9 +263,9 @@ export default function AdminCustomersClient({
 
   // Bulk Delete
   const handleBulkDelete = () => {
-    if (selectedLeads.size === 0) return showAlert("تنبيه", "يرجى تحديد العملاء أولاً.");
-    
-    showConfirm("تأكيد الحذف", `هل أنت متأكد من حذف ${selectedLeads.size} عميل بشكل نهائي؟`, async () => {
+    if (selectedLeads.size === 0) return showAlert("Notice", "Please select leads first.");
+
+    showConfirm("Confirm Delete", `Are you sure you want to permanently delete ${selectedLeads.size} leads?`, async () => {
       setIsDeleting(true);
       try {
         const res = await fetch("/api/admin/leads/bulk-delete", {
@@ -276,12 +276,12 @@ export default function AdminCustomersClient({
 
         if (!res.ok) throw new Error(await res.text());
         
-        showAlert("تم بنجاح", `تم حذف العملاء بنجاح!`);
+        showAlert("Success", `Leads deleted successfully!`);
         setSelectedLeads(new Set());
         router.refresh();
         setLeads(leads.filter(l => !selectedLeads.has(l.id)));
       } catch (error: any) {
-        showAlert("خطأ", "حدث خطأ أثناء الحذف: " + error.message);
+        showAlert("Error", "An error occurred while deleting: " + error.message);
       } finally {
         setIsDeleting(false);
       }
@@ -323,17 +323,17 @@ export default function AdminCustomersClient({
   });
 
   const handleExport = () => {
-    if (filteredLeads.length === 0) return showAlert("تنبيه", "لا يوجد بيانات لتصديرها.");
-    
-    const headers = ["الاسم", "رقم الهاتف", "الشركة", "الحالة", "التقييم", "الموظف المسؤول", "تاريخ الإضافة"];
+    if (filteredLeads.length === 0) return showAlert("Notice", "No data to export.");
+
+    const headers = ["Name", "Phone Number", "Company", "Status", "Tier", "Assigned Employee", "Date Added"];
     const csvData = filteredLeads.map(l => [
       l.name,
       l.phone,
       l.company || "",
       l.status,
       l.tier,
-      l.assignedTo?.name || "غير معين",
-      new Date(l.createdAt).toLocaleDateString("ar-EG")
+      l.assignedTo?.name || "Unassigned",
+      new Date(l.createdAt).toLocaleDateString("en-US")
     ]);
     
     const csvContent = "\uFEFF" + [headers, ...csvData].map(row => 
@@ -355,7 +355,7 @@ export default function AdminCustomersClient({
       {modal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-[#182032] border border-white/10 p-6 rounded-2xl shadow-2xl max-w-md w-full transform transition-all scale-100 opacity-100">
-            <h3 className={`text-xl font-bold mb-3 ${modal.title.includes("خطأ") ? "text-rose-500" : modal.title.includes("بنجاح") ? "text-emerald-500" : "text-white"}`}>
+            <h3 className={`text-xl font-bold mb-3 ${modal.title.includes("Error") ? "text-rose-500" : modal.title.includes("Success") ? "text-emerald-500" : "text-white"}`}>
               {modal.title}
             </h3>
             <p className="text-slate-300 text-[15px] mb-8 leading-relaxed">
@@ -367,10 +367,10 @@ export default function AdminCustomersClient({
                   onClick={() => setModal({ ...modal, isOpen: false })}
                   className="px-5 py-2 rounded-xl text-sm font-bold text-slate-300 bg-white/5 hover:bg-white/10 transition-colors"
                 >
-                  إلغاء
+                  Cancel
                 </button>
               )}
-              <button 
+              <button
                 onClick={() => {
                   if (modal.type === "confirm" && modal.onConfirm) modal.onConfirm();
                   setModal({ ...modal, isOpen: false });
@@ -379,7 +379,7 @@ export default function AdminCustomersClient({
                   modal.type === "confirm" ? "bg-rose-600 hover:bg-rose-500" : "bg-accent hover:bg-accent"
                 }`}
               >
-                {modal.type === "confirm" ? "نعم، متأكد" : "حسناً"}
+                {modal.type === "confirm" ? "Yes, I'm Sure" : "OK"}
               </button>
             </div>
           </div>
@@ -392,12 +392,12 @@ export default function AdminCustomersClient({
           <div className="bg-[#182032] border border-white/10 p-6 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-1">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <Search size={16} className="text-amber-400" /> معاينة الشيت قبل الرفع
+                <Search size={16} className="text-amber-400" /> Sheet Preview Before Upload
               </h3>
               <button
                 onClick={() => setPreviewData(null)}
                 className="text-rose-500 hover:text-white hover:bg-rose-600 transition-colors p-1.5 rounded-lg border border-rose-500/30 hover:border-rose-600 shrink-0"
-                title="إغلاق"
+                title="Close"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -406,19 +406,19 @@ export default function AdminCustomersClient({
               </button>
             </div>
             <p className="text-slate-400 text-sm mb-5">
-              السيستم اكتشف الأعمدة تلقائياً. تحقق من اختيار الأعمدة الصحيحة قبل الرفع.
+              The system auto-detected the columns. Verify the correct columns are selected before uploading.
             </p>
 
             {/* Column Mapping Selectors */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
               {[
-                { label: "عمود الاسم *", value: previewNameKey, setter: setPreviewNameKey, color: "purple" },
-                { label: "عمود التليفون *", value: previewPhoneKey, setter: setPreviewPhoneKey, color: "emerald" },
-                { label: "عمود الإيميل", value: previewEmailKey, setter: setPreviewEmailKey, color: "cyan" },
-                { label: "عمود الشركة", value: previewCompanyKey, setter: setPreviewCompanyKey, color: "sky" },
-                { label: "عمود الملاحظات / الاحتياج", value: previewNeedKey, setter: setPreviewNeedKey, color: "violet" },
-                { label: "عمود رابط المتجر / الموقع", value: previewStoreUrlKey, setter: setPreviewStoreUrlKey, color: "amber" },
-                { label: "عمود السوشيال ميديا", value: previewSocialKey, setter: setPreviewSocialKey, color: "rose" },
+                { label: "Name Column *", value: previewNameKey, setter: setPreviewNameKey, color: "purple" },
+                { label: "Phone Column *", value: previewPhoneKey, setter: setPreviewPhoneKey, color: "emerald" },
+                { label: "Email Column", value: previewEmailKey, setter: setPreviewEmailKey, color: "cyan" },
+                { label: "Company Column", value: previewCompanyKey, setter: setPreviewCompanyKey, color: "sky" },
+                { label: "Notes / Need Column", value: previewNeedKey, setter: setPreviewNeedKey, color: "violet" },
+                { label: "Store / Website Link Column", value: previewStoreUrlKey, setter: setPreviewStoreUrlKey, color: "amber" },
+                { label: "Social Media Column", value: previewSocialKey, setter: setPreviewSocialKey, color: "rose" },
               ].map(({ label, value, setter, color }) => (
                 <div key={label}>
                   <label className={`block text-xs font-bold mb-1 text-${color}-400`}>{label}</label>
@@ -427,7 +427,7 @@ export default function AdminCustomersClient({
                     onChange={e => setter(e.target.value)}
                     className="w-full bg-[#0f1523] border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-accent/50"
                   >
-                    <option value="">-- لا يوجد --</option>
+                    <option value="">-- None --</option>
                     {previewData.allKeys.map(k => (
                       <option key={k} value={k}>{k}</option>
                     ))}
@@ -438,7 +438,7 @@ export default function AdminCustomersClient({
 
             {/* Tier Picker */}
             <div className="mb-6 bg-[#0f1523] rounded-xl p-4 border border-white/5">
-              <p className="text-xs font-bold text-slate-400 mb-3">حالة العملاء بعد الرفع (Tier)</p>
+              <p className="text-xs font-bold text-slate-400 mb-3">Lead Tier After Upload</p>
               <div className="flex gap-3">
                 {[
                   { value: "HOT", label: "Hot", bg: "bg-rose-500/20 border-rose-500/40 text-rose-400", active: "bg-rose-500 text-white border-rose-500" },
@@ -459,16 +459,16 @@ export default function AdminCustomersClient({
             {/* Data Preview Table */}
             <div className="rounded-xl border border-white/10 overflow-hidden mb-6">
               <div className="bg-[#0f1523] px-4 py-2 text-xs font-bold text-slate-400 border-b border-white/5">
-                معاينة أول 5 صفوف من البيانات
+                Preview of the First 5 Rows
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-right">
                   <thead className="bg-[#0a0f1a]">
                     <tr>
-                      <th className="px-3 py-2 text-accent-soft font-bold">الاسم</th>
-                      <th className="px-3 py-2 text-emerald-400 font-bold">التليفون</th>
-                      <th className="px-3 py-2 text-sky-400 font-bold">الشركة</th>
-                      <th className="px-3 py-2 text-violet-400 font-bold">الملاحظات</th>
+                      <th className="px-3 py-2 text-accent-soft font-bold">Name</th>
+                      <th className="px-3 py-2 text-emerald-400 font-bold">Phone</th>
+                      <th className="px-3 py-2 text-sky-400 font-bold">Company</th>
+                      <th className="px-3 py-2 text-violet-400 font-bold">Notes</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -488,21 +488,21 @@ export default function AdminCustomersClient({
               </div>
             </div>
 
-            <p className="text-slate-500 text-xs mb-5">إجمالي الصفوف في الملف: <span className="text-white font-bold">{previewData.rawJson.length} سطر</span></p>
+            <p className="text-slate-500 text-xs mb-5">Total rows in file: <span className="text-white font-bold">{previewData.rawJson.length} rows</span></p>
 
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setPreviewData(null)}
                 className="px-5 py-2 rounded-xl text-sm font-bold text-slate-300 bg-white/5 hover:bg-white/10 transition-colors"
               >
-                إلغاء
+                Cancel
               </button>
               <button
                 onClick={handleConfirmUpload}
                 disabled={isUploading || !previewNameKey || !previewPhoneKey}
                 className="px-6 py-2 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors shadow-lg disabled:opacity-50 flex items-center gap-2"
               >
-                {isUploading ? "جاري الرفع..." : `رفع ${previewData.rawJson.length} عميل`}
+                {isUploading ? "Uploading..." : `Upload ${previewData.rawJson.length} leads`}
               </button>
             </div>
           </div>
@@ -513,9 +513,9 @@ export default function AdminCustomersClient({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#121826] p-6 rounded-3xl border border-white/5 shadow-xl">
         <div>
           <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-            <Users size={18} className="text-accent" /> إدارة وتوزيع العملاء
+            <Users size={18} className="text-accent" /> Lead Management & Distribution
           </h1>
-          <p className="text-slate-400 text-sm">ارفع شيت الإكسيل وقم بتوزيع العملاء على موظفي المبيعات والتيلي سيلز.</p>
+          <p className="text-slate-400 text-sm">Upload an Excel sheet and distribute leads to your Sales and Tele-Sales staff.</p>
         </div>
         
         <div>
@@ -531,14 +531,14 @@ export default function AdminCustomersClient({
             disabled={isUploading}
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors flex items-center gap-2 disabled:opacity-50"
           >
-            {isUploading ? "جاري الرفع..." : (
+            {isUploading ? "Uploading..." : (
               <>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                   <polyline points="17 8 12 3 7 8"></polyline>
                   <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
-                رفع شيت Excel
+                Upload Excel Sheet
               </>
             )}
           </button>
@@ -553,7 +553,7 @@ export default function AdminCustomersClient({
           }`}
           onClick={() => setActiveTab("table")}
         >
-          توزيع العملاء (الجدول)
+          Lead Distribution (Table)
         </button>
         <button
           className={`px-6 py-3 font-bold text-sm transition-colors border-b-2 ${
@@ -561,7 +561,7 @@ export default function AdminCustomersClient({
           }`}
           onClick={() => setActiveTab("cards")}
         >
-          متابعة العملاء
+          Lead Follow-up
         </button>
       </div>
 
@@ -573,76 +573,76 @@ export default function AdminCustomersClient({
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
           <div className="relative flex-1 min-w-[200px]">
-            <input 
-              type="text" placeholder="بحث بالاسم أو الرقم..." 
+            <input
+              type="text" placeholder="Search by name or number..."
               value={search} onChange={e => setSearch(e.target.value)}
               className="w-full bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-accent/50"
             />
           </div>
-          <select 
+          <select
             value={filterEmployee} onChange={e => setFilterEmployee(e.target.value)}
             className="bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-accent/50 min-w-[150px]"
           >
-            <option value="ALL">كل الموظفين</option>
-            <option value="UNASSIGNED">غير معين (جديد)</option>
+            <option value="ALL">All Employees</option>
+            <option value="UNASSIGNED">Unassigned (New)</option>
             {employees.map(emp => (
-              <option key={emp.id} value={emp.id}>{emp.name} ({emp.role === "TELE_SALES" ? "تيلي" : "سيلز"})</option>
+              <option key={emp.id} value={emp.id}>{emp.name} ({emp.role === "TELE_SALES" ? "Tele" : "Sales"})</option>
             ))}
           </select>
-          <select 
+          <select
             value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
             className="bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-accent/50 min-w-[150px]"
           >
-            <option value="ALL">كل الحالات</option>
-            <option value="UNASSIGNED">غير موزع فقط</option>
-            <option value="NEW">جديد</option>
-            <option value="CONTACTED">تم التواصل</option>
-            <option value="INTERESTED">مهتم</option>
-            <option value="NOT_INTERESTED">غير مهتم</option>
-            <option value="TRANSFERRED_TO_SALES">تم التحويل لـ Sales</option>
+            <option value="ALL">All Statuses</option>
+            <option value="UNASSIGNED">Unassigned Only</option>
+            <option value="NEW">New</option>
+            <option value="CONTACTED">Contacted</option>
+            <option value="INTERESTED">Interested</option>
+            <option value="NOT_INTERESTED">Not Interested</option>
+            <option value="TRANSFERRED_TO_SALES">Transferred to Sales</option>
           </select>
         </div>
 
         {/* Bulk Actions */}
         <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto p-3 bg-accent/10 rounded-2xl border border-accent/20">
-          
-          <button 
+
+          <button
             onClick={handleExport}
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl shadow-md transition-colors whitespace-nowrap flex items-center gap-2"
-            title="تصدير النتائج الحالية لإكسيل"
+            title="Export the current results to Excel"
           >
-            <Download size={14} /> تصدير الداتا
+            <Download size={14} /> Export Data
           </button>
 
           <div className="text-sm text-accent-soft font-bold px-2 whitespace-nowrap border-r border-accent/30 pr-3">
-            محدد: {selectedLeads.size}
+            Selected: {selectedLeads.size}
           </div>
-          <select 
+          <select
             value={assignTarget} onChange={e => setAssignTarget(e.target.value)}
             className="bg-[#182032] border border-accent/30 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-accent flex-1 min-w-[180px]"
           >
-            <option value="">-- اختر الموظف للتحويل --</option>
-            <option value="AUTO" className="text-amber-400 font-bold">توزيع تلقائي (بالتساوي على التيلي سيلز)</option>
+            <option value="">-- Select employee to transfer --</option>
+            <option value="AUTO" className="text-amber-400 font-bold">Auto-distribute (evenly among Tele-Sales)</option>
             {employees.map(emp => (
               <option key={emp.id} value={emp.id}>{emp.name} ({emp.role === "TELE_SALES" ? "Tele" : "Sales"})</option>
             ))}
           </select>
-          <button 
+          <button
             onClick={handleBulkAssign}
             disabled={isAssigning || selectedLeads.size === 0 || !assignTarget}
             className="bg-accent hover:bg-accent text-white font-bold py-2 px-6 rounded-xl shadow-md transition-colors disabled:opacity-50 whitespace-nowrap"
           >
-            {isAssigning ? "جاري..." : "توزيع"}
+            {isAssigning ? "Processing..." : "Assign"}
           </button>
-          
+
           {canDelete && (
-            <button 
+            <button
               onClick={handleBulkDelete}
               disabled={isDeleting || selectedLeads.size === 0}
               className="bg-rose-500/10 hover:bg-rose-600 text-rose-500 hover:text-white font-bold py-2 px-4 rounded-xl shadow-md transition-colors disabled:opacity-50 whitespace-nowrap border border-rose-500/20 ml-2"
-              title="حذف العملاء المحددين"
+              title="Delete selected leads"
             >
-              {isDeleting ? "..." : "حذف"}
+              {isDeleting ? "..." : "Delete"}
             </button>
           )}
         </div>
@@ -662,19 +662,19 @@ export default function AdminCustomersClient({
                     className="w-4 h-4 rounded bg-[#182032] border-white/20 text-accent focus:ring-accent/50 cursor-pointer"
                   />
                 </th>
-                <th className="px-6 py-4">العميل</th>
-                <th className="px-6 py-4">الهاتف</th>
-                <th className="px-6 py-4">الشركة</th>
-                <th className="px-6 py-4">الحالة</th>
-                <th className="px-6 py-4">الموظف المسؤول</th>
-                <th className="px-6 py-4">تاريخ الإضافة</th>
+                <th className="px-6 py-4">Lead</th>
+                <th className="px-6 py-4">Phone</th>
+                <th className="px-6 py-4">Company</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Assigned Employee</th>
+                <th className="px-6 py-4">Date Added</th>
               </tr>
             </thead>
             <tbody>
               {filteredLeads.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
-                    لا يوجد عملاء متاحين بالفلتر الحالي.
+                    No leads available with the current filter.
                   </td>
                 </tr>
               ) : (
@@ -702,11 +702,11 @@ export default function AdminCustomersClient({
                           {lead.assignedTo.name}
                         </span>
                       ) : (
-                        <span className="text-slate-500 text-xs font-semibold bg-white/5 px-3 py-1 rounded-full">غير معين</span>
+                        <span className="text-slate-500 text-xs font-semibold bg-white/5 px-3 py-1 rounded-full">Unassigned</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-xs text-slate-500">
-                      {new Date(lead.createdAt).toLocaleDateString("ar-EG")}
+                      {new Date(lead.createdAt).toLocaleDateString("en-US")}
                     </td>
                   </tr>
                 ))

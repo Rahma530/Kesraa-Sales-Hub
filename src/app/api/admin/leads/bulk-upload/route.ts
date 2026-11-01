@@ -5,16 +5,19 @@ import { prisma } from "@/lib/prisma";
 import { LeadSource } from "@/lib/enums";
 import { distributeLeads, BACKGROUND_PROCESSING_THRESHOLD } from "@/lib/lead-distribution";
 
-// هنا كان الخلل الأساسي: الكود القديم كان بيعمل `createMany` مباشر من غير
-// توزيع تلقائي ومن غير إشعارات — فالعميل كان بيتسجل "بدون مالك" ومحدش كان
-// بياخد Notification. دلوقتي الـ route ده بيستخدم نفس دالة التوزيع
-// (`distributeLeads`) المستخدمة في رفع الملفات العادي، فالسلوك بقى موحّد:
-// كل رفع (سواء من هنا أو من شاشة الرفع التانية) بيوزّع تلقائي ويبعت إشعارات.
+// The main bug here used to be: the old code did a direct `createMany` with
+// no automatic distribution and no notifications — so a lead got saved
+// "without an owner" and nobody got a Notification. Now this route uses the
+// same distribution function (`distributeLeads`) used by the regular file
+// upload, so the behavior is unified: every upload (whether from here or
+// from the other upload screen) distributes automatically and sends
+// notifications.
 //
-// الحجم الكبير (أكتر من BACKGROUND_PROCESSING_THRESHOLD صف) بيتعالج في
-// الخلفية: بنرجع رد فوري للـ Admin، والمعالجة بتكمل على السيرفر من غير ما
-// يستنى قدام الشاشة. ده ممكن لأن السيرفر خاص (Node process شغال بشكل دائم)
-// مش Serverless زي Vercel اللي بيوقف التنفيذ بعد الرد.
+// Large sizes (more than BACKGROUND_PROCESSING_THRESHOLD rows) are processed
+// in the background: we return an immediate response to the Admin, and
+// processing continues on the server without the screen waiting. This is
+// possible because the server is a dedicated, long-running Node process,
+// not Serverless like Vercel which stops execution after the response.
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user.role !== "ADMIN" && session.user.role !== "HEAD_OF_SALES")) {
@@ -53,7 +56,7 @@ export async function POST(req: NextRequest) {
     const runDistribution = () =>
       distributeLeads(normalizedLeads, createdById, LeadSource.MANUAL, batch.id, leadTier);
 
-    // الرفعات الصغيرة: بنستنى النتيجة ونرجعها كاملة فورًا — تجربة أبسط للموظف.
+    // Small uploads: we wait for the result and return it in full right away — a simpler experience for the employee.
     if (normalizedLeads.length <= BACKGROUND_PROCESSING_THRESHOLD) {
       const result = await runDistribution();
       await notifyDistributedEmployees(result.distribution, fileName);
@@ -67,9 +70,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // الرفعات الكبيرة: بنرجع رد فوري، والمعالجة بتكمل في الخلفية.
-    // ملاحظة: من غير await هنا عمدًا — العملية بتكمل بعد ما الرد يترجع،
-    // لأن السيرفر عملية Node دائمة التشغيل مش Serverless.
+    // Large uploads: we return an immediate response, and processing continues in the background.
+    // Note: intentionally no await here — the operation continues after the response is returned,
+    // because the server is a long-running Node process, not Serverless.
     runDistribution()
       .then(async (result) => {
         await prisma.uploadBatch.update({
@@ -83,9 +86,9 @@ export async function POST(req: NextRequest) {
         await prisma.notification.create({
           data: {
             userId: createdById,
-            title: "اكتمل رفع العملاء",
-            message: `تم رفع وتوزيع ${result.insertedCount} عميل من ملف ${fileName || "الشيت"}${
-              result.duplicatePhones.length > 0 ? `، واستبعاد ${result.duplicatePhones.length} مكرر` : ""
+            title: "Lead upload complete",
+            message: `${result.insertedCount} leads have been uploaded and distributed from the file ${fileName || "sheet"}${
+              result.duplicatePhones.length > 0 ? `, excluding ${result.duplicatePhones.length} duplicate(s)` : ""
             }.`,
             type: "UPLOAD_COMPLETE",
             link: "/admin/customers",
@@ -101,8 +104,8 @@ export async function POST(req: NextRequest) {
         await prisma.notification.create({
           data: {
             userId: createdById,
-            title: "فشل رفع العملاء",
-            message: `حصل خطأ أثناء معالجة ملف ${fileName || "الشيت"}. راجع السجل مع الدعم الفني.`,
+            title: "Lead upload failed",
+            message: `An error occurred while processing the file ${fileName || "sheet"}. Check the log with technical support.`,
             type: "UPLOAD_FAILED",
             link: "/admin/customers",
           },
@@ -114,7 +117,7 @@ export async function POST(req: NextRequest) {
       status: "PENDING",
       batchId: batch.id,
       totalLeads: normalizedLeads.length,
-      message: "الملف كبير، جارٍ توزيعه في الخلفية. تقدري تتابعي التقدم من قايمة الشيتات.",
+      message: "The file is large, distribution is in progress in the background. You can track progress from the sheets list.",
     });
   } catch (error: any) {
     console.error("Bulk upload error:", error);
@@ -125,8 +128,8 @@ export async function POST(req: NextRequest) {
 async function notifyDistributedEmployees(distribution: Record<string, number>, fileName?: string) {
   const notificationsToCreate = Object.entries(distribution).map(([userId, count]) => ({
     userId,
-    title: "عملاء جدد",
-    message: `تم توزيع ${count} عميل جديد لك من ملف ${fileName || "الشيت"}`,
+    title: "New leads",
+    message: `${count} new lead(s) have been distributed to you from the file ${fileName || "sheet"}`,
     type: "ASSIGNMENT",
     link: "?status=NEW",
   }));

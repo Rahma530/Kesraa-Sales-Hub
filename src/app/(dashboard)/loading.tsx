@@ -2,7 +2,7 @@ import DashboardShell from "@/components/DashboardShell";
 
 export default function DashboardLoading() {
   return (
-    <DashboardShell title="جاري التحميل...">
+    <DashboardShell title="Loading...">
       <div className="flex flex-col gap-6 animate-pulse mt-4">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
           {[...Array(5)].map((_, i) => (

@@ -8,11 +8,11 @@ import { z } from "zod";
 
 import bcrypt from "bcryptjs";
 
-// GET /api/users — كل المستخدمين (Admin فقط)
+// GET /api/users — all users (Admin only)
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || !can(session.user.role, "MANAGE_USERS")) {
-    return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء" }, { status: 403 });
+    return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
 
   const users = await prisma.user.findMany({
@@ -34,22 +34,22 @@ export async function GET() {
 }
 
 const createUserSchema = z.object({
-  name: z.string().min(1, "الاسم مطلوب"),
+  name: z.string().min(1, "Name is required"),
   username: z
     .string()
-    .min(3, "اسم المستخدم لازم يكون 3 حروف على الأقل")
-    .regex(/^[a-zA-Z0-9._-]+$/, "اسم المستخدم يقبل حروف إنجليزي وأرقام فقط"),
-  email: z.string().email("إيميل غير صحيح"),
+    .min(3, "Username must be at least 3 characters")
+    .regex(/^[a-zA-Z0-9._-]+$/, "Username can only contain English letters and numbers"),
+  email: z.string().email("Invalid email"),
   phone: z.string().optional(),
   role: z.nativeEnum(Role),
-  password: z.string().min(6, "كلمة المرور لازم تكون 6 حروف على الأقل"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-// POST /api/users — إنشاء مستخدم جديد (Admin فقط)
+// POST /api/users — create a new user (Admin only)
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || !can(session.user.role, "MANAGE_USERS")) {
-    return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء" }, { status: 403 });
+    return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
   });
   if (existing) {
     return NextResponse.json(
-      { error: "اسم المستخدم أو الإيميل ده مستخدم بالفعل" },
+      { error: "This username or email already exists" },
       { status: 409 }
     );
   }

@@ -7,13 +7,13 @@ import bcrypt from "bcryptjs";
 
 const schema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z.string().min(6, "كلمة المرور الجديدة لازم تكون 6 حروف على الأقل"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
 });
 
-// PATCH /api/account/password — أي مستخدم بيغيّر كلمة مروره بنفسه
+// PATCH /api/account/password — any user changes their own password
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
   const parsed = schema.safeParse(body);
@@ -22,11 +22,11 @@ export async function PATCH(req: NextRequest) {
   }
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!user) return NextResponse.json({ error: "المستخدم غير موجود" }, { status: 404 });
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const isValid = await bcrypt.compare(parsed.data.currentPassword, user.passwordHash);
   if (!isValid) {
-    return NextResponse.json({ error: "كلمة المرور الحالية غير صحيحة" }, { status: 400 });
+    return NextResponse.json({ error: "Current password is incorrect" }, { status: 400 });
   }
 
   const passwordHash = await bcrypt.hash(parsed.data.newPassword, 10);

@@ -51,7 +51,7 @@ export async function distributeLeads(
   });
 
   if (teleSalesTeam.length === 0) {
-    throw new Error("لا يوجد موظفين Tele-Sales نشطين لتوزيع الليدز عليهم");
+    throw new Error("No active Tele-Sales employees to distribute leads to");
   }
 
   // منع تكرار نفس الرقم أكتر من مرة داخل نفس الملف/الطلب (قبل ما نلمس الداتابيز خالص)
@@ -124,7 +124,7 @@ export async function distributeLeads(
             leadId: lead.id,
             userId: createdById,
             type: "LEAD_ASSIGNED",
-            message: "تم توزيع الليد تلقائيًا على موظف Tele-Sales",
+            message: "Lead automatically distributed to a Tele-Sales employee",
           })),
         });
       }

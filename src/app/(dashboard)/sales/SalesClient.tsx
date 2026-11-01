@@ -56,7 +56,7 @@ export default function SalesClient({ leads }: { leads: any[] }) {
                 const event = new CustomEvent("addToast", { 
                   detail: { 
                     type: "warning", 
-                    message: `تذكير: لديك مقابلة مع العميل ${lead.name} بعد ${diffMins === 0 ? 'الآن!' : diffMins + ' دقيقة'}` 
+                    message: `Reminder: you have a meeting with lead ${lead.name} in ${diffMins === 0 ? 'now!' : diffMins + ' minutes'}`
                   } 
                 });
                 window.dispatchEvent(event);
@@ -82,13 +82,13 @@ export default function SalesClient({ leads }: { leads: any[] }) {
 
       <div className="mb-6 flex space-x-2 space-x-reverse overflow-x-auto border-b border-white/10 pb-2">
         {[
-          { key: "all",           label: `الكل (${leads.length})`,                   color: "accent" },
-          { key: "new",           label: `جديد (${newLeads.length})`,              color: "blue" },
-          { key: "meetings_today",label: `مواعيد الميتنج اليوم (${todaysMeetings.length})`, color: "accent" },
-          { key: "no_answer",     label: `لا يرد/غير متاح (${noAnswerLeads.length})`,color: "yellow" },
-          { key: "followup",      label: `يحتاج متابعة (${followupLeads.length})`, color: "purple" },
-          { key: "won",           label: `ناجح (${wonLeads.length})`,              color: "won" },
-          { key: "lost",          label: `خاسر (${lostLeads.length})`,             color: "lost" },
+          { key: "all",           label: `All (${leads.length})`,                   color: "accent" },
+          { key: "new",           label: `New (${newLeads.length})`,              color: "blue" },
+          { key: "meetings_today",label: `Today's Meetings (${todaysMeetings.length})`, color: "accent" },
+          { key: "no_answer",     label: `No Answer/Not Available (${noAnswerLeads.length})`,color: "yellow" },
+          { key: "followup",      label: `Needs Follow-up (${followupLeads.length})`, color: "purple" },
+          { key: "won",           label: `Won (${wonLeads.length})`,              color: "won" },
+          { key: "lost",          label: `Lost (${lostLeads.length})`,             color: "lost" },
         ].map(tab => (
           <button
             key={tab.key}

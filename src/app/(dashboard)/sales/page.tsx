@@ -39,16 +39,16 @@ export default async function SalesDashboard() {
   ]);
 
   return (
-    <DashboardShell title="لوحة المبيعات (Sales)">
+    <DashboardShell title="Sales Dashboard">
       <FollowUpReminderChecker />
 
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <StatCard label="إجمالي عملائي" value={myLeads.length} icon={<Handshake size={18} />} />
-        <StatCard label="مواعيد الميتنج اليوم" value={meetingsToday} icon={<Calendar size={18} />} accent="text-accent-soft" />
-        <StatCard label="العقود" value={closedWon} icon={<Trophy size={18} />} accent="text-status-won" />
-        <StatCard label="تم دخول ميتنج" value={enteredMeetings} icon={<Video size={18} />} accent="text-blue-400" />
-        <StatCard label="تم تحديد متابعة" value={followUpsScheduled} icon={<CalendarCheck size={18} />} accent="text-amber-400" />
-        <StatCard label="عقود مرفوعة" value={uploadedContracts} icon={<FileText size={18} />} accent="text-accent-soft" />
+        <StatCard label="Total Leads" value={myLeads.length} icon={<Handshake size={18} />} />
+        <StatCard label="Today's Meetings" value={meetingsToday} icon={<Calendar size={18} />} accent="text-accent-soft" />
+        <StatCard label="Contracts" value={closedWon} icon={<Trophy size={18} />} accent="text-status-won" />
+        <StatCard label="Meetings Attended" value={enteredMeetings} icon={<Video size={18} />} accent="text-blue-400" />
+        <StatCard label="Follow-ups Scheduled" value={followUpsScheduled} icon={<CalendarCheck size={18} />} accent="text-amber-400" />
+        <StatCard label="Contracts Uploaded" value={uploadedContracts} icon={<FileText size={18} />} accent="text-accent-soft" />
       </div>
 
       <div className="glass-panel p-5">

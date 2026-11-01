@@ -6,11 +6,11 @@ import { can } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 
 
-// GET /api/activity — سجل النشاط الكامل، فلترة اختيارية بالنوع أو بالبحث عن ليد
+// GET /api/activity — full activity log, with optional filtering by type or lead search
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || !can(session.user.role, "VIEW_FULL_ACTIVITY_LOG")) {
-    return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء" }, { status: 403 });
+    return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
 
   const { searchParams } = new URL(req.url);

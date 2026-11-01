@@ -28,18 +28,18 @@ const COLORS = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  NEW: "جديد",
-  CONTACTED: "تم التواصل",
-  NO_ANSWER: "لم يرد",
-  NEEDS_FOLLOWUP: "يحتاج متابعة",
-  INTERESTED: "مهتم",
-  NOT_INTERESTED: "غير مهتم",
+  NEW: "New",
+  CONTACTED: "Contacted",
+  NO_ANSWER: "No Answer",
+  NEEDS_FOLLOWUP: "Needs Follow-up",
+  INTERESTED: "Interested",
+  NOT_INTERESTED: "Not Interested",
   HOT: "Hot",
   COLD: "Cold",
   MEETING_SCHEDULED: "Meeting",
-  TRANSFERRED_TO_SALES: "تحويل لـ Sales",
-  CLOSED_WON: "صفقة ناجحة",
-  CLOSED_LOST: "صفقة خاسرة",
+  TRANSFERRED_TO_SALES: "Transferred to Sales",
+  CLOSED_WON: "Closed (Won)",
+  CLOSED_LOST: "Closed (Lost)",
 };
 
 const TIER_COLORS: Record<string, string> = {

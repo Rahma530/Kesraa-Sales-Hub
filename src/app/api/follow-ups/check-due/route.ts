@@ -45,8 +45,8 @@ export async function POST() {
     prisma.notification.createMany({
       data: dueFollowUps.map((fu) => ({
         userId: session.user.id,
-        title: "حان وقت المتابعة",
-        message: `حان وقت متابعة العميل ${fu.lead.name} (${fu.lead.phone})${fu.notes ? ` — ${fu.notes}` : ""}`,
+        title: "Follow-up is due",
+        message: `It's time to follow up with lead ${fu.lead.name} (${fu.lead.phone})${fu.notes ? ` — ${fu.notes}` : ""}`,
         type: "FOLLOWUP_DUE",
         link: `?search=${fu.lead.phone}`,
       })),

@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
         leadId,
         userId: latestMeeting.ownerId,
         type: "AI_MEETING_ANALYSIS",
-        message: "تم حفظ تسجيل وتحليل الميتنج بواسطة الذكاء الاصطناعي",
+        message: "The meeting recording and AI analysis have been saved",
       },
     });
 

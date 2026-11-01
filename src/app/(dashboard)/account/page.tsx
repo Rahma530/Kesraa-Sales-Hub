@@ -7,10 +7,10 @@ import EditProfileForm from "@/components/EditProfileForm";
 import { prisma } from "@/lib/prisma";
 
 const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "مدير النظام",
-  HEAD_OF_SALES: "رئيس المبيعات",
-  TELE_SALES: "موظف Tele-Sales",
-  SALES: "موظف Sales",
+  ADMIN: "Admin",
+  HEAD_OF_SALES: "Head of Sales",
+  TELE_SALES: "Tele-Sales",
+  SALES: "Sales",
 };
 
 export default async function AccountPage() {
@@ -25,7 +25,7 @@ export default async function AccountPage() {
   if (!user) redirect("/login");
 
   return (
-    <DashboardShell title="حسابي">
+    <DashboardShell title="My Account">
       <div className="mb-6 max-w-md">
         <div className="flex items-center gap-4 mb-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-white font-bold text-2xl shadow-inner border-2 border-white/10">

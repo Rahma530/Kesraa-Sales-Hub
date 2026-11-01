@@ -60,15 +60,15 @@ export default async function ReportsPage() {
     .map((t) => ({ name: t.name, role: t.role, count: t._count.assignedLeads }))
     .sort((a, b) => b.count - a.count);
 
-  // تجميع عدد الليدز الجديدة يوم بيوم لآخر 14 يوم
+  // Aggregate new lead counts day by day for the last 14 days
   const dayBuckets: Record<string, number> = {};
   for (let i = 0; i < 14; i++) {
     const d = new Date(since);
     d.setDate(d.getDate() + i);
-    dayBuckets[d.toLocaleDateString("ar-EG", { day: "2-digit", month: "2-digit" })] = 0;
+    dayBuckets[d.toLocaleDateString("en-US", { day: "2-digit", month: "2-digit" })] = 0;
   }
   recentLeads.forEach((l) => {
-    const key = l.createdAt.toLocaleDateString("ar-EG", { day: "2-digit", month: "2-digit" });
+    const key = l.createdAt.toLocaleDateString("en-US", { day: "2-digit", month: "2-digit" });
     if (key in dayBuckets) dayBuckets[key] += 1;
   });
   const timeSeries = Object.entries(dayBuckets).map(([date, count]) => ({ date, count }));
@@ -76,40 +76,40 @@ export default async function ReportsPage() {
   const conversionRate = totalLeads > 0 ? ((closedWon / totalLeads) * 100).toFixed(1) : "0";
 
   return (
-    <DashboardShell title="التقارير والتحليلات">
+    <DashboardShell title="Reports & Analytics">
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="إجمالي الليدز" value={totalLeads} icon={<ClipboardList size={18} />} />
-        <StatCard label="تم التحويل لـ Sales" value={transferred} icon={<Handshake size={18} />} />
-        <StatCard label="العقود" value={closedWon} icon={<CheckCircle2 size={18} />} accent="text-status-won" />
-        <StatCard label="نسبة التحويل لصفقة" value={`${conversionRate}%`} icon={<TrendingUp size={18} />} accent="text-accent-soft" />
+        <StatCard label="Total Leads" value={totalLeads} icon={<ClipboardList size={18} />} />
+        <StatCard label="Transferred to Sales" value={transferred} icon={<Handshake size={18} />} />
+        <StatCard label="Contracts" value={closedWon} icon={<CheckCircle2 size={18} />} accent="text-status-won" />
+        <StatCard label="Deal Conversion Rate" value={`${conversionRate}%`} icon={<TrendingUp size={18} />} accent="text-accent-soft" />
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="glass-panel p-5">
-          <p className="mb-4 text-sm font-semibold text-white">توزيع الليدز حسب الحالة</p>
+          <p className="mb-4 text-sm font-semibold text-white">Leads by Status</p>
           <StatusBarChart data={statusData} />
         </div>
         <div className="glass-panel p-5">
-          <p className="mb-4 text-sm font-semibold text-white">توزيع الليدز حسب التصنيف</p>
+          <p className="mb-4 text-sm font-semibold text-white">Leads by Tier</p>
           <TierPieChart data={tierData} />
         </div>
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="glass-panel p-5">
-          <p className="mb-4 text-sm font-semibold text-white">أداء الفريق (عدد الليدز الحالية)</p>
+          <p className="mb-4 text-sm font-semibold text-white">Team Performance (Current Lead Count)</p>
           <TeamPerformanceChart data={teamData} />
         </div>
         <div className="glass-panel p-5">
-          <p className="mb-4 text-sm font-semibold text-white">ليدز جديدة آخر 14 يوم</p>
+          <p className="mb-4 text-sm font-semibold text-white">New Leads, Last 14 Days</p>
           <LeadsOverTimeChart data={timeSeries} />
         </div>
       </div>
 
       <div className="glass-panel p-5">
-        <p className="mb-1 text-sm font-semibold text-white">ملخص سريع</p>
+        <p className="mb-1 text-sm font-semibold text-white">Quick Summary</p>
         <p className="text-xs text-slate-500">
-          صفقات خاسرة: {closedLost} — إجمالي الصفقات المغلقة: {closedWon + closedLost}
+          Lost Deals: {closedLost} — Total Closed Deals: {closedWon + closedLost}
         </p>
       </div>
     </DashboardShell>

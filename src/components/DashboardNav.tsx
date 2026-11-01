@@ -9,23 +9,23 @@ export default function DashboardNav({ role }: { role: string }) {
   const links: { href: string; label: string }[] = [];
 
   if (role === "ADMIN" || role === "HEAD_OF_SALES") {
-    links.push({ href: "/admin", label: "لوحة التحكم" });
-    links.push({ href: "/admin/customers", label: "إدارة العملاء" });
-    links.push({ href: "/admin/sheets", label: "إدارة الشيتات" });
-    links.push({ href: "/admin/activity", label: "متابعة الموظفين" });
-    links.push({ href: "/admin/meetings", label: "تقرير بعد ميتنج" });
+    links.push({ href: "/admin", label: "Dashboard" });
+    links.push({ href: "/admin/customers", label: "Lead Management" });
+    links.push({ href: "/admin/sheets", label: "Sheets Management" });
+    links.push({ href: "/admin/activity", label: "Employee Monitoring" });
+    links.push({ href: "/admin/meetings", label: "Post-Meeting Report" });
   }
   if (role === "ADMIN") {
-    links.push({ href: "/admin/users", label: "الموظفين" });
+    links.push({ href: "/admin/users", label: "Employees" });
   }
   if (role === "TELE_SALES") {
-    links.push({ href: "/tele-sales", label: "لوحتي" });
+    links.push({ href: "/tele-sales", label: "My Dashboard" });
   }
   if (role === "SALES") {
-    links.push({ href: "/sales", label: "لوحتي" });
+    links.push({ href: "/sales", label: "My Dashboard" });
   }
   if (role === "ADMIN") {
-    links.push({ href: "/account", label: "حسابي" });
+    links.push({ href: "/account", label: "My Account" });
   }
   // WhatsApp temporarily disabled: this host can't run the persistent
   // Chrome/Puppeteer session whatsapp-web.js needs (confirmed with

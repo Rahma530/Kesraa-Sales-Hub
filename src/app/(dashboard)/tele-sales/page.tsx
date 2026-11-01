@@ -57,14 +57,14 @@ export default async function TeleSalesDashboard() {
   ]);
 
   return (
-    <DashboardShell title="لوحة العمليات (Tele-Sales)">
+    <DashboardShell title="Tele-Sales Dashboard">
       <FollowUpReminderChecker />
 
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="إجمالي عملائي" value={myLeads.length} icon={<User size={18} />} />
-        <StatCard label="متابعات اليوم" value={todaysFollowUps} icon={<Pin size={18} />} accent="text-accent-soft" />
-        <StatCard label="يحتاجون متابعة" value={needsFollowUp} icon={<Clock size={18} />} accent="text-status-gold" />
-        <StatCard label="تم التحويل بنجاح" value={transferred} icon={<CheckCircle2 size={18} />} accent="text-status-won" />
+        <StatCard label="Total Leads" value={myLeads.length} icon={<User size={18} />} />
+        <StatCard label="Today's Follow-ups" value={todaysFollowUps} icon={<Pin size={18} />} accent="text-accent-soft" />
+        <StatCard label="Needs Follow-up" value={needsFollowUp} icon={<Clock size={18} />} accent="text-status-gold" />
+        <StatCard label="Successfully Transferred" value={transferred} icon={<CheckCircle2 size={18} />} accent="text-status-won" />
       </div>
 
       <div className="glass-panel p-5">

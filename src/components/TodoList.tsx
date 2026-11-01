@@ -57,8 +57,8 @@ export default function TodoList({ leads, isSalesView = false }: { leads: any[],
         <div className="flex items-center gap-3">
           <CheckCircle2 size={28} className="text-emerald-400" />
           <div>
-            <h3 className="text-emerald-400 font-bold text-lg">لا يوجد مهام متأخرة أو مجدولة لليوم!</h3>
-            <p className="text-emerald-500/70 text-sm">أنت مسيطر على جميع مهامك. عمل رائع!</p>
+            <h3 className="text-emerald-400 font-bold text-lg">No overdue or scheduled tasks for today!</h3>
+            <p className="text-emerald-500/70 text-sm">You're on top of all your tasks. Great work!</p>
           </div>
         </div>
       </div>
@@ -75,10 +75,10 @@ export default function TodoList({ leads, isSalesView = false }: { leads: any[],
         <div className="flex items-center gap-3">
           <span className="bg-accent/20 text-accent-soft p-2.5 rounded-xl"><ClipboardList size={20} /></span>
           <div>
-            <h3 className="text-xl font-bold text-white">مهام اليوم والمتابعات</h3>
+            <h3 className="text-xl font-bold text-white">Today's Tasks & Follow-ups</h3>
             <p className="text-slate-400 text-sm">
-              لديك {tasks.length} مهام متبقية 
-              {overdueCount > 0 && <span className="text-rose-400 font-bold"> (منها {overdueCount} متأخرة!)</span>}
+              You have {tasks.length} tasks remaining
+              {overdueCount > 0 && <span className="text-rose-400 font-bold"> ({overdueCount} of them overdue!)</span>}
             </p>
           </div>
         </div>
@@ -92,10 +92,10 @@ export default function TodoList({ leads, isSalesView = false }: { leads: any[],
             <div key={task.id} className={`p-4 rounded-2xl border transition-all ${task.isOverdue ? 'bg-rose-500/10 border-rose-500/30' : 'bg-[#182032] border-white/10 hover:border-accent/30'}`}>
               <div className="flex items-center justify-between mb-3">
                 <span className={`text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 ${isMeeting ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                  {isMeeting ? <><Handshake size={12} /> مقابلة (Sales)</> : <><Phone size={12} /> مكالمة متابعة</>}
+                  {isMeeting ? <><Handshake size={12} /> Meeting (Sales)</> : <><Phone size={12} /> Follow-up Call</>}
                 </span>
                 <span className={`text-xs font-bold flex items-center gap-1 ${task.isOverdue ? 'text-rose-400' : 'text-slate-400'}`}>
-                  {task.isOverdue ? <><AlertTriangle size={12} /> متأخر ({timeString})</> : timeString}
+                  {task.isOverdue ? <><AlertTriangle size={12} /> Overdue ({timeString})</> : timeString}
                 </span>
               </div>
               
@@ -113,7 +113,7 @@ export default function TodoList({ leads, isSalesView = false }: { leads: any[],
                   href={`?search=${task.leadPhone}`}
                   className="flex-1 bg-accent hover:bg-accent text-white text-xs font-bold py-2.5 rounded-xl text-center transition-colors"
                 >
-                  افتح العميل ↗
+                  Open Lead ↗
                 </Link>
               </div>
             </div>

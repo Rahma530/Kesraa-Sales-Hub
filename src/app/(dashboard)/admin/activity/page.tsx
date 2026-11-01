@@ -8,19 +8,19 @@ import DashboardShell from "@/components/DashboardShell";
 
 
 const TYPE_LABELS: Record<string, string> = {
-  STATUS_CHANGE: "تغيير حالة",
-  FOLLOWUP_CREATED: "إضافة متابعة",
-  FOLLOWUP_COMPLETED: "إنجاز متابعة",
-  MEETING_SCHEDULED: "تحديد Meeting",
-  MEETING_UPDATED: "تحديث نتيجة Meeting",
-  TRANSFERRED: "تحويل لـ Sales",
-  NOTE: "تعديل بيانات",
-  LEAD_CREATED: "إنشاء ليد",
-  LEAD_ASSIGNED: "توزيع ليد",
+  STATUS_CHANGE: "Status Change",
+  FOLLOWUP_CREATED: "Follow-up Added",
+  FOLLOWUP_COMPLETED: "Follow-up Completed",
+  MEETING_SCHEDULED: "Meeting Scheduled",
+  MEETING_UPDATED: "Meeting Result Updated",
+  TRANSFERRED: "Transferred to Sales",
+  NOTE: "Data Edited",
+  LEAD_CREATED: "Lead Created",
+  LEAD_ASSIGNED: "Lead Assigned",
 };
 
 function formatDateTime(date: Date) {
-  return date.toLocaleString("ar-EG", {
+  return date.toLocaleString("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -53,7 +53,7 @@ export default async function ActivityLogPage({
   });
 
   return (
-    <DashboardShell title="متابعة الموظفين">
+    <DashboardShell title="Employee Activity">
       <div className="mb-4 flex flex-wrap gap-2">
         <a
           href="/admin/activity"
@@ -61,7 +61,7 @@ export default async function ActivityLogPage({
             !type ? "bg-accent/20 text-accent-soft" : "bg-white/[0.03] text-slate-400"
           }`}
         >
-          الكل
+          All
         </a>
         {Object.entries(TYPE_LABELS).map(([value, label]) => (
           <a
@@ -78,7 +78,7 @@ export default async function ActivityLogPage({
 
       <div className="glass-panel overflow-hidden">
         {activities.length === 0 ? (
-          <div className="p-10 text-center text-sm text-slate-500">لا يوجد نشاط مسجّل</div>
+          <div className="p-10 text-center text-sm text-slate-500">No activity recorded</div>
         ) : (
           <ul className="divide-y divide-white/[0.03]">
             {activities.map((a) => (
@@ -89,7 +89,7 @@ export default async function ActivityLogPage({
                     <span className="text-slate-400">{a.lead.name}</span>
                     <span dir="ltr"> ({a.lead.phone})</span>
                     <span className="mx-1.5">·</span>
-                    بواسطة {a.user.name}
+                    by {a.user.name}
                     <span className="mx-1.5">·</span>
                     {TYPE_LABELS[a.type] ?? a.type}
                   </p>

@@ -20,23 +20,23 @@ export default function LeadUploadForm() {
     try {
       const res = await fetch("/api/leads/upload", { method: "POST", body: formData });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "فشل الرفع");
+      if (!res.ok) throw new Error(data.error ?? "Upload failed");
       const dupCount = data.duplicatePhones?.length ?? 0;
       const invalidCount = data.invalidRows?.length ?? 0;
       const notes = [
-        invalidCount ? `${invalidCount} صف ببيانات غير صالحة` : null,
-        dupCount ? `${dupCount} رقم مكرر (موجود بالفعل)` : null,
+        invalidCount ? `${invalidCount} row(s) with invalid data` : null,
+        dupCount ? `${dupCount} duplicate number(s) (already exist)` : null,
       ]
         .filter(Boolean)
-        .join(" و ");
+        .join(" and ");
       setResult(
-        `تم رفع وتوزيع ${data.totalUploaded} ليد على ${data.distributedAcross} موظف بنجاح${
-          notes ? ` — تم تجاهل: ${notes}` : ""
+        `Successfully uploaded and distributed ${data.totalUploaded} lead(s) across ${data.distributedAcross} employee(s)${
+          notes ? ` — skipped: ${notes}` : ""
         }`
       );
       router.refresh();
     } catch (e: any) {
-      setResult(`خطأ: ${e.message}`);
+      setResult(`Error: ${e.message}`);
     } finally {
       setBusy(false);
       setFile(null);
@@ -52,12 +52,12 @@ export default function LeadUploadForm() {
         body: JSON.stringify(manual),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "فشلت الإضافة");
-      setResult("تم إضافة الليد وتوزيعه بنجاح");
+      if (!res.ok) throw new Error(data.error ?? "Failed to add lead");
+      setResult("Lead added and distributed successfully");
       setManual({ name: "", phone: "", company: "", need: "" });
       router.refresh();
     } catch (e: any) {
-      setResult(`خطأ: ${e.message}`);
+      setResult(`Error: ${e.message}`);
     } finally {
       setBusy(false);
     }
@@ -66,9 +66,9 @@ export default function LeadUploadForm() {
   return (
     <div className="glass-panel p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-white">رفع / إضافة ليدز</p>
+        <p className="text-sm font-semibold text-white">Upload / Add Leads</p>
         <button className="text-xs text-accent-soft" onClick={() => setShowManual(!showManual)}>
-          {showManual ? "رفع ملف بدلاً من ذلك" : "إضافة يدوية بدلاً من ذلك"}
+          {showManual ? "Upload a file instead" : "Add manually instead"}
         </button>
       </div>
 
@@ -81,29 +81,29 @@ export default function LeadUploadForm() {
             className="text-xs text-slate-400 file:btn-ghost file:mr-3 file:border-0 file:text-xs"
           />
           <button disabled={!file || busy} onClick={handleUpload} className="btn-primary text-xs">
-            {busy ? "جاري الرفع والتوزيع..." : "رفع وتوزيع الليدز"}
+            {busy ? "Uploading and distributing..." : "Upload and Distribute Leads"}
           </button>
           <span className="text-xs text-slate-500">
-            أعمدة الملف المتوقعة: name, phone, email, company, need
+            Expected file columns: name, phone, email, company, need
           </span>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
           <input
             className="input-field text-xs"
-            placeholder="اسم العميل"
+            placeholder="Lead Name"
             value={manual.name}
             onChange={(e) => setManual({ ...manual, name: e.target.value })}
           />
           <input
             className="input-field text-xs"
-            placeholder="رقم الهاتف"
+            placeholder="Phone Number"
             value={manual.phone}
             onChange={(e) => setManual({ ...manual, phone: e.target.value })}
           />
           <input
             className="input-field text-xs"
-            placeholder="الشركة (اختياري)"
+            placeholder="Company (optional)"
             value={manual.company}
             onChange={(e) => setManual({ ...manual, company: e.target.value })}
           />
@@ -112,7 +112,7 @@ export default function LeadUploadForm() {
             onClick={handleManualAdd}
             className="btn-primary text-xs"
           >
-            إضافة
+            Add
           </button>
         </div>
       )}

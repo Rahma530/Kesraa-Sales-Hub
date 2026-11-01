@@ -7,11 +7,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const lead = await prisma.lead.findUnique({ where: { id: params.id } });
-    if (!lead) return NextResponse.json({ error: "الليد غير موجود" }, { status: 404 });
+    if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
     const body = await req.json();
     const { meetingUrl } = body;
@@ -29,22 +29,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         ownerId: session.user.id,
         scheduledAt: new Date(), // Now
         status: "DONE",
-        notes: "تم عقد اجتماع فوري عبر Jitsi.",
-        
+        notes: "An instant meeting was held via Jitsi.",
+
         // --- Simulated AI Data from "Fireflies" ---
         recordingUrl: meetingUrl || "https://meet.jit.si/Telesales_Recorded",
-        aiAnalysis: `التحليل والملخص:
-العميل أظهر اهتمام كبير جداً بالباقة السنوية.
-تم مناقشة تفاصيل الدفع والخصومات المتاحة.
-العميل طلب مهلة للتفكير حتى الغد للرد النهائي.
-النية الشرائية: عالية جداً (Warm/Hot).`,
-        transcript: `[00:00] الموظف: أهلاً بك يا فندم، معاك ممثل المبيعات.
-[00:05] العميل: أهلاً بيك. كنت بسأل عن تفاصيل الباقة السنوية.
-[00:12] الموظف: الباقة السنوية بتوفرلك خصم 20% وبنديلك شهرين مجاناً.
-[00:20] العميل: ممتاز جداً، هل الدفع بيكون كاش ولا ممكن تقسيط؟
-[00:25] الموظف: متاح التقسيط على 3 شهور بدون فوائد.
-[00:30] العميل: خلاص عظيم، هراجع الحسابات وأرد عليك بكرة الصبح إن شاء الله.
-[00:35] الموظف: تحت أمرك في أي وقت، يومك سعيد.`,
+        aiAnalysis: `Analysis and Summary:
+The lead showed strong interest in the annual package.
+Payment details and available discounts were discussed.
+The lead asked for time to think it over and will give a final answer tomorrow.
+Purchase intent: Very high (Warm/Hot).`,
+        transcript: `[00:00] Agent: Hello, this is the sales representative speaking.
+[00:05] Lead: Hi. I was asking about the details of the annual package.
+[00:12] Agent: The annual package gives you a 20% discount and two months free.
+[00:20] Lead: Great, is payment cash only or can I pay in installments?
+[00:25] Agent: Installments over 3 months with no interest are available.
+[00:30] Lead: Perfect, I'll review the numbers and get back to you tomorrow morning, God willing.
+[00:35] Agent: At your service anytime, have a great day.`,
       },
     });
 
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         leadId: params.id,
         userId: session.user.id,
         type: "MEETING",
-        message: `تم دخول الذكاء الاصطناعي للميتنج وتسجيله بنجاح (${meetingUrl})`,
+        message: `The AI assistant joined the meeting and recorded it successfully (${meetingUrl})`,
       },
     });
 

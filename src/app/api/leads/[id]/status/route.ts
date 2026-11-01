@@ -15,19 +15,19 @@ const schema = z.object({
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session || !can(session.user.role, "UPDATE_LEAD_STATUS")) {
-    return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء" }, { status: 403 });
+    return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
 
   const lead = await prisma.lead.findUnique({ where: { id: params.id } });
-  if (!lead) return NextResponse.json({ error: "الليد غير موجود" }, { status: 404 });
+  if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
-  // موظف عادي يقدر يعدل بس الليدز المسندة له أو اللي هو حولها للسيلز
+  // A regular employee can only edit leads assigned to them or that they transferred to sales
   if (!isManagementRole(session.user.role) && lead.assignedToId !== session.user.id) {
     const hasTransferredActivity = await prisma.activity.findFirst({
       where: { leadId: lead.id, userId: session.user.id, type: "TRANSFERRED" }
     });
     if (!hasTransferredActivity) {
-      return NextResponse.json({ error: "هذا الليد غير مسند لك" }, { status: 403 });
+      return NextResponse.json({ error: "This lead is not assigned to you" }, { status: 403 });
     }
   }
 
@@ -52,8 +52,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           userId: session.user.id,
           type: "STATUS_CHANGE",
           message: [
-            parsed.data.status && `تم تغيير الحالة إلى ${parsed.data.status}`,
-            parsed.data.tier && `تم تصنيف العميل كـ ${parsed.data.tier}`,
+            parsed.data.status && `Status changed to ${parsed.data.status}`,
+            parsed.data.tier && `Lead classified as ${parsed.data.tier}`,
           ]
             .filter(Boolean)
             .join(" — "),
