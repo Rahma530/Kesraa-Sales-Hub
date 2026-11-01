@@ -34,7 +34,7 @@ export async function POST() {
 
     let createdCount = 0;
 
-    // ========== 1. عملاء محولين بدون أي أكشن (24 ساعة+) ==========
+    // ========== 1. Leads transferred with no action (24+ hours) ==========
     const staleThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const staleLeads = await (prisma as any).lead.findMany({
@@ -49,8 +49,8 @@ export async function POST() {
     });
 
     for (const lead of staleLeads) {
-      const employeeName = lead.assignedTo?.name || "غير معروف";
-      
+      const employeeName = lead.assignedTo?.name || "Unknown";
+
       const existingNotif = await (prisma as any).notification.findFirst({
         where: {
           type: "STALE_LEAD_ALERT",
@@ -59,7 +59,7 @@ export async function POST() {
       });
       if (existingNotif) continue;
 
-      const hoursSinceTransfer = lead.transferredAt 
+      const hoursSinceTransfer = lead.transferredAt
         ? Math.round((Date.now() - new Date(lead.transferredAt).getTime()) / (1000 * 60 * 60))
         : 0;
 
@@ -67,8 +67,8 @@ export async function POST() {
         await (prisma as any).notification.create({
           data: {
             userId: admin.id,
-            title: "عميل بدون أكشن من السيلز",
-            message: `العميل "${lead.name}" محوّل لموظف السيلز "${employeeName}" من ${hoursSinceTransfer} ساعة ولم يتم اتخاذ أي إجراء عليه.`,
+            title: "Lead with no action from Sales",
+            message: `Lead "${lead.name}" was transferred to Sales employee "${employeeName}" ${hoursSinceTransfer} hours ago and no action has been taken.`,
             type: "STALE_LEAD_ALERT",
             link: `/admin/customers?search=${encodeURIComponent(lead.name)}`,
           },
@@ -81,8 +81,8 @@ export async function POST() {
         await (prisma as any).notification.create({
           data: {
             userId: lead.assignedToId,
-            title: "تذكير: عميل معلق",
-            message: `العميل "${lead.name}" تم تحويله لك من ${hoursSinceTransfer} ساعة ولم تتخذ أي إجراء عليه. يرجى المتابعة.`,
+            title: "Reminder: pending lead",
+            message: `Lead "${lead.name}" was transferred to you ${hoursSinceTransfer} hours ago and no action has been taken. Please follow up.`,
             type: "STALE_LEAD_ALERT",
             link: `/sales?search=${encodeURIComponent(lead.name)}`,
           },
@@ -91,13 +91,13 @@ export async function POST() {
       }
     }
 
-    // ========== 2. مقابلات فات ميعادها ولم يتم كتابة تقرير ==========
+    // ========== 2. Meetings that are overdue with no report written ==========
     const now = new Date();
 
     const overdueMeetings = await prisma.meeting.findMany({
       where: {
-        status: "SCHEDULED",       // لسه مكملهاش
-        scheduledAt: { lt: now },   // ميعادها عدى
+        status: "SCHEDULED",       // Not completed yet
+        scheduledAt: { lt: now },   // Date has passed
       },
       include: {
         lead: { select: { id: true, name: true } },
@@ -106,8 +106,8 @@ export async function POST() {
     });
 
     for (const meeting of overdueMeetings) {
-      const employeeName = meeting.owner?.name || "غير معروف";
-      const leadName = meeting.lead?.name || "غير معروف";
+      const employeeName = meeting.owner?.name || "Unknown";
+      const leadName = meeting.lead?.name || "Unknown";
       
       const existingNotif = await (prisma as any).notification.findFirst({
         where: {
@@ -125,8 +125,8 @@ export async function POST() {
         await (prisma as any).notification.create({
           data: {
             userId: admin.id,
-            title: "مقابلة فات ميعادها بدون تقرير",
-            message: `موظف السيلز "${employeeName}" عنده مقابلة مع العميل "${leadName}" فات ميعادها من ${hoursSinceMeeting} ساعة ولم يكتب تقرير المقابلة.`,
+            title: "Overdue meeting with no report",
+            message: `Sales employee "${employeeName}" has a meeting with lead "${leadName}" that was due ${hoursSinceMeeting} hours ago and no meeting report has been written.`,
             type: "OVERDUE_MEETING_ALERT",
             link: `/admin/customers?search=${encodeURIComponent(leadName)}`,
           },
@@ -139,8 +139,8 @@ export async function POST() {
         await (prisma as any).notification.create({
           data: {
             userId: meeting.ownerId,
-            title: "تذكير: تقرير مقابلة متأخر",
-            message: `فات ميعاد المقابلة مع العميل "${leadName}" من ${hoursSinceMeeting} ساعة. الرجاء إنهاء المقابلة وكتابة التقرير.`,
+            title: "Reminder: overdue meeting report",
+            message: `The meeting with lead "${leadName}" was due ${hoursSinceMeeting} hours ago. Please complete the meeting and write the report.`,
             type: "OVERDUE_MEETING_ALERT",
             link: `/sales?search=${encodeURIComponent(leadName)}`,
           },
@@ -149,7 +149,7 @@ export async function POST() {
       }
     }
 
-    // ========== 3. تنبيهات قبل المقابلة بـ 30 دقيقة ==========
+    // ========== 3. Alerts 30 minutes before a meeting ==========
     const thirtyMinsFromNow = new Date(now.getTime() + 30 * 60 * 1000);
 
     const upcomingMeetings = await prisma.meeting.findMany({
@@ -166,7 +166,7 @@ export async function POST() {
     });
 
     for (const meeting of upcomingMeetings) {
-      const leadName = meeting.lead?.name || "غير معروف";
+      const leadName = meeting.lead?.name || "Unknown";
       
       const existingNotif = await (prisma as any).notification.findFirst({
         where: {
@@ -180,8 +180,8 @@ export async function POST() {
         await (prisma as any).notification.create({
           data: {
             userId: meeting.ownerId,
-            title: "⏳ تذكير بمقابلة قادمة",
-            message: `لديك مقابلة مع العميل "${leadName}" ستبدأ خلال أقل من 30 دقيقة. استعد!`,
+            title: "⏳ Upcoming meeting reminder",
+            message: `You have a meeting with lead "${leadName}" starting in less than 30 minutes. Get ready!`,
             type: "UPCOMING_MEETING_ALERT",
             link: `/sales?search=${encodeURIComponent(leadName)}`,
           },
@@ -190,7 +190,7 @@ export async function POST() {
       }
     }
 
-    // ========== 4. عملاء موزعين على التيلي سيلز بدون أكشن (24 ساعة+) ==========
+    // ========== 4. Leads distributed to Tele-Sales with no action (24+ hours) ==========
     const staleTeleLeads = await (prisma as any).lead.findMany({
       where: {
         currentStage: "TELE_SALES",
@@ -204,7 +204,7 @@ export async function POST() {
 
     for (const lead of staleTeleLeads) {
       if (!lead.assignedToId) continue;
-      const employeeName = lead.assignedTo?.name || "غير معروف";
+      const employeeName = lead.assignedTo?.name || "Unknown";
       
       const existingNotif = await (prisma as any).notification.findFirst({
         where: {
@@ -222,8 +222,8 @@ export async function POST() {
         await (prisma as any).notification.create({
           data: {
             userId: admin.id,
-            title: "عميل جديد بدون أكشن من التيلي سيلز",
-            message: `العميل "${lead.name}" مسند للموظف "${employeeName}" من ${hoursSinceUpload} ساعة ولم يتم اتخاذ أي إجراء عليه.`,
+            title: "New lead with no action from Tele-Sales",
+            message: `Lead "${lead.name}" has been assigned to employee "${employeeName}" for ${hoursSinceUpload} hours and no action has been taken.`,
             type: "STALE_TELE_LEAD_ALERT",
             link: `/admin/customers?search=${encodeURIComponent(lead.name)}`,
           },
@@ -235,8 +235,8 @@ export async function POST() {
       await (prisma as any).notification.create({
         data: {
           userId: lead.assignedToId,
-          title: "تذكير: عميل جديد معلق",
-          message: `تم إسناد العميل "${lead.name}" لك من ${hoursSinceUpload} ساعة ولم تتخذ أي إجراء عليه. يرجى التواصل معه.`,
+          title: "Reminder: pending new lead",
+          message: `Lead "${lead.name}" was assigned to you ${hoursSinceUpload} hours ago and no action has been taken. Please reach out to them.`,
           type: "STALE_TELE_LEAD_ALERT",
           link: `/tele-sales?search=${encodeURIComponent(lead.name)}`,
         },
@@ -249,7 +249,7 @@ export async function POST() {
       staleLeads: staleLeads.length,
       overdueMeetings: overdueMeetings.length,
       staleTeleLeads: staleTeleLeads.length,
-      message: `تم إرسال ${createdCount} إشعار` 
+      message: `${createdCount} notification(s) sent`
     });
   } catch (error) {
     console.error("Stale leads check error:", error);

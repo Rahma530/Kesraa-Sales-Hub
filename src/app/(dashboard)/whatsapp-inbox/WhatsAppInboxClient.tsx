@@ -26,19 +26,19 @@ type WaStatus = "DISCONNECTED" | "INITIALIZING" | "QR_READY" | "CONNECTED";
 
 type SlotInfo = {
   id: string;      // "slot1", "slot2", ...
-  label: string;   // "واتساب 1", "واتساب 2", ...
+  label: string;   // "WhatsApp 1", "WhatsApp 2", ...
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function formatTime(ts: number) {
-  return new Date(ts * 1000).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+  return new Date(ts * 1000).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 }
 function formatChatTime(ts: number) {
   const d = new Date(ts * 1000);
   const diffDays = Math.floor((Date.now() - d.getTime()) / 86400000);
-  if (diffDays === 0) return d.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
-  if (diffDays === 1) return "أمس";
-  return d.toLocaleDateString("ar-EG", { month: "short", day: "numeric" });
+  if (diffDays === 0) return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 1) return "Yesterday";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 function getInitials(name: string) {
   return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
@@ -159,7 +159,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
   }, [messages]);
 
   const handleLogout = async () => {
-    if (!confirm("هل أنت متأكد أنك تريد تسجيل الخروج من واتساب؟")) return;
+    if (!confirm("Are you sure you want to log out of WhatsApp?")) return;
     try {
       setWaStatus("INITIALIZING");
       await fetch(`/api/whatsapp/logout?${qs}`, { method: "POST" });
@@ -168,7 +168,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
       setChats([]);
       setSelectedChat(null);
       setMessages([]);
-    } catch { alert("حدث خطأ أثناء تسجيل الخروج"); }
+    } catch { alert("An error occurred while logging out"); }
   };
 
   const handleSend = async () => {
@@ -201,35 +201,35 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
           {waStatus === "DISCONNECTED" && (
             <>
               <MessageCircle size={56} className="mb-4 text-slate-500" />
-              <h2 className="text-xl font-bold text-white mb-2">الواتساب غير مرتبط</h2>
-              <p className="text-slate-400 mb-6">اضغط لتوليد رمز QR وربط حسابك</p>
+              <h2 className="text-xl font-bold text-white mb-2">WhatsApp Not Linked</h2>
+              <p className="text-slate-400 mb-6">Click to generate a QR code and link your account</p>
               <button
                 id={`btn-generate-qr-${slotId}`}
                 onClick={() => fetch(`/api/whatsapp/status?${qs}`, { method: "POST" })}
                 className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-xl transition-all duration-200 shadow-lg hover:shadow-green-500/30 hover:scale-105"
               >
-                توليد رمز QR
+                Generate QR Code
               </button>
             </>
           )}
           {waStatus === "INITIALIZING" && (
             <>
               <div className="w-14 h-14 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-green-400 font-bold text-lg">جاري تجهيز رمز QR...</p>
-              <p className="text-sm text-slate-400 mt-2">يرجى الانتظار بضع ثوانٍ</p>
+              <p className="text-green-400 font-bold text-lg">Preparing QR code...</p>
+              <p className="text-sm text-slate-400 mt-2">Please wait a few seconds</p>
             </>
           )}
           {waStatus === "QR_READY" && waQr && (
             <>
-              <h2 className="text-xl font-bold text-white mb-4">امسح الرمز من موبايلك</h2>
+              <h2 className="text-xl font-bold text-white mb-4">Scan the code from your phone</h2>
               <div className="bg-white p-3 rounded-2xl inline-block mb-4 shadow-xl">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={waQr} alt="QR" width={240} height={240} />
               </div>
               <div className="text-right text-sm text-slate-300 space-y-2 bg-white/5 p-4 rounded-xl border border-white/10">
-                <p>1️⃣ افتح <strong>واتساب</strong> على هاتفك</p>
-                <p>2. الإعدادات → <strong>الأجهزة المرتبطة</strong></p>
-                <p>3️⃣ اضغط <strong>ربط جهاز</strong> وامسح الرمز</p>
+                <p>1️⃣ Open <strong>WhatsApp</strong> on your phone</p>
+                <p>2. Settings → <strong>Linked Devices</strong></p>
+                <p>3️⃣ Tap <strong>Link a Device</strong> and scan the code</p>
               </div>
             </>
           )}
@@ -246,27 +246,27 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <span className="text-white font-bold flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse inline-block" />
-            المحادثات
+            Chats
           </span>
           <div className="flex items-center gap-3">
             <button onClick={loadChats} className="text-slate-400 hover:text-white text-xs transition-colors">
-              {loadingChats ? "⟳ جاري..." : "⟳ تحديث"}
+              {loadingChats ? "⟳ Loading..." : "⟳ Refresh"}
             </button>
             <button onClick={handleLogout} className="text-rose-400 hover:text-rose-300 text-xs transition-colors border border-rose-500/30 px-2 py-1 rounded-md bg-rose-500/10">
-              خروج
+              Log out
             </button>
           </div>
         </div>
         <div className="p-3 border-b border-white/5">
           <input
             type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="بحث..."
+            placeholder="Search..."
             className="w-full bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-accent/50 transition-colors"
           />
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {filtered.length === 0
-            ? <p className="text-center text-slate-500 text-sm py-8">لا توجد محادثات</p>
+            ? <p className="text-center text-slate-500 text-sm py-8">No chats found</p>
             : filtered.map((chat) => (
               <button key={chat.id} onClick={() => { setSelectedChat(chat); setMessages([]); }}
                 className={`w-full flex items-center gap-3 px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors text-right ${selectedChat?.id === chat.id ? "bg-white/10 border-r-2 border-r-green-500" : ""}`}
@@ -298,8 +298,8 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
         <div className="flex-1 bg-[#121927] flex items-center justify-center min-w-0 h-full">
           <div className="text-center text-slate-500">
             <MessageCircle size={56} className="mb-4 text-slate-500" />
-            <p className="text-xl font-bold text-white mb-2">واتساب ويب</p>
-            <p className="text-sm">اختر محادثة للبدء في المراسلة</p>
+            <p className="text-xl font-bold text-white mb-2">WhatsApp Web</p>
+            <p className="text-sm">Select a chat to start messaging</p>
           </div>
         </div>
       ) : (
@@ -320,7 +320,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.fromMe ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[85%] sm:max-w-[75%] px-4 py-2.5 rounded-2xl text-sm shadow-md break-words ${msg.fromMe ? "bg-[#005c4b] text-white rounded-br-sm" : "bg-[#202c33] text-white rounded-bl-sm"}`}>
-                  <p className="whitespace-pre-wrap leading-relaxed mb-1 break-words">{msg.body || <em className="opacity-50">[ميديا]</em>}</p>
+                  <p className="whitespace-pre-wrap leading-relaxed mb-1 break-words">{msg.body || <em className="opacity-50">[Media]</em>}</p>
                   <div className="flex items-center justify-end gap-1">
                     <p className={`text-[10px] ${msg.fromMe ? "text-green-200" : "text-slate-400"}`}>{formatTime(msg.timestamp)}</p>
                     {msg.fromMe && <CheckCheck size={12} className="text-blue-400" />}
@@ -337,7 +337,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
               <input
                 type="text" value={newMsg} onChange={(e) => setNewMsg(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSend(); } }}
-                placeholder="اكتب رسالة..."
+                placeholder="Type a message..."
                 className="flex-1 bg-[#182032] border border-white/10 rounded-xl px-4 py-3.5 text-white text-[15px] placeholder-slate-500 focus:outline-none focus:border-[#00a884] transition-colors shadow-inner"
               />
               <button onClick={handleSend} disabled={sending || !newMsg.trim()}
@@ -363,7 +363,7 @@ export default function WhatsAppInboxClient() {
   const phoneQuery = searchParams.get("phone");
 
   const [mounted, setMounted] = useState(false);
-  const [slots, setSlots] = useState<SlotInfo[]>([{ id: "slot1", label: "واتساب 1" }]);
+  const [slots, setSlots] = useState<SlotInfo[]>([{ id: "slot1", label: "WhatsApp 1" }]);
   const [activeSlot, setActiveSlot] = useState("slot1");
 
   useEffect(() => { setMounted(true); }, []);
@@ -371,7 +371,7 @@ export default function WhatsAppInboxClient() {
   const addSlot = () => {
     if (slots.length >= MAX_SLOTS) return;
     const newIndex = slots.length + 1;
-    const newSlot: SlotInfo = { id: `slot${newIndex}`, label: `واتساب ${newIndex}` };
+    const newSlot: SlotInfo = { id: `slot${newIndex}`, label: `WhatsApp ${newIndex}` };
     setSlots((prev) => [...prev, newSlot]);
     setActiveSlot(newSlot.id);
   };
@@ -408,7 +408,7 @@ export default function WhatsAppInboxClient() {
                   role="button"
                   onClick={(e) => { e.stopPropagation(); removeSlot(slot.id); }}
                   className="ml-1 text-slate-500 hover:text-rose-400 transition-colors text-xs leading-none"
-                  title="إزالة"
+                  title="Remove"
                 >
                   <X size={12} />
                 </span>
@@ -423,10 +423,10 @@ export default function WhatsAppInboxClient() {
             id="btn-add-whatsapp-slot"
             onClick={addSlot}
             className="flex items-center gap-2 px-4 py-3 rounded-t-xl text-sm font-semibold text-slate-400 hover:text-white border border-transparent hover:border-white/10 hover:bg-[#0f1523] transition-all duration-200"
-            title="إضافة رقم واتساب جديد"
+            title="Add a new WhatsApp number"
           >
             <span className="text-lg leading-none">+</span>
-            <span>إضافة رقم</span>
+            <span>Add Number</span>
           </button>
         )}
       </div>

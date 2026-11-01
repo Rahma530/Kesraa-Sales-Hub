@@ -3,8 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// بيرجع تقدم رفعة كبيرة بتتعالج في الخلفية — الواجهة بتعمل عليه Polling
-// كل كذا ثانية لحد ما status تبقى DONE أو FAILED.
+// Returns the progress of a large upload being processed in the background — the UI polls
+// this every few seconds until status becomes DONE or FAILED.
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session || (session.user.role !== "ADMIN" && session.user.role !== "HEAD_OF_SALES")) {

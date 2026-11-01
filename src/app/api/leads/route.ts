@@ -8,10 +8,10 @@ import { z } from "zod";
 
 import { distributeLeads } from "@/lib/lead-distribution";
 
-// GET /api/leads — الإدارة تشوف الكل، الموظف يشوف بتاعته بس
+// GET /api/leads — management sees all leads, employees only see their own
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") ?? undefined;
@@ -55,11 +55,11 @@ const createLeadSchema = z.object({
   need: z.string().optional(),
 });
 
-// POST /api/leads — إضافة ليد يدوي واحد
+// POST /api/leads — add a single lead manually
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || !can(session.user.role, "ADD_LEAD_MANUALLY")) {
-    return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء" }, { status: 403 });
+    return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
   if (session.user.role === Role.TELE_SALES || session.user.role === Role.SALES) {
     const existing = await prisma.lead.findFirst({ where: { phone: parsed.data.phone } });
     if (existing) {
-      return NextResponse.json({ error: "يوجد عميل بنفس رقم الهاتف مسجل بالفعل في النظام" }, { status: 409 });
+      return NextResponse.json({ error: "A lead with this phone number already exists in the system" }, { status: 409 });
     }
     
     const lead = await prisma.lead.create({
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
           create: {
             userId: session.user.id,
             type: "LEAD_CREATED",
-            message: "تم إضافة العميل يدويًا بواسطة الموظف نفسه",
+            message: "Lead added manually by the employee",
           }
         }
       }
@@ -103,15 +103,15 @@ export async function POST(req: NextRequest) {
 
   if (insertedCount === 0) {
     return NextResponse.json(
-      { error: "يوجد عميل بنفس رقم الهاتف مسجل بالفعل في النظام" },
+      { error: "A lead with this phone number already exists in the system" },
       { status: 409 }
     );
   }
 
   const notificationsToCreate = Object.entries(distribution).map(([userId, count]) => ({
     userId,
-    title: "عملاء جدد",
-    message: `تم إضافة عميل جديد وتعيينه لك`,
+    title: "New leads",
+    message: `A new lead has been added and assigned to you`,
     type: "ASSIGNMENT",
     link: "?status=NEW",
   }));

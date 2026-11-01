@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           create: {
             userId: session.user.id,
             type: "UPLOAD_CONTRACT",
-            message: "تم رفع عقد العميل"
+            message: "The lead's contract was uploaded"
           }
         }
       }

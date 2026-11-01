@@ -7,10 +7,10 @@ import OnlineUsers from "@/components/OnlineUsers";
 import ChatBox from "@/components/ChatBox";
 
 const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "مدير النظام",
-  HEAD_OF_SALES: "رئيس المبيعات",
-  TELE_SALES: "موظف Tele-Sales",
-  SALES: "موظف Sales",
+  ADMIN: "Admin",
+  HEAD_OF_SALES: "Head of Sales",
+  TELE_SALES: "Tele-Sales",
+  SALES: "Sales",
 };
 
 export default async function DashboardShell({

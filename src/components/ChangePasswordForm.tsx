@@ -29,7 +29,7 @@ export default function ChangePasswordForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      setMessage({ text: "كلمة المرور الجديدة وتأكيدها مش متطابقين", error: true });
+      setMessage({ text: "The new password and confirmation don't match", error: true });
       return;
     }
     setBusy(true);
@@ -41,8 +41,8 @@ export default function ChangePasswordForm() {
         body: JSON.stringify({ currentPassword, newPassword }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "حدث خطأ");
-      setMessage({ text: "تم تغيير كلمة المرور بنجاح" });
+      if (!res.ok) throw new Error(data.error ?? "An error occurred");
+      setMessage({ text: "Password changed successfully" });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -55,9 +55,9 @@ export default function ChangePasswordForm() {
 
   return (
     <form onSubmit={handleSubmit} className="glass-panel max-w-md space-y-4 p-6">
-      <p className="text-sm font-semibold text-white">تغيير كلمة المرور</p>
+      <p className="text-sm font-semibold text-white">Change Password</p>
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-400">كلمة المرور الحالية</label>
+        <label className="mb-1.5 block text-xs font-medium text-slate-400">Current Password</label>
         <div className="relative">
           <input
             type={showCurrent ? "text" : "password"}
@@ -72,7 +72,7 @@ export default function ChangePasswordForm() {
         </div>
       </div>
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-400">كلمة المرور الجديدة</label>
+        <label className="mb-1.5 block text-xs font-medium text-slate-400">New Password</label>
         <div className="relative">
           <input
             type={showNew ? "text" : "password"}
@@ -88,7 +88,7 @@ export default function ChangePasswordForm() {
         </div>
       </div>
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-slate-400">تأكيد كلمة المرور الجديدة</label>
+        <label className="mb-1.5 block text-xs font-medium text-slate-400">Confirm New Password</label>
         <div className="relative">
           <input
             type={showConfirm ? "text" : "password"}
@@ -109,7 +109,7 @@ export default function ChangePasswordForm() {
         </p>
       )}
       <button type="submit" disabled={busy} className="btn-primary w-full">
-        {busy ? "جاري الحفظ..." : "حفظ كلمة المرور الجديدة"}
+        {busy ? "Saving..." : "Save New Password"}
       </button>
     </form>
   );

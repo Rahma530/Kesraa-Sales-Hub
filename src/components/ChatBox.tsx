@@ -55,8 +55,8 @@ export type SelectedChat = {
 };
 
 const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "مدير",
-  HEAD_OF_SALES: "رئيس مبيعات",
+  ADMIN: "Admin",
+  HEAD_OF_SALES: "Head of Sales",
   TELE_SALES: "Tele-Sales",
   SALES: "Sales",
 };
@@ -241,23 +241,23 @@ export default function ChatBox() {
   };
 
   const deleteMessage = async (msgId: string) => {
-    if (!confirm("هل أنت متأكد من حذف هذه الرسالة؟")) return;
+    if (!confirm("Are you sure you want to delete this message?")) return;
     try {
       const res = await fetch(`/api/chat?messageId=${msgId}`, { method: "DELETE" });
       if (res.ok) {
         fetchMessages();
       } else {
-        alert("حدث خطأ أثناء الحذف");
+        alert("An error occurred while deleting");
       }
     } catch (e) {
       console.error(e);
-      alert("تعذر الاتصال بالخادم");
+      alert("Could not connect to the server");
     }
   };
 
   const updateMessage = async (msgId: string) => {
     if (!editContent.trim()) {
-      alert("الرسالة فارغة!");
+      alert("Message is empty!");
       return;
     }
     try {
@@ -272,11 +272,11 @@ export default function ChatBox() {
       } else {
         const errorData = await res.json().catch(() => null);
         console.error("Update error:", errorData);
-        alert("حدث خطأ أثناء التعديل. الرجاء المحاولة مرة أخرى.");
+        alert("An error occurred while editing. Please try again.");
       }
     } catch (e) {
       console.error(e);
-      alert("تعذر الاتصال بالخادم");
+      alert("Could not connect to the server");
     }
   };
 
@@ -321,7 +321,7 @@ export default function ChatBox() {
 
     } catch (err) {
       console.error("Error accessing microphone:", err);
-      alert("الرجاء السماح بالوصول إلى المايكروفون من المتصفح لكي تتمكن من إرسال رسائل صوتية.");
+      alert("Please allow microphone access in your browser so you can send voice messages.");
     }
   };
 
@@ -330,7 +330,7 @@ export default function ChatBox() {
     if (!file || !selectedChat) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("حجم الملف يجب أن لا يتجاوز 5 ميجابايت");
+      alert("File size must not exceed 5 MB");
       return;
     }
 
@@ -344,7 +344,7 @@ export default function ChatBox() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...(selectedChat.isGroup ? { groupId: selectedChat.id } : { receiverId: selectedChat.id }),
-            content: "ملف مرفق",
+            content: "Attachment",
             file: { name: file.name, base64 }
           }),
         });
@@ -383,7 +383,7 @@ export default function ChatBox() {
       <div 
         className="cursor-pointer hover:bg-white/5 p-2 rounded-xl transition-colors relative mr-2 flex items-center justify-center"
         onClick={() => setIsOpen(!isOpen)}
-        title="محادثات الفريق"
+        title="Team Chats"
       >
         <svg width="34" height="34" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-lg">
           <defs>
@@ -432,7 +432,7 @@ export default function ChatBox() {
                 </div>
                 <div>
                   <h3 className="text-white font-bold text-sm">{selectedChat.name}</h3>
-                  <p className="text-[10px] text-slate-400">{selectedChat.isGroup ? 'مجموعة' : (ROLE_LABELS[selectedChat.role!] || selectedChat.role)}</p>
+                  <p className="text-[10px] text-slate-400">{selectedChat.isGroup ? 'Group' : (ROLE_LABELS[selectedChat.role!] || selectedChat.role)}</p>
                 </div>
               </div>
             ) : isCreatingGroup ? (
@@ -445,33 +445,33 @@ export default function ChatBox() {
                     <path d="M15 18l-6-6 6-6"/>
                   </svg>
                 </button>
-                <h3 className="text-white font-bold text-sm">إنشاء مجموعة جديدة</h3>
+                <h3 className="text-white font-bold text-sm">Create New Group</h3>
               </div>
             ) : (
               <div className="flex flex-col w-full gap-3 mt-1">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
                     <MessageCircle size={20} className="text-slate-200" />
-                    <h3 className="text-white font-bold text-sm">الرسائل والمحادثات</h3>
+                    <h3 className="text-white font-bold text-sm">Messages & Chats</h3>
                   </div>
                   {activeTab === "groups" && (
                     <button onClick={() => setIsCreatingGroup(true)} className="text-xs bg-accent hover:bg-accent text-white px-2 py-1 rounded">
-                      + مجموعة
+                      + Group
                     </button>
                   )}
                 </div>
                 <div className="flex bg-[#0b1120] rounded-lg p-1 border border-white/5">
-                  <button 
+                  <button
                     onClick={() => setActiveTab("users")}
                     className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-colors ${activeTab === "users" ? "bg-accent text-white" : "text-slate-400 hover:text-white"}`}
                   >
-                    الموظفين
+                    Employees
                   </button>
-                  <button 
+                  <button
                     onClick={() => setActiveTab("groups")}
                     className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-colors ${activeTab === "groups" ? "bg-emerald-600 text-white" : "text-slate-400 hover:text-white"}`}
                   >
-                    المجموعات
+                    Groups
                   </button>
                 </div>
               </div>
@@ -486,17 +486,17 @@ export default function ChatBox() {
             isCreatingGroup ? (
               <div className="flex-1 overflow-y-auto bg-[#0b1120] p-4 flex flex-col gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">اسم المجموعة</label>
-                  <input 
-                    type="text" 
+                  <label className="block text-sm font-medium text-slate-300 mb-1">Group Name</label>
+                  <input
+                    type="text"
                     value={newGroupName}
                     onChange={e => setNewGroupName(e.target.value)}
                     className="w-full bg-[#121927] border border-white/10 rounded-lg p-2 text-white text-sm"
-                    placeholder="مثال: فريق المبيعات"
+                    placeholder="e.g. Sales Team"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">اختر الأعضاء</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Select Members</label>
                   <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                     {conversations.filter(c => !c.isGroup && c.user).map(c => (
                       <label key={c.user!.id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer border border-white/5">
@@ -520,7 +520,7 @@ export default function ChatBox() {
                 <button 
                   onClick={async () => {
                     if (!newGroupName.trim() || selectedGroupMembers.length === 0) {
-                      alert("يرجى إدخال اسم المجموعة واختيار عضو واحد على الأقل");
+                      alert("Please enter a group name and select at least one member");
                       return;
                     }
                     setIsLoading(true);
@@ -546,7 +546,7 @@ export default function ChatBox() {
                   disabled={isLoading}
                   className="w-full bg-accent hover:bg-accent text-white font-bold py-2 rounded-lg mt-auto disabled:opacity-50"
                 >
-                  {isLoading ? 'جاري الإنشاء...' : 'إنشاء المجموعة'}
+                  {isLoading ? 'Creating...' : 'Create Group'}
                 </button>
               </div>
             ) : (
@@ -558,7 +558,7 @@ export default function ChatBox() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="ابحث عن مستخدم أو مجموعة..."
+                    placeholder="Search for a user or group..."
                     className="w-full bg-[#1a2235] text-white text-sm rounded-lg pl-10 pr-4 py-2 border border-white/10 focus:outline-none focus:border-accent"
                     dir="rtl"
                   />
@@ -572,7 +572,7 @@ export default function ChatBox() {
               </div>
               <div className="flex-1 overflow-y-auto">
               {conversations.length === 0 ? (
-                <p className="text-center text-slate-500 text-sm mt-10">لا يوجد مستخدمين آخرين.</p>
+                <p className="text-center text-slate-500 text-sm mt-10">No other users found.</p>
               ) : (
                 conversations
                   .filter(conv => (activeTab === "users" ? !conv.isGroup : conv.isGroup))
@@ -617,8 +617,8 @@ export default function ChatBox() {
                         {conv.latestMessage && (
                           <p className="text-xs text-slate-400 truncate mt-1" dir="rtl">
                             {conv.latestMessage.content.startsWith("data:audio")
-                              ? "رسالة صوتية"
-                              : conv.latestMessage.content.startsWith("[FILE:") ? "ملف مرفق" : conv.latestMessage.content}
+                              ? "Voice message"
+                              : conv.latestMessage.content.startsWith("[FILE:") ? "Attachment" : conv.latestMessage.content}
                           </p>
                         )}
                       </div>
@@ -627,7 +627,7 @@ export default function ChatBox() {
                       <button 
                         onClick={(e) => togglePin(e, id)} 
                         className={`hover:scale-110 transition-transform ${isPinned ? 'opacity-100' : 'opacity-30 hover:opacity-100'}`}
-                        title={isPinned ? 'إلغاء التثبيت' : 'تثبيت المحادثة'}
+                        title={isPinned ? 'Unpin' : 'Pin conversation'}
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill={isPinned ? "#ef4444" : "currentColor"} stroke={isPinned ? "#ef4444" : "currentColor"} className={isPinned ? "" : "text-slate-400"} strokeWidth="2">
                           <path d="M12 2L12 10" />
@@ -640,7 +640,7 @@ export default function ChatBox() {
                       </button>
                       {conv.latestMessage && (
                         <span className="text-[10px] text-slate-500">
-                          {new Date(conv.latestMessage.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(conv.latestMessage.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
                     </div>
@@ -656,7 +656,7 @@ export default function ChatBox() {
             <>
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0b1120]" ref={messagesContainerRef}>
                 {messages.length === 0 ? (
-                  <p className="text-center text-slate-500 text-sm mt-10">لا توجد رسائل سابقة. ابدأ المحادثة!</p>
+                  <p className="text-center text-slate-500 text-sm mt-10">No previous messages. Start the conversation!</p>
                 ) : (
                   messages.map((msg) => {
                     const isMe = msg.sender.id === session?.user?.id;
@@ -688,8 +688,8 @@ export default function ChatBox() {
                                   dir="rtl"
                                 />
                                 <div className="flex justify-end gap-2">
-                                  <button onClick={() => setEditingMessageId(null)} className="text-[10px] text-white/70 hover:text-white">إلغاء</button>
-                                  <button onClick={() => updateMessage(msg.id)} className="text-[10px] bg-white/20 px-2 py-0.5 rounded hover:bg-white/30">حفظ</button>
+                                  <button onClick={() => setEditingMessageId(null)} className="text-[10px] text-white/70 hover:text-white">Cancel</button>
+                                  <button onClick={() => updateMessage(msg.id)} className="text-[10px] bg-white/20 px-2 py-0.5 rounded hover:bg-white/30">Save</button>
                                 </div>
                               </div>
                             ) : isAudio ? (
@@ -724,13 +724,13 @@ export default function ChatBox() {
                             {activeMenuId === msg.id && (
                               <div className={`absolute top-6 w-24 bg-[#1a2235] border border-white/10 rounded-lg shadow-xl z-10 py-1 ${isMe ? 'left-0' : 'right-0'}`}>
                                 {!isAudio && (
-                                  <button onClick={() => copyMessage(msg.content)} className="w-full text-right px-3 py-1.5 text-xs text-white hover:bg-white/5">نسخ</button>
+                                  <button onClick={() => copyMessage(msg.content)} className="w-full text-right px-3 py-1.5 text-xs text-white hover:bg-white/5">Copy</button>
                                 )}
                                 {isMe && !isAudio && (
-                                  <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content); setActiveMenuId(null); }} className="w-full text-right px-3 py-1.5 text-xs text-white hover:bg-white/5">تعديل</button>
+                                  <button onClick={() => { setEditingMessageId(msg.id); setEditContent(msg.content); setActiveMenuId(null); }} className="w-full text-right px-3 py-1.5 text-xs text-white hover:bg-white/5">Edit</button>
                                 )}
                                 {isMe && (
-                                  <button onClick={() => { deleteMessage(msg.id); setActiveMenuId(null); }} className="w-full text-right px-3 py-1.5 text-xs text-red-400 hover:bg-white/5">حذف</button>
+                                  <button onClick={() => { deleteMessage(msg.id); setActiveMenuId(null); }} className="w-full text-right px-3 py-1.5 text-xs text-red-400 hover:bg-white/5">Delete</button>
                                 )}
                               </div>
                             )}
@@ -739,7 +739,7 @@ export default function ChatBox() {
                         </div>
                         <div className="flex items-center gap-1 mt-1 px-1">
                           <span className="text-[10px] text-slate-500">
-                            {new Date(msg.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(msg.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           {isMe && (
                             <span className={`flex items-center ${msg.isRead ? 'text-blue-500' : 'text-slate-500'}`}>
@@ -779,13 +779,13 @@ export default function ChatBox() {
                           {Math.floor(recordingTime / 60).toString().padStart(2, '0')}:{(recordingTime % 60).toString().padStart(2, '0')}
                         </span>
                       </div>
-                      <span className="text-slate-300 text-xs">جاري تسجيل الصوت...</span>
-                      <button 
+                      <span className="text-slate-300 text-xs">Recording audio...</span>
+                      <button
                         type="button"
                         onClick={cancelRecording}
                         className="text-red-400 hover:text-red-300 text-xs underline"
                       >
-                        إلغاء
+                        Cancel
                       </button>
                     </div>
                   ) : (
@@ -794,7 +794,7 @@ export default function ChatBox() {
                       <div className="flex gap-0.5 shrink-0">
                         <button
                           type="button"
-                          title="إضافة ملصق"
+                          title="Add emoji"
                           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                           className={`text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors flex items-center justify-center w-[36px] h-[36px] ${showEmojiPicker ? 'text-white bg-white/10' : ''}`}
                         >
@@ -806,7 +806,7 @@ export default function ChatBox() {
                           </svg>
                         </button>
                         <label
-                          title="إرفاق ملف أو صورة"
+                          title="Attach a file or image"
                           className="cursor-pointer text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors flex items-center justify-center w-[36px] h-[36px]"
                         >
                           <input type="file" className="hidden" onChange={handleFileUpload} />
@@ -821,7 +821,7 @@ export default function ChatBox() {
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="اكتب رسالتك..."
+                        placeholder="Type a message..."
                         className="flex-1 bg-[#1a2235] border border-white/10 rounded-lg py-2.5 px-3 text-sm text-white resize-none focus:outline-none focus:border-blue-500 h-[40px] overflow-hidden"
                         rows={1}
                         dir="rtl"
@@ -835,7 +835,7 @@ export default function ChatBox() {
                     {isRecording ? (
                       <button
                         type="button"
-                        title="إرسال المقطع الصوتي"
+                        title="Send voice clip"
                         onClick={stopRecording}
                         className="text-white hover:text-red-100 bg-red-600 hover:bg-red-700 rounded-full transition-colors flex items-center justify-center w-[36px] h-[36px] shrink-0"
                       >
@@ -847,7 +847,7 @@ export default function ChatBox() {
                     ) : (
                       <button
                         type="button"
-                        title="تسجيل رسالة صوتية"
+                        title="Record a voice message"
                         onClick={startRecording}
                         disabled={isLoading || newMessage.trim().length > 0}
                         className="text-slate-400 hover:text-blue-400 hover:bg-white/5 rounded-full transition-colors flex items-center justify-center w-[36px] h-[36px] shrink-0 disabled:opacity-30"

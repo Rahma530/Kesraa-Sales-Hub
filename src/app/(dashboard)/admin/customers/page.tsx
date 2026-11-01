@@ -44,7 +44,7 @@ export default async function AdminCustomersPage() {
   });
 
   return (
-    <DashboardShell title="إدارة العملاء">
+    <DashboardShell title="Lead Management">
       <AdminCustomersClient 
         initialLeads={JSON.parse(JSON.stringify(leads))} 
         employees={JSON.parse(JSON.stringify(employees))} 

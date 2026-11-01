@@ -12,7 +12,7 @@ const WhatsAppInboxClient = dynamic(() => import("./WhatsAppInboxClient"), {
 
 export default function WhatsAppInboxPage() {
   return (
-    <DashboardShell title="صندوق رسائل واتساب">
+    <DashboardShell title="WhatsApp Inbox">
       <WhatsAppInboxClient />
     </DashboardShell>
   );

@@ -14,14 +14,14 @@ const schema = z.object({
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session || !can(session.user.role, "TRANSFER_TO_SALES")) {
-    return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء" }, { status: 403 });
+    return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
 
   const lead = await prisma.lead.findUnique({ where: { id: params.id } });
-  if (!lead) return NextResponse.json({ error: "الليد غير موجود" }, { status: 404 });
+  if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
   if (!isManagementRole(session.user.role) && lead.assignedToId !== session.user.id) {
-    return NextResponse.json({ error: "هذا الليد غير مسند لك" }, { status: 403 });
+    return NextResponse.json({ error: "This lead is not assigned to you" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     where: { id: parsed.data.salesEmployeeId },
   });
   if (!salesEmployee || salesEmployee.role !== Role.SALES || !salesEmployee.isActive) {
-    return NextResponse.json({ error: "موظف المبيعات المحدد غير صالح" }, { status: 400 });
+    return NextResponse.json({ error: "The selected sales employee is invalid" }, { status: 400 });
   }
 
   const [updatedLead] = await prisma.$transaction([
@@ -53,10 +53,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         leadId: params.id,
         userId: session.user.id,
         type: "TRANSFERRED",
-        message: `تم تحويل الليد إلى موظف Sales: ${salesEmployee.name}`,
+        message: `The lead was transferred to the sales employee: ${salesEmployee.name}`,
       },
     }),
-    // أي Meeting مجدول بيتحول ملكيته لموظف الـ Sales الجديد
+    // Any scheduled meeting has its ownership transferred to the new sales employee
     prisma.meeting.updateMany({
       where: { leadId: params.id, status: "SCHEDULED" },
       data: { ownerId: salesEmployee.id },
@@ -64,8 +64,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     prisma.notification.create({
       data: {
         userId: salesEmployee.id,
-        title: "عميل جديد محول إليك",
-        message: `تم تحويل العميل ${lead.name} إليك من قبل ${session.user.name}. راجع مواعيد مقابلاتك.`,
+        title: "New lead transferred to you",
+        message: `The lead ${lead.name} was transferred to you by ${session.user.name}. Check your meeting schedule.`,
         type: "LEAD_TRANSFER",
         link: "/sales",
       },

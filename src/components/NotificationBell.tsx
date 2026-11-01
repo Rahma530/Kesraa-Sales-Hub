@@ -114,11 +114,11 @@ export default function NotificationBell() {
       {isOpen && (
         <div className="absolute top-full right-0 mt-2 w-80 bg-[#161f33] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col">
           <div className="p-3 border-b border-white/10 bg-white/5">
-            <h3 className="text-white font-bold text-sm">الإشعارات ({unreadCount})</h3>
+            <h3 className="text-white font-bold text-sm">Notifications ({unreadCount})</h3>
           </div>
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <p className="text-center text-slate-400 text-sm py-6">لا توجد إشعارات</p>
+              <p className="text-center text-slate-400 text-sm py-6">No notifications</p>
             ) : (
               notifications.map((notif) => (
                 <div 
@@ -132,7 +132,7 @@ export default function NotificationBell() {
                   </div>
                   <p className="text-xs text-slate-400 leading-relaxed mb-2">{notif.message}</p>
                   <p className="text-[10px] text-slate-500">
-                    {new Date(notif.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(notif.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               ))

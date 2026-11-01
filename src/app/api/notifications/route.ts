@@ -34,8 +34,8 @@ export async function GET() {
     // Transform follow-ups into notification format
     const followUpNotifs = pendingFollowUps.map(f => ({
       id: `followup-${f.id}`,
-      title: "متابعة مطلوبة",
-      message: `لديك متابعة مع العميل ${f.lead?.name || "بدون اسم"} - ${f.notes}`,
+      title: "Follow-up required",
+      message: `You have a follow-up with lead ${f.lead?.name || "Unnamed"} - ${f.notes}`,
       type: "FOLLOW_UP",
       isRead: false,
       createdAt: f.scheduledDate,

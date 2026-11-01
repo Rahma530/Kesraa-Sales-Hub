@@ -18,18 +18,18 @@ const updateSchema = z.object({
   socialMediaUrl: z.string().url().optional().or(z.literal("")),
 });
 
-// PATCH /api/leads/[id] — تعديل بيانات العميل الأساسية (مش الحالة/التصنيف، دي في /status)
+// PATCH /api/leads/[id] — edit the lead's basic details (not status/tier, that's in /status)
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session || !can(session.user.role, "EDIT_LEAD_DETAILS")) {
-    return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء" }, { status: 403 });
+    return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
 
   const lead = await prisma.lead.findUnique({ where: { id: params.id } });
-  if (!lead) return NextResponse.json({ error: "الليد غير موجود" }, { status: 404 });
+  if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
   if (!isManagementRole(session.user.role) && lead.assignedToId !== session.user.id) {
-    return NextResponse.json({ error: "هذا الليد غير مسند لك" }, { status: 403 });
+    return NextResponse.json({ error: "This lead is not assigned to you" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -44,7 +44,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     });
     if (duplicate) {
       return NextResponse.json(
-        { error: "يوجد عميل آخر بنفس رقم الهاتف بالفعل" },
+        { error: "Another lead already exists with this phone number" },
         { status: 409 }
       );
     }
@@ -69,7 +69,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         create: {
           userId: session.user.id,
           type: "NOTE",
-          message: "تم تعديل بيانات العميل",
+          message: "The lead's details were updated",
         },
       },
     },
@@ -78,15 +78,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ success: true, lead: updated });
 }
 
-// DELETE /api/leads/[id] — حذف نهائي (Admin فقط) — بيحذف معاه الـ follow-ups والـ meetings والـ activities
+// DELETE /api/leads/[id] — permanent delete (Admin only) — cascades to follow-ups, meetings and activities
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session || !can(session.user.role, "DELETE_LEAD")) {
-    return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء" }, { status: 403 });
+    return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
 
   const lead = await prisma.lead.findUnique({ where: { id: params.id } });
-  if (!lead) return NextResponse.json({ error: "الليد غير موجود" }, { status: 404 });
+  if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
   await prisma.lead.delete({ where: { id: params.id } });
 

@@ -20,7 +20,7 @@ export default async function AdminSheetsPage() {
   });
 
   return (
-    <DashboardShell title="إدارة الشيتات">
+    <DashboardShell title="Sheets Management">
       <SheetsClient initialBatches={batches} />
     </DashboardShell>
   );

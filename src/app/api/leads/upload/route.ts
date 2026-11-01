@@ -19,8 +19,8 @@ const rowSchema = z.object({
   socialMediaUrl: z.string().optional(),
 });
 
-// توقع أعمدة الملف: name, phone, email, company, need
-// (بيقبل أسماء أعمدة عربي أو إنجليزي شائعة عن طريق تطبيع الهيدر)
+// Expected file columns: name, phone, email, company, need
+// (accepts common Arabic or English column names by normalizing the header)
 function normalizeHeader(h: string) {
   const map: Record<string, string> = {
     "الاسم": "name",
@@ -45,13 +45,13 @@ function normalizeHeader(h: string) {
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session || !can(session.user.role, "UPLOAD_LEADS")) {
-    return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء" }, { status: 403 });
+    return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
   if (!file) {
-    return NextResponse.json({ error: "لم يتم إرفاق ملف" }, { status: 400 });
+    return NextResponse.json({ error: "No file was attached" }, { status: 400 });
   }
 
   const text = await file.text();
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
   if (parsed.errors.length > 0) {
     return NextResponse.json(
-      { error: "تعذّرت قراءة الملف", details: parsed.errors },
+      { error: "Failed to read the file", details: parsed.errors },
       { status: 400 }
     );
   }
@@ -76,13 +76,13 @@ export async function POST(req: NextRequest) {
     if (result.success) {
       validRows.push(result.data);
     } else {
-      invalidRows.push({ row: i + 2, error: result.error.issues[0]?.message ?? "بيانات غير صحيحة" });
+      invalidRows.push({ row: i + 2, error: result.error.issues[0]?.message ?? "Invalid data" });
     }
   });
 
   if (validRows.length === 0) {
     return NextResponse.json(
-      { error: "لا يوجد صفوف صالحة في الملف", invalidRows },
+      { error: "No valid rows found in the file", invalidRows },
       { status: 400 }
     );
   }
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     batch.id
   );
 
-  // حدّث عدد الليدز الفعلي في الـ batch لو اتجاهل بعض الصفوف كتكرار
+  // Update the actual lead count in the batch if some rows were skipped as duplicates
   if (insertedCount !== batch.totalLeads) {
     await prisma.uploadBatch.update({
       where: { id: batch.id },
@@ -112,8 +112,8 @@ export async function POST(req: NextRequest) {
 
   const notificationsToCreate = Object.entries(distribution).map(([userId, count]) => ({
     userId,
-    title: "عملاء جدد",
-    message: `تم توزيع ${count} عميل جديد لك من ملف ${file.name}`,
+    title: "New leads",
+    message: `${count} new leads have been distributed to you from file ${file.name}`,
     type: "ASSIGNMENT",
     link: "?status=NEW",
   }));

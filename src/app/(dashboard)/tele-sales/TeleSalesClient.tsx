@@ -39,7 +39,7 @@ export default function TeleSalesClient({ leads, salesTeam }: { leads: any[], sa
           }`}
           onClick={() => setActiveTab("all")}
         >
-          كل عملائي ({leads.length})
+          All Leads ({leads.length})
         </button>
         <button
           className={`shrink-0 rounded-xl px-4 py-2 text-sm font-medium transition-all ${
@@ -49,7 +49,7 @@ export default function TeleSalesClient({ leads, salesTeam }: { leads: any[], sa
           }`}
           onClick={() => setActiveTab("today")}
         >
-          متابعات اليوم والجديد ({todaysLeads.length})
+          Today's Follow-ups & New ({todaysLeads.length})
         </button>
         <button
           className={`shrink-0 rounded-xl px-4 py-2 text-sm font-medium transition-all ${
@@ -59,7 +59,7 @@ export default function TeleSalesClient({ leads, salesTeam }: { leads: any[], sa
           }`}
           onClick={() => setActiveTab("transferred")}
         >
-          تم التحويل للسيلز ({transferredLeads.length})
+          Transferred to Sales ({transferredLeads.length})
         </button>
       </div>
 

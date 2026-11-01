@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
         where: { role: "TELE_SALES" }
       });
       if (teleSalesEmployees.length === 0) {
-        return NextResponse.json({ error: "لا يوجد موظفين تيلي سيلز لتوزيع العملاء عليهم" }, { status: 400 });
+        return NextResponse.json({ error: "No Tele-Sales employees available to distribute leads to" }, { status: 400 });
       }
 
       // Distribute leads evenly using round-robin logic
@@ -44,14 +44,14 @@ export async function POST(req: NextRequest) {
             leadId: id,
             userId: session.user.id,
             type: "LEAD_ASSIGNED",
-            message: `تم تعيين العميل إلى ${emp.name}`,
+            message: `Lead assigned to ${emp.name}`,
           });
         });
 
         notificationsToCreate.push({
           userId: emp.id,
-          title: "عملاء جدد",
-          message: `تم توزيع ${assignedLeadIds.length} عملاء جدد لك`,
+          title: "New leads",
+          message: `${assignedLeadIds.length} new leads have been assigned to you`,
           type: "ASSIGNMENT",
           link: "?status=NEW",
         });
@@ -97,14 +97,14 @@ export async function POST(req: NextRequest) {
           leadId: id,
           userId: session.user.id,
           type: "LEAD_ASSIGNED",
-          message: `تم تعيين العميل إلى ${employee.name}`,
+          message: `Lead assigned to ${employee.name}`,
         })),
       }),
       prisma.notification.create({
         data: {
           userId: employeeId,
-          title: "عملاء جدد",
-          message: `تم تحويل ${leadIds.length} عملاء إليك`,
+          title: "New leads",
+          message: `${leadIds.length} leads have been transferred to you`,
           type: "ASSIGNMENT",
           link: "?status=NEW",
         },

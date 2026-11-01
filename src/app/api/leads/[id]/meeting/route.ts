@@ -17,18 +17,18 @@ const updateSchema = z.object({
   notes: z.string().optional(),
 });
 
-// POST — Tele-Sales بيحدد موعد Meeting بعد اهتمام العميل
+// POST — Tele-Sales schedules a meeting after the lead shows interest
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session || !can(session.user.role, "SCHEDULE_MEETING")) {
-    return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء" }, { status: 403 });
+    return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
 
   const lead = await prisma.lead.findUnique({ where: { id: params.id } });
-  if (!lead) return NextResponse.json({ error: "الليد غير موجود" }, { status: 404 });
+  if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
   if (!isManagementRole(session.user.role) && lead.assignedToId !== session.user.id) {
-    return NextResponse.json({ error: "هذا الليد غير مسند لك" }, { status: 403 });
+    return NextResponse.json({ error: "This lead is not assigned to you" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         leadId: params.id,
         userId: session.user.id,
         type: "MEETING_SCHEDULED",
-        message: `تم تحديد Meeting بتاريخ ${parsed.data.scheduledAt}`,
+        message: `A meeting was scheduled for ${parsed.data.scheduledAt}`,
       },
     }),
   ]);
@@ -64,18 +64,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json({ success: true, meeting });
 }
 
-// PATCH — Sales بيسجل نتيجة الـ Meeting بعد ما بتتم
+// PATCH — Sales records the meeting result after it takes place
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session || !can(session.user.role, "RECORD_MEETING_RESULT")) {
-    return NextResponse.json({ error: "غير مصرح لك بهذا الإجراء" }, { status: 403 });
+    return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
 
   const lead = await prisma.lead.findUnique({ where: { id: params.id } });
-  if (!lead) return NextResponse.json({ error: "الليد غير موجود" }, { status: 404 });
+  if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
 
   if (!isManagementRole(session.user.role) && lead.assignedToId !== session.user.id) {
-    return NextResponse.json({ error: "هذا الليد غير مسند لك" }, { status: 403 });
+    return NextResponse.json({ error: "This lead is not assigned to you" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -98,7 +98,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       leadId: params.id,
       userId: session.user.id,
       type: "MEETING_UPDATED",
-      message: `تم تحديث نتيجة الـ Meeting: ${parsed.data.result ?? parsed.data.status ?? ""}`,
+      message: `The meeting result was updated: ${parsed.data.result ?? parsed.data.status ?? ""}`,
     },
   });
 
