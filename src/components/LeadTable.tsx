@@ -6,6 +6,27 @@ import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
 import TierBadge from "@/components/TierBadge";
 import { playNotificationSound } from "@/lib/audio";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Download,
+  User,
+  Pencil,
+  Clock,
+  Calendar,
+  CalendarClock,
+  FileText,
+  Users,
+  Trash2,
+  Phone,
+  Link2,
+  Bot,
+  PlayCircle,
+  MessageCircle,
+  Smartphone,
+  X,
+  ClipboardList,
+} from "lucide-react";
 
 type SalesOption = { id: string; name: string; lastActiveAt?: Date | string | null };
 
@@ -205,7 +226,7 @@ export default function LeadTable({
       // Wait, since this is in CustomerDetailClient, we don't have showToast. 
       // But we can just use setWaSendError or a small state.
       // We will pass showToast down as a prop if we want.
-      setWaSendError("تم إرسال الرسالة بنجاح ✓");
+      setWaSendError("تم إرسال الرسالة بنجاح");
     } catch(e:any) {
       setWaSendError(e.message || "خطأ في الإرسال");
     } finally {
@@ -378,7 +399,7 @@ export default function LeadTable({
         <div className={`fixed bottom-6 right-6 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5 fade-in duration-300 border ${
           toast.type === 'error' ? 'bg-rose-950/90 text-rose-200 border-rose-500/30' : 'bg-emerald-950/90 text-emerald-200 border-emerald-500/30'
         }`}>
-          <span className="text-xl">{toast.type === 'error' ? '⚠️' : '✅'}</span>
+          <span className="text-xl">{toast.type === 'error' ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}</span>
           <p className="font-semibold">{toast.text}</p>
         </div>
       )}
@@ -474,7 +495,7 @@ export default function LeadTable({
                 onClick={handleExport}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3.5 rounded-xl text-base font-medium transition-colors flex items-center gap-2 shadow-sm w-full md:w-auto justify-center"
               >
-                تصدير إكسيل 📥
+                <Download size={16} /> تصدير إكسيل
               </button>
             )}
             {!isSalesView && (
@@ -509,8 +530,8 @@ export default function LeadTable({
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
-                    <div className={`w-12 h-12 shrink-0 rounded-full ${avatarColor} flex items-center justify-center text-white text-xl shadow-inner`}>
-                      👤
+                    <div className={`w-12 h-12 shrink-0 rounded-full ${avatarColor} flex items-center justify-center text-white shadow-inner`}>
+                      <User size={20} />
                     </div>
                     <div className="min-w-0 flex-1 overflow-hidden">
                       <h3 className="font-bold text-white text-[15px] truncate" title={lead.name}>{lead.name}</h3>
@@ -537,30 +558,30 @@ export default function LeadTable({
                           <div className="absolute left-0 mt-2 w-56 bg-[#0f1523] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col py-1">
 
                             <button onClick={(e) => { e.stopPropagation(); setOpenId(lead.id); setModalMode("edit"); setOpenDropdown(null); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors text-right w-full">
-                              <span>✏️</span> {isSalesView ? "تفاصيل وملاحظات السيلز" : "تعديل البيانات"}
+                              <Pencil size={14} /> {isSalesView ? "تفاصيل وملاحظات السيلز" : "تعديل البيانات"}
                             </button>
                             <button onClick={(e) => { e.stopPropagation(); setOpenId(lead.id); setModalMode("status"); setOpenDropdown(null); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors text-right w-full">
-                              <span>⏱️</span> أكشن مع العميل
+                              <Clock size={14} /> أكشن مع العميل
                             </button>
                             <button onClick={(e) => { e.stopPropagation(); setOpenId(lead.id); setModalMode("task"); setOpenDropdown(null); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-white transition-colors text-right w-full">
-                              <span>📅</span> إضافة متابعة مع العميل
+                              <Calendar size={14} /> إضافة متابعة مع العميل
                             </button>
 
                             {isSalesView && (
                               <button onClick={(e) => { e.stopPropagation(); setOpenId(lead.id); setModalMode("meeting-result"); setOpenDropdown(null); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-emerald-400 hover:bg-emerald-500/20 transition-colors text-right w-full border-t border-white/5 font-semibold">
-                                <span>📝</span> تقرير بعد الميتنج
+                                <FileText size={14} /> تقرير بعد الميتنج
                               </button>
                             )}
 
                             {isSalesView && (
                               <button onClick={(e) => { e.stopPropagation(); setOpenId(lead.id); setModalMode("upload-contract"); setOpenDropdown(null); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-blue-400 hover:bg-blue-500/20 transition-colors text-right w-full border-t border-white/5 font-semibold">
-                                <span>📄</span> رفع عقد العميل
+                                <FileText size={14} /> رفع عقد العميل
                               </button>
                             )}
 
                             {allowTransfer && (
                               <button onClick={(e) => { e.stopPropagation(); setOpenId(lead.id); setModalMode("transfer"); setOpenDropdown(null); }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-accent/20 hover:text-accent-soft transition-colors text-right w-full">
-                                <span>👥</span> تحويل إلى موظف سيلز
+                                <Users size={14} /> تحويل إلى موظف سيلز
                               </button>
                             )}
                             {canDelete && (
@@ -571,7 +592,7 @@ export default function LeadTable({
                                 }
                                 setOpenDropdown(null);
                               }} className="flex items-center gap-3 px-4 py-2.5 text-sm text-status-hot hover:bg-rose-500/10 transition-colors text-right w-full border-t border-white/5 mt-1 pt-2.5">
-                                <span>🗑️</span> حذف العميل
+                                <Trash2 size={14} /> حذف العميل
                               </button>
                             )}
                           </div>
@@ -595,12 +616,12 @@ export default function LeadTable({
                 {/* Details */}
                 <div className="space-y-3 mt-1 flex-1">
                   <div className="flex items-center gap-3 text-xs text-slate-300">
-                    <span className="text-slate-500 text-sm">📞</span>
+                    <Phone size={14} className="text-slate-500" />
                     <span dir="ltr" className="text-slate-300 font-medium tracking-wide">{lead.phone}</span>
                   </div>
                   {(lead.storeUrl || lead.socialMediaUrl) && (
                     <div className="flex items-start gap-3 text-xs text-slate-300 overflow-hidden">
-                      <span className="text-slate-500 text-sm mt-0.5">🔗</span>
+                      <Link2 size={14} className="text-slate-500 mt-0.5" />
                       <div className="flex flex-col min-w-0 flex-1 gap-1.5">
                         {lead.storeUrl && lead.storeUrl.split(',').filter(Boolean).map((url, idx) => (
                           <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="text-accent-soft hover:text-accent-soft transition-colors truncate w-full block" dir="ltr" title={`المتجر ${idx + 1}`}>
@@ -616,7 +637,7 @@ export default function LeadTable({
                     </div>
                   )}
                   <div className="flex items-start gap-3 text-xs text-slate-300">
-                    <span className="text-slate-500 text-sm mt-0.5">🗓️</span>
+                    <CalendarClock size={14} className="text-slate-500 mt-0.5" />
                     <span className="text-slate-400 truncate w-full block mt-0.5">
                       {latestActivity ? `آخر تواصل: ${formatDateTime(latestActivity.createdAt)}` : "لم يتم التواصل بعد"}
                     </span>
@@ -626,17 +647,17 @@ export default function LeadTable({
                     lead.meetings[0].status === "DONE" ? (
                       <div className="mt-4 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl space-y-3">
                         <div>
-                          <p className="text-xs text-emerald-400 font-bold mb-2">✅ نتيجة المقابلة: {formatDateTime(lead.meetings[0].scheduledAt)}</p>
+                          <p className="text-xs text-emerald-400 font-bold mb-2 flex items-center gap-1.5"><CheckCircle2 size={14} /> نتيجة المقابلة: {formatDateTime(lead.meetings[0].scheduledAt)}</p>
                           {lead.meetings[0].result && <p className="text-[11px] text-slate-300 leading-relaxed bg-[#0b101a] p-2.5 rounded-lg border border-white/5">{lead.meetings[0].result}</p>}
                         </div>
 
                         {(lead.meetings[0].recordingUrl || lead.meetings[0].aiAnalysis || lead.meetings[0].transcript) && (
                           <div className="border-t border-emerald-500/20 pt-3 space-y-3">
-                            <h4 className="text-xs font-bold text-emerald-300 flex items-center gap-1"><span>🤖</span> تسجيل وتحليل الذكاء الاصطناعي</h4>
+                            <h4 className="text-xs font-bold text-emerald-300 flex items-center gap-1"><Bot size={14} /> تسجيل وتحليل الذكاء الاصطناعي</h4>
                             
                             {lead.meetings[0].recordingUrl && (
                               <a href={lead.meetings[0].recordingUrl} target="_blank" className="flex items-center justify-center gap-2 bg-accent/20 hover:bg-accent/30 text-accent-soft py-2 rounded-lg text-[11px] font-bold transition-colors">
-                                <span>▶️</span> مشاهدة تسجيل الميتنج
+                                <PlayCircle size={14} /> مشاهدة تسجيل الميتنج
                               </a>
                             )}
                             
@@ -662,7 +683,7 @@ export default function LeadTable({
                       </div>
                     ) : (
                       <div className="mt-4 bg-purple-500/10 border border-purple-500/20 p-3 rounded-xl">
-                        <p className="text-xs text-purple-400 font-bold mb-2">📅 ميعاد المقابلة: {formatDateTime(lead.meetings[0].scheduledAt)}</p>
+                        <p className="text-xs text-purple-400 font-bold mb-2 flex items-center gap-1.5"><Calendar size={14} /> ميعاد المقابلة: {formatDateTime(lead.meetings[0].scheduledAt)}</p>
                         {lead.meetings[0].notes && <p className="text-[11px] text-slate-300 leading-relaxed bg-[#0b101a] p-2.5 rounded-lg border border-white/5">{lead.meetings[0].notes}</p>}
                       </div>
                     )
@@ -752,9 +773,9 @@ export default function LeadTable({
             {/* Header */}
             <div className="p-5 border-b border-white/10 flex justify-between items-center">
               <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                <span className="text-green-400">💬</span> واتساب — {waTargetName}
+                <MessageCircle size={18} className="text-green-400" /> واتساب — {waTargetName}
               </h3>
-              <button onClick={() => setWaModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">✕</button>
+              <button onClick={() => setWaModalOpen(false)} className="text-slate-400 hover:text-white transition-colors"><X size={18} /></button>
             </div>
 
             <div className="p-6">
@@ -783,15 +804,15 @@ export default function LeadTable({
               {/* QR Ready */}
               {waStatus === "QR_READY" && waQr && (
                 <div className="text-center">
-                  <p className="text-white font-bold mb-4">📱 امسح هذا الرمز من موبايلك</p>
+                  <p className="text-white font-bold mb-4 flex items-center justify-center gap-1.5"><Smartphone size={16} /> امسح هذا الرمز من موبايلك</p>
                   <div className="bg-white p-3 rounded-2xl inline-block mb-4 shadow-xl">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={waQr} alt="WhatsApp QR" width={220} height={220} />
                   </div>
                   <div className="text-right text-sm text-slate-300 space-y-2 bg-white/5 p-3 rounded-xl border border-white/10">
-                    <p>1️⃣ افتح <strong>واتساب</strong> على هاتفك</p>
-                    <p>2️⃣ ادخل <strong>الإعدادات</strong> → <strong>الأجهزة المرتبطة</strong></p>
-                    <p>3️⃣ اضغط <strong>ربط جهاز</strong> وامسح الرمز</p>
+                    <p>1. افتح <strong>واتساب</strong> على هاتفك</p>
+                    <p>2. ادخل <strong>الإعدادات</strong> → <strong>الأجهزة المرتبطة</strong></p>
+                    <p>3. اضغط <strong>ربط جهاز</strong> وامسح الرمز</p>
                   </div>
                 </div>
               )}
@@ -800,7 +821,7 @@ export default function LeadTable({
               {waStatus === "CONNECTED" && (
                 <div>
                   <div className="flex items-center gap-2 mb-4 text-green-400 font-bold">
-                    <span>✅</span> متصل — إرسال رسالة إلى {waTargetName}
+                    <CheckCircle2 size={16} /> متصل — إرسال رسالة إلى {waTargetName}
                   </div>
                   <textarea
                     className="w-full h-28 bg-[#0e1320] border border-white/10 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-green-500 resize-none mb-3"
@@ -814,7 +835,7 @@ export default function LeadTable({
                     disabled={waSending || !waMessage.trim()}
                     className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl disabled:opacity-50 transition-colors"
                   >
-                    {waSending ? "جاري الإرسال..." : "إرسال الرسالة 🚀"}
+                    {waSending ? "جاري الإرسال..." : "إرسال الرسالة"}
                   </button>
                 </div>
               )}
@@ -829,9 +850,9 @@ export default function LeadTable({
           <div className="bg-[#0f1523] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden">
             <div className="p-5 border-b border-white/10 flex justify-between items-center bg-accent-deep/20">
               <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                <span className="text-accent-soft">🤖</span> دعوة البوت لـ {aiInviteProvider}
+                <Bot size={18} className="text-accent-soft" /> دعوة البوت لـ {aiInviteProvider}
               </h3>
-              <button onClick={() => setAiInviteModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">✕</button>
+              <button onClick={() => setAiInviteModalOpen(false)} className="text-slate-400 hover:text-white transition-colors"><X size={18} /></button>
             </div>
             <div className="p-6">
               <p className="text-slate-300 text-sm mb-4 leading-relaxed">
@@ -865,7 +886,7 @@ export default function LeadTable({
                 disabled={aiInviteLoading || !aiInviteUrl.trim()}
                 className="w-full bg-accent hover:bg-accent text-white font-bold py-3 rounded-xl disabled:opacity-50 transition-colors"
               >
-                {aiInviteLoading ? "جاري دعوة البوت..." : "دعوة البوت الآن 🚀"}
+                {aiInviteLoading ? "جاري دعوة البوت..." : "دعوة البوت الآن"}
               </button>
             </div>
           </div>
@@ -879,7 +900,7 @@ export default function LeadTable({
             className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#0f1523] border border-[#1b2438] p-6 shadow-2xl relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <button onClick={() => { setOpenId(null); if(searchParams.get("leadId")) router.replace(window.location.pathname, {scroll: false}); }} className="absolute top-5 left-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors">✕</button>
+            <button onClick={() => { setOpenId(null); if(searchParams.get("leadId")) router.replace(window.location.pathname, {scroll: false}); }} className="absolute top-5 left-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"><X size={16} /></button>
             <h2 className="text-xl font-bold text-white mb-6 border-b border-white/5 pb-4">
               {modalMode === "edit" ? "بيانات العميل" :
                modalMode === "status" ? "أكشن مع العميل" :
@@ -926,7 +947,7 @@ export default function LeadTable({
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setShowAddModal(false)}>
           <div className="w-full max-w-md rounded-3xl bg-[#0f1523] border border-[#1b2438] p-6 shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setShowAddModal(false)} className="absolute top-5 left-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors">✕</button>
+            <button onClick={() => setShowAddModal(false)} className="absolute top-5 left-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"><X size={16} /></button>
             <h3 className="text-lg font-bold text-white mb-6 border-b border-white/5 pb-4">إضافة عميل جديد يدويًا</h3>
             <div className="space-y-4">
               <div>
@@ -1146,7 +1167,7 @@ function LeadActions({
             >
               {TIER_OPTIONS.map((s) => (
                 <option key={s} value={s}>
-                  {s === "HOT" ? "Hot 🔥" : s === "WARM" ? "Warm" : s === "COLD" ? "Cold ❄️" : "عادي"}
+                  {s === "HOT" ? "Hot" : s === "WARM" ? "Warm" : s === "COLD" ? "Cold" : "عادي"}
                 </option>
               ))}
             </select>
@@ -1205,7 +1226,7 @@ function LeadActions({
                       onClick={() => setStoreUrls(storeUrls.filter((_, i) => i !== idx))}
                       className="btn-ghost px-4 py-3 text-sm text-status-hot"
                     >
-                      ✕
+                      <X size={16} />
                     </button>
                   )}
                 </div>
@@ -1250,7 +1271,7 @@ function LeadActions({
                       onClick={() => setSocialMediaUrls(socialMediaUrls.filter((_, i) => i !== idx))}
                       className="btn-ghost px-4 py-3 text-sm text-status-hot"
                     >
-                      ✕
+                      <X size={16} />
                     </button>
                   )}
                 </div>
@@ -1281,7 +1302,7 @@ function LeadActions({
               }}
               className={`text-sm py-3 px-6 flex-1 transition-colors ${saved ? 'bg-emerald-500 text-white rounded-xl shadow-lg font-semibold' : 'btn-primary'}`}
             >
-              {saved ? "تم الحفظ بنجاح ✓" : "حفظ التعديلات"}
+              {saved ? "تم الحفظ بنجاح" : "حفظ التعديلات"}
             </button>
             {canDelete && (
               <button disabled={busy} onClick={onDelete} className="btn-ghost text-sm py-3 px-6 text-status-hot">
@@ -1360,7 +1381,7 @@ function LeadActions({
               }}
               className={`w-full text-sm py-3 mt-4 transition-colors ${saved ? 'bg-emerald-500 text-white rounded-xl shadow-lg font-semibold' : 'btn-primary'}`}
             >
-              {saved ? "تم حفظ المتابعة بنجاح ✓" : "حفظ المتابعة"}
+              {saved ? "تم حفظ المتابعة بنجاح" : "حفظ المتابعة"}
             </button>
           </div>
         </div>
@@ -1402,7 +1423,7 @@ function LeadActions({
             }}
             className={`w-full text-sm py-3 mt-4 transition-colors ${saved ? 'bg-emerald-500 text-white rounded-xl shadow-lg font-semibold' : 'btn-primary'}`}
           >
-            {saved ? "تم حفظ التقرير بنجاح ✓" : "إنهاء المقابلة وحفظ التقرير"}
+            {saved ? "تم حفظ التقرير بنجاح" : "إنهاء المقابلة وحفظ التقرير"}
           </button>
         </div>
       )}
@@ -1415,7 +1436,7 @@ function LeadActions({
               <div className="flex flex-col gap-2 mb-4 mt-2">
                 {lead.contractUrl.split(',').filter(Boolean).map((url, idx) => (
                   <a key={idx} href={url} target="_blank" className="flex items-center justify-center gap-2 bg-accent/10 hover:bg-accent/20 text-accent-soft border border-accent/20 rounded-xl py-2.5 px-4 text-sm font-semibold transition-colors">
-                    <span>📄</span> عرض العقد رقم {idx + 1}
+                    <FileText size={14} /> عرض العقد رقم {idx + 1}
                   </a>
                 ))}
               </div>
@@ -1456,7 +1477,7 @@ function LeadActions({
             }}
             className={`w-full text-sm py-3 mt-4 transition-colors ${saved ? 'bg-emerald-500 text-white rounded-xl shadow-lg font-semibold' : 'btn-primary'}`}
           >
-            {uploading ? "جاري الرفع..." : saved ? "تم رفع العقد بنجاح ✓" : "رفع الملف"}
+            {uploading ? "جاري الرفع..." : saved ? "تم رفع العقد بنجاح" : "رفع الملف"}
           </button>
         </div>
       )}
@@ -1474,16 +1495,17 @@ function LeadActions({
             >
               <option value="">اختر موظف Sales</option>
               {salesTeam?.map((s) => {
-                // If they are in the live online list, show green, else if they have a very recent static lastActiveAt show yellow, else grey
-                let dot = onlineSalesIds.includes(s.id) ? "🟢" : "⚫";
-                if (dot === "⚫" && s.lastActiveAt) {
+                // If they are in the live online list, show "online", else if they have a very recent static lastActiveAt show "recently active", else nothing
+                // Note: <option> can only hold plain text, so this is a text label, not a colored dot.
+                let statusLabel = onlineSalesIds.includes(s.id) ? "متصل الآن" : "";
+                if (!statusLabel && s.lastActiveAt) {
                   const diff = (Date.now() - new Date(s.lastActiveAt).getTime()) / 1000 / 60;
-                  if (diff < 60) dot = "🟡";
+                  if (diff < 60) statusLabel = "نشط مؤخرًا";
                 }
 
                 return (
                   <option key={s.id} value={s.id}>
-                    {dot} {s.name}
+                    {s.name}{statusLabel ? ` (${statusLabel})` : ""}
                   </option>
                 );
               })}
@@ -1512,7 +1534,7 @@ function LeadActions({
           </div>
 
           <div className="space-y-1 pt-2">
-            <p className="text-xs text-amber-400 font-semibold">📝 ملاحظات ما حصل بعد الميتنج (تُحفظ في ملف العميل)</p>
+            <p className="text-xs text-amber-400 font-semibold flex items-center gap-1.5"><FileText size={14} /> ملاحظات ما حصل بعد الميتنج (تُحفظ في ملف العميل)</p>
             <textarea
               rows={3}
               placeholder="نتيجة المقابلة، ردود فعل العميل، أي معلومة مهمة للـ Sales..."
@@ -1563,7 +1585,7 @@ function LeadActions({
             }}
             className={`w-full text-sm py-3 mt-4 transition-colors ${saved ? 'bg-emerald-500 text-white rounded-xl shadow-lg font-semibold' : 'btn-primary'}`}
           >
-            {saved ? "تم إدخال البيانات وتحويل العميل بنجاح ✓" : "حفظ البيانات وتحويل العميل"}
+            {saved ? "تم إدخال البيانات وتحويل العميل بنجاح" : "حفظ البيانات وتحويل العميل"}
           </button>
         </div>
       )}
@@ -1572,7 +1594,7 @@ function LeadActions({
         <div className="space-y-6">
           <div className="bg-[#182032] border border-white/5 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-accent-soft mb-6 flex items-center gap-2">
-              <span>📋</span> سجل الأنشطة (History)
+              <ClipboardList size={14} /> سجل الأنشطة (History)
             </h3>
             
             {lead.activities && lead.activities.length > 0 ? (

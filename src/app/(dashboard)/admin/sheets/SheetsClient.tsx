@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { FileText, FileSpreadsheet, Trash2 } from "lucide-react";
 
 type Batch = {
   id: string;
@@ -79,7 +80,7 @@ export default function SheetsClient({ initialBatches }: { initialBatches: any[]
 
       <div className="bg-[#121826] p-6 rounded-3xl border border-white/5 shadow-xl">
         <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-          <span className="text-accent">📄</span> إدارة شيتات الإكسيل المرفوعة
+          <FileText size={18} className="text-accent" /> إدارة شيتات الإكسيل المرفوعة
         </h2>
         <p className="text-slate-400 text-sm mb-6">
           يمكنك هنا رؤية جميع الشيتات التي تم رفعها مسبقاً، وإذا اكتشفت خطأ في الداتا يمكنك حذف الشيت بالكامل بضغطة زر.
@@ -108,7 +109,7 @@ export default function SheetsClient({ initialBatches }: { initialBatches: any[]
                 batches.map((batch) => (
                   <tr key={batch.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                     <td className="px-6 py-4 font-bold text-white flex items-center gap-2">
-                      <span className="text-emerald-500">📊</span> {batch.fileName}
+                      <FileSpreadsheet size={16} className="text-emerald-500" /> {batch.fileName}
                     </td>
                     <td className="px-6 py-4 text-slate-400">{batch.totalLeads} عميل</td>
                     <td className="px-6 py-4 text-accent-soft font-bold">{batch._count.leads} عميل</td>
@@ -126,7 +127,7 @@ export default function SheetsClient({ initialBatches }: { initialBatches: any[]
                         disabled={deletingId === batch.id}
                         className="bg-rose-600/10 hover:bg-rose-600 hover:text-white text-rose-500 px-4 py-2 rounded-lg text-xs font-bold transition-colors border border-rose-600/20 disabled:opacity-50"
                       >
-                        {deletingId === batch.id ? "جاري الحذف..." : "حذف الشيت بالكامل 🗑️"}
+                        {deletingId === batch.id ? "جاري الحذف..." : <><Trash2 size={14} className="inline mb-0.5" /> حذف الشيت بالكامل</>}
                       </button>
                     </td>
                   </tr>

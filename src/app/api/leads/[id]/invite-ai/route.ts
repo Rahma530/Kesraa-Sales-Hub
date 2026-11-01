@@ -33,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         
         // --- Simulated AI Data from "Fireflies" ---
         recordingUrl: meetingUrl || "https://meet.jit.si/Telesales_Recorded",
-        aiAnalysis: `🔹 التحليل والملخص:
+        aiAnalysis: `التحليل والملخص:
 العميل أظهر اهتمام كبير جداً بالباقة السنوية.
 تم مناقشة تفاصيل الدفع والخصومات المتاحة.
 العميل طلب مهلة للتفكير حتى الغد للرد النهائي.
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         leadId: params.id,
         userId: session.user.id,
         type: "MEETING",
-        message: `تم دخول الذكاء الاصطناعي للميتنج وتسجيله بنجاح 🤖 (${meetingUrl})`,
+        message: `تم دخول الذكاء الاصطناعي للميتنج وتسجيله بنجاح (${meetingUrl})`,
       },
     });
 

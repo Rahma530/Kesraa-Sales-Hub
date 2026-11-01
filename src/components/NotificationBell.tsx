@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Bell } from "lucide-react";
 import { playNotificationSound } from "@/lib/audio";
 
 export type AppNotification = {
@@ -102,7 +103,7 @@ export default function NotificationBell() {
         className="cursor-pointer hover:bg-white/5 p-2 rounded-full transition-colors relative mr-4"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="text-3xl leading-none block select-none">🔔</span>
+        <Bell size={24} className="text-slate-200" />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[11px] font-bold text-white border-2 border-[#0f1523]">
             {unreadCount > 99 ? '99+' : unreadCount}

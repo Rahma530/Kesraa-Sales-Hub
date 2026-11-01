@@ -2,6 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertTriangle, CheckCircle2, Download, Settings, FileText, XCircle, Ban } from "lucide-react";
 
 export interface UserRow {
   id: string;
@@ -157,7 +158,7 @@ export default function UserManagementTable({
         <div className={`fixed bottom-6 right-6 z-[100] px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5 fade-in duration-300 border ${
           toast.type === 'error' ? 'bg-rose-950/90 text-rose-200 border-rose-500/30' : 'bg-emerald-950/90 text-emerald-200 border-emerald-500/30'
         }`}>
-          <span className="text-xl">{toast.type === 'error' ? '⚠️' : '✅'}</span>
+          <span className="text-xl">{toast.type === 'error' ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}</span>
           <p className="font-semibold">{toast.text}</p>
         </div>
       )}
@@ -184,7 +185,7 @@ export default function UserManagementTable({
             className="bg-[#1e293b] hover:bg-slate-700 text-white px-5 py-3.5 rounded-xl text-base font-medium transition-colors flex items-center justify-center gap-2 border border-white/5 shadow-sm w-full sm:w-auto"
           >
             رفع موظفين (شيت Excel)
-            <span className="text-lg">📥</span>
+            <Download size={18} />
           </button>
           <button 
             onClick={() => setShowCreate(true)}
@@ -279,7 +280,7 @@ export default function UserManagementTable({
                 onClick={() => setOpenId(openId === u.id ? null : u.id)}
                 className="w-full bg-white/5 hover:bg-white/10 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
               >
-                <span>⚙️</span> إدارة الموظف
+                <Settings size={14} /> إدارة الموظف
               </button>
             </div>
           </div>
@@ -295,7 +296,7 @@ export default function UserManagementTable({
               <div className="bg-[#182032] border border-white/10 p-6 rounded-3xl shadow-2xl w-full max-w-4xl relative my-auto" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <span className="text-accent-soft">⚙️</span> 
+                    <Settings size={16} className="text-accent-soft" /> 
                     <span>إعدادات الموظف: <span className="text-accent-soft">{u.name}</span></span>
                   </h3>
                   <button onClick={() => setOpenId(null)} className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-colors shrink-0 bg-[#0f1523] border border-white/5 mr-4">
@@ -423,7 +424,7 @@ export default function UserManagementTable({
           <div className="bg-[#182032] border border-white/10 p-6 rounded-3xl shadow-2xl w-full max-w-md relative my-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <span className="text-xl">📥</span> رفع موظفين من ملف Excel
+                <Download size={18} /> رفع موظفين من ملف Excel
               </h3>
               <button onClick={() => setShowUpload(false)} className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-colors bg-[#0f1523] border border-white/5">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -441,7 +442,7 @@ export default function UserManagementTable({
                   </p>
                   
                   <div className="bg-[#0f1523] p-10 rounded-2xl border-2 border-dashed border-accent/30 flex flex-col items-center justify-center gap-4">
-                    <span className="text-5xl">📄</span>
+                    <FileText size={44} className="text-accent-soft" />
                     <input
                       type="file"
                       accept=".csv"
@@ -464,7 +465,7 @@ export default function UserManagementTable({
               ) : (
                 <>
                   <div className="bg-[#0f1523] p-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-3">
-                    <span className="text-4xl">{uploadResult.includes("خطأ") ? "❌" : "✅"}</span>
+                    {uploadResult.includes("خطأ") ? <XCircle size={40} className="text-rose-400" /> : <CheckCircle2 size={40} className="text-emerald-400" />}
                     <p className="text-sm font-semibold text-white mt-2 leading-relaxed">{uploadResult}</p>
                   </div>
                   <button
@@ -665,7 +666,7 @@ function UserActions({
               onClick={() => onUpdate({ isActive: !user.isActive })}
               className={`w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold transition-colors shrink-0 ${user.isActive ? "bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20" : "bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/20"}`}
             >
-              {user.isActive ? "تعطيل الحساب 🛑" : "تفعيل الحساب ✅"}
+              {user.isActive ? <><Ban size={14} className="inline mb-0.5" /> تعطيل الحساب</> : <><CheckCircle2 size={14} className="inline mb-0.5" /> تفعيل الحساب</>}
             </button>
           </div>
         </div>

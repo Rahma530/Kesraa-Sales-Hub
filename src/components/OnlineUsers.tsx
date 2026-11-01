@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { Users } from "lucide-react";
 
 export type OnlineUser = {
   id: string;
@@ -67,7 +68,7 @@ export default function OnlineUsers({ currentUserRole }: { currentUserRole?: str
         onClick={() => setIsOpen(!isOpen)}
         title="الموظفون المتصلون حالياً"
       >
-        <span className="text-3xl leading-none block select-none">👥</span>
+        <Users size={24} className="text-slate-200" />
         {onlineCount > 0 && (
           <span className="absolute top-1 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-[11px] font-bold text-white border-2 border-[#0f1523]">
             {onlineCount > 99 ? '99+' : onlineCount}

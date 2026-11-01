@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { CheckCircle2, Eye, Handshake, Phone, AlertTriangle, User } from "lucide-react";
 
 export default function AdminTodoList({ followUps, meetings }: { followUps: any[], meetings: any[] }) {
   const [filterEmployee, setFilterEmployee] = useState<string>("ALL");
@@ -53,7 +54,7 @@ export default function AdminTodoList({ followUps, meetings }: { followUps: any[
     return (
       <div className="bg-[#121826] border border-white/5 rounded-3xl p-6 mb-6 shadow-2xl flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">😎</span>
+          <CheckCircle2 size={28} className="text-emerald-400" />
           <div>
             <h3 className="text-emerald-400 font-bold text-lg">لا يوجد أي مهام أو مقابلات مجدولة لليوم</h3>
             <p className="text-slate-400 text-sm">الفريق ليس لديه مهام معلقة اليوم.</p>
@@ -71,7 +72,7 @@ export default function AdminTodoList({ followUps, meetings }: { followUps: any[
       
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-5 gap-4">
         <div className="flex items-center gap-3">
-          <span className="bg-accent/20 text-accent-soft p-2.5 rounded-xl text-xl">👀</span>
+          <span className="bg-accent/20 text-accent-soft p-2.5 rounded-xl"><Eye size={20} /></span>
           <div>
             <h3 className="text-xl font-bold text-white">مراقبة مهام الفريق (اليوم)</h3>
             <p className="text-slate-400 text-sm">
@@ -100,18 +101,18 @@ export default function AdminTodoList({ followUps, meetings }: { followUps: any[
           return (
             <div key={task.id} className={`p-4 rounded-2xl border transition-all ${task.isOverdue ? 'bg-rose-500/10 border-rose-500/30' : 'bg-[#182032] border-white/10'}`}>
               <div className="flex items-center justify-between mb-2">
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${isMeeting ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                  {isMeeting ? '🤝 مقابلة' : '📞 اتصال'}
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${isMeeting ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                  {isMeeting ? <><Handshake size={11} /> مقابلة</> : <><Phone size={11} /> اتصال</>}
                 </span>
-                <span className={`text-[10px] font-bold ${task.isOverdue ? 'text-rose-400' : 'text-slate-400'}`}>
-                  {task.isOverdue ? '⚠️ متأخر (' + timeString + ')' : timeString}
+                <span className={`text-[10px] font-bold flex items-center gap-1 ${task.isOverdue ? 'text-rose-400' : 'text-slate-400'}`}>
+                  {task.isOverdue ? <><AlertTriangle size={11} /> متأخر ({timeString})</> : timeString}
                 </span>
               </div>
               
               <div className="mb-2 border-b border-white/5 pb-2">
                 <p className="text-xs text-slate-500 mb-1">الموظف المسؤول:</p>
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center text-[10px] font-bold text-white">👤</div>
+                  <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center text-white"><User size={11} /></div>
                   <span className="text-sm font-bold text-white">{task.assignedTo}</span>
                 </div>
               </div>

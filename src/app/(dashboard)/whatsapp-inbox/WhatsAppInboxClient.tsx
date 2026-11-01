@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { MessageCircle, Users, CheckCheck, X } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Chat = {
@@ -199,7 +200,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
         <div className="max-w-md w-full bg-[#121927] border border-white/10 rounded-2xl p-8 text-center shadow-2xl">
           {waStatus === "DISCONNECTED" && (
             <>
-              <div className="text-6xl mb-4">💬</div>
+              <MessageCircle size={56} className="mb-4 text-slate-500" />
               <h2 className="text-xl font-bold text-white mb-2">الواتساب غير مرتبط</h2>
               <p className="text-slate-400 mb-6">اضغط لتوليد رمز QR وربط حسابك</p>
               <button
@@ -227,7 +228,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
               </div>
               <div className="text-right text-sm text-slate-300 space-y-2 bg-white/5 p-4 rounded-xl border border-white/10">
                 <p>1️⃣ افتح <strong>واتساب</strong> على هاتفك</p>
-                <p>2️⃣ الإعدادات → <strong>الأجهزة المرتبطة</strong></p>
+                <p>2. الإعدادات → <strong>الأجهزة المرتبطة</strong></p>
                 <p>3️⃣ اضغط <strong>ربط جهاز</strong> وامسح الرمز</p>
               </div>
             </>
@@ -259,7 +260,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
         <div className="p-3 border-b border-white/5">
           <input
             type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="🔍 بحث..."
+            placeholder="بحث..."
             className="w-full bg-[#182032] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-accent/50 transition-colors"
           />
         </div>
@@ -271,7 +272,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
                 className={`w-full flex items-center gap-3 px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors text-right ${selectedChat?.id === chat.id ? "bg-white/10 border-r-2 border-r-green-500" : ""}`}
               >
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 ${avatarColor(chat.id)}`}>
-                  {chat.isGroup ? "👥" : getInitials(chat.name)}
+                  {chat.isGroup ? <Users size={18} /> : getInitials(chat.name)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
@@ -280,7 +281,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
                   </div>
                   {chat.lastMessage && (
                     <p className="text-slate-400 text-xs truncate flex items-center gap-1">
-                      {chat.lastMessage.fromMe && <span className="text-green-400 text-[10px]">✓✓</span>}
+                      {chat.lastMessage.fromMe && <CheckCheck size={12} className="text-green-400" />}
                       {chat.lastMessage.body}
                     </p>
                   )}
@@ -296,7 +297,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
       {!selectedChat ? (
         <div className="flex-1 bg-[#121927] flex items-center justify-center min-w-0 h-full">
           <div className="text-center text-slate-500">
-            <div className="text-6xl mb-4">💬</div>
+            <MessageCircle size={56} className="mb-4 text-slate-500" />
             <p className="text-xl font-bold text-white mb-2">واتساب ويب</p>
             <p className="text-sm">اختر محادثة للبدء في المراسلة</p>
           </div>
@@ -306,7 +307,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
           {/* Chat Header */}
           <div className="h-[72px] min-h-[72px] p-4 border-b border-white/10 flex items-center gap-4 bg-[#0f1523] z-10 flex-shrink-0">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${avatarColor(selectedChat.id)}`}>
-              {selectedChat.isGroup ? "👥" : getInitials(selectedChat.name)}
+              {selectedChat.isGroup ? <Users size={18} /> : getInitials(selectedChat.name)}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-white font-bold text-[15px] truncate">{selectedChat.name}</p>
@@ -322,7 +323,7 @@ function WhatsAppPanel({ slotId, phoneQuery }: { slotId: string; phoneQuery: str
                   <p className="whitespace-pre-wrap leading-relaxed mb-1 break-words">{msg.body || <em className="opacity-50">[ميديا]</em>}</p>
                   <div className="flex items-center justify-end gap-1">
                     <p className={`text-[10px] ${msg.fromMe ? "text-green-200" : "text-slate-400"}`}>{formatTime(msg.timestamp)}</p>
-                    {msg.fromMe && <span className="text-blue-400 text-[10px]">✓✓</span>}
+                    {msg.fromMe && <CheckCheck size={12} className="text-blue-400" />}
                   </div>
                 </div>
               </div>
@@ -400,7 +401,7 @@ export default function WhatsAppInboxClient() {
                   : "bg-[#0a0f1a] border-transparent text-slate-500 hover:text-slate-300 hover:bg-[#0f1523]"
                 }`}
             >
-              <span>💬</span>
+              <MessageCircle size={14} />
               <span>{slot.label}</span>
               {slots.length > 1 && (
                 <span
@@ -409,7 +410,7 @@ export default function WhatsAppInboxClient() {
                   className="ml-1 text-slate-500 hover:text-rose-400 transition-colors text-xs leading-none"
                   title="إزالة"
                 >
-                  ✕
+                  <X size={12} />
                 </span>
               )}
             </button>

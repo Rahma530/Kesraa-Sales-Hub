@@ -67,7 +67,7 @@ export async function POST() {
         await (prisma as any).notification.create({
           data: {
             userId: admin.id,
-            title: "⚠️ عميل بدون أكشن من السيلز",
+            title: "عميل بدون أكشن من السيلز",
             message: `العميل "${lead.name}" محوّل لموظف السيلز "${employeeName}" من ${hoursSinceTransfer} ساعة ولم يتم اتخاذ أي إجراء عليه.`,
             type: "STALE_LEAD_ALERT",
             link: `/admin/customers?search=${encodeURIComponent(lead.name)}`,
@@ -81,7 +81,7 @@ export async function POST() {
         await (prisma as any).notification.create({
           data: {
             userId: lead.assignedToId,
-            title: "⚠️ تذكير: عميل معلق",
+            title: "تذكير: عميل معلق",
             message: `العميل "${lead.name}" تم تحويله لك من ${hoursSinceTransfer} ساعة ولم تتخذ أي إجراء عليه. يرجى المتابعة.`,
             type: "STALE_LEAD_ALERT",
             link: `/sales?search=${encodeURIComponent(lead.name)}`,
@@ -125,7 +125,7 @@ export async function POST() {
         await (prisma as any).notification.create({
           data: {
             userId: admin.id,
-            title: "🔴 مقابلة فات ميعادها بدون تقرير",
+            title: "مقابلة فات ميعادها بدون تقرير",
             message: `موظف السيلز "${employeeName}" عنده مقابلة مع العميل "${leadName}" فات ميعادها من ${hoursSinceMeeting} ساعة ولم يكتب تقرير المقابلة.`,
             type: "OVERDUE_MEETING_ALERT",
             link: `/admin/customers?search=${encodeURIComponent(leadName)}`,
@@ -139,7 +139,7 @@ export async function POST() {
         await (prisma as any).notification.create({
           data: {
             userId: meeting.ownerId,
-            title: "🔴 تذكير: تقرير مقابلة متأخر",
+            title: "تذكير: تقرير مقابلة متأخر",
             message: `فات ميعاد المقابلة مع العميل "${leadName}" من ${hoursSinceMeeting} ساعة. الرجاء إنهاء المقابلة وكتابة التقرير.`,
             type: "OVERDUE_MEETING_ALERT",
             link: `/sales?search=${encodeURIComponent(leadName)}`,
@@ -222,7 +222,7 @@ export async function POST() {
         await (prisma as any).notification.create({
           data: {
             userId: admin.id,
-            title: "⚠️ عميل جديد بدون أكشن من التيلي سيلز",
+            title: "عميل جديد بدون أكشن من التيلي سيلز",
             message: `العميل "${lead.name}" مسند للموظف "${employeeName}" من ${hoursSinceUpload} ساعة ولم يتم اتخاذ أي إجراء عليه.`,
             type: "STALE_TELE_LEAD_ALERT",
             link: `/admin/customers?search=${encodeURIComponent(lead.name)}`,
@@ -235,7 +235,7 @@ export async function POST() {
       await (prisma as any).notification.create({
         data: {
           userId: lead.assignedToId,
-          title: "⚠️ تذكير: عميل جديد معلق",
+          title: "تذكير: عميل جديد معلق",
           message: `تم إسناد العميل "${lead.name}" لك من ${hoursSinceUpload} ساعة ولم تتخذ أي إجراء عليه. يرجى التواصل معه.`,
           type: "STALE_TELE_LEAD_ALERT",
           link: `/tele-sales?search=${encodeURIComponent(lead.name)}`,
