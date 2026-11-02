@@ -50,6 +50,10 @@ model User {
   // resent), cleared once the employee sets their password.
   inviteToken          String?   @unique
   inviteTokenExpiresAt DateTime?
+  // Forgot-password flow: set when the employee requests a reset email,
+  // cleared once they set a new password or the link expires.
+  passwordResetToken          String?   @unique
+  passwordResetTokenExpiresAt DateTime?
   role          String
   isActive      Boolean  @default(true)
   lastActiveAt  DateTime?
