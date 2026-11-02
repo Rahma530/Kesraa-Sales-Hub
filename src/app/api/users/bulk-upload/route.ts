@@ -2,7 +2,7 @@ import { Role } from "@/lib/enums";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { can } from "@/lib/permissions";
+import { can, teamRoleForManager } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import Papa from "papaparse";
 import { z } from "zod";
@@ -36,9 +36,14 @@ function normalizeHeader(h: string) {
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || !can(session.user.role, "MANAGE_USERS")) {
+  if (!session || !can(session.user.role, "MANAGE_TEAM_USERS")) {
     return NextResponse.json({ error: "You are not authorized to perform this action" }, { status: 403 });
   }
+
+  // A Head can only add employees to their own team — whatever the sheet's
+  // Role column says, every row is forced into their team's role. The
+  // Admin keeps full control over the Role column.
+  const managedRole = teamRoleForManager(session.user.role);
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
@@ -70,6 +75,8 @@ export async function POST(req: NextRequest) {
       mappedRole = "ADMIN";
     } else if (["رئيس المبيعات", "رئيس مبيعات", "هيد سيلز", "head of sales", "head_of_sales"].includes(normalizedRole)) {
       mappedRole = "HEAD_OF_SALES";
+    } else if (["رئيس التيلي سيلز", "رئيس تيلي سيلز", "هيد تيلي سيلز", "head of tele-sales", "head of tele sales", "head_of_tele_sales"].includes(normalizedRole)) {
+      mappedRole = "HEAD_OF_TELE_SALES";
     } else if (["تيلي سيلز", "موظف تيلي سيلز", "تيلي", "tele-sales", "tele sales", "tele_sales"].includes(normalizedRole)) {
       mappedRole = "TELE_SALES";
     } else if (["مبيعات", "سيلز", "موظف مبيعات", "موظف سيلز", "sales"].includes(normalizedRole)) {
@@ -77,6 +84,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (mappedRole) row.role = mappedRole;
+
+    // A Head's upload always lands in their own team, regardless of
+    // whatever role was written in the sheet.
+    if (managedRole) row.role = managedRole;
 
     const result = rowSchema.safeParse(row);
     if (result.success) {

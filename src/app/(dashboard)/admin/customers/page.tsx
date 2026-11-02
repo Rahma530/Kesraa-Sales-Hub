@@ -9,8 +9,13 @@ import DashboardShell from "@/components/DashboardShell";
 export default async function AdminCustomersPage() {
   const session = await getServerSession(authOptions);
   
-  // Only Admin and Head of Sales can access this
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "HEAD_OF_SALES")) {
+  // Only Admin and the Heads can access this
+  if (
+    !session ||
+    (session.user.role !== "ADMIN" &&
+      session.user.role !== "HEAD_OF_SALES" &&
+      session.user.role !== "HEAD_OF_TELE_SALES")
+  ) {
     redirect("/");
   }
 

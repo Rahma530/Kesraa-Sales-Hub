@@ -5,9 +5,9 @@ import { NextResponse } from "next/server";
 
 // أي مسار (Prefix) بيسمح بالدخول له لأنهي أدوار
 const ROUTE_ROLES: { prefix: string; roles: Role[] }[] = [
-  { prefix: "/admin", roles: [Role.ADMIN, Role.HEAD_OF_SALES] },
-  { prefix: "/tele-sales", roles: [Role.ADMIN, Role.HEAD_OF_SALES, Role.TELE_SALES] },
-  { prefix: "/sales", roles: [Role.ADMIN, Role.HEAD_OF_SALES, Role.SALES] },
+  { prefix: "/admin", roles: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES] },
+  { prefix: "/tele-sales", roles: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES, Role.TELE_SALES] },
+  { prefix: "/sales", roles: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES, Role.SALES] },
   { prefix: "/account", roles: [Role.ADMIN] },
 ];
 
