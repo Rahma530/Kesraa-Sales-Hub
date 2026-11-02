@@ -2,7 +2,7 @@ import { Role } from "@/lib/enums";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { can } from "@/lib/permissions";
+import { can, teamRoleForManager } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const isSelf = session.user.id === params.id;
-  if (!isSelf && !can(session.user.role, "MANAGE_USERS")) {
+  if (!isSelf && !can(session.user.role, "MANAGE_TEAM_USERS")) {
     return NextResponse.json({ error: "You are not authorized to edit other users' data" }, { status: 403 });
   }
 
@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
     }
-    
+
     // Prevent self role/status change unless ADMIN doing it to themselves safely
     if (parsed.data.isActive === false) {
       return NextResponse.json({ error: "You cannot deactivate your own account" }, { status: 400 });
@@ -47,14 +47,30 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (parsed.data.role && parsed.data.role !== user.role && session.user.role !== Role.ADMIN) {
       return NextResponse.json({ error: "You cannot change your own role" }, { status: 400 });
     }
-    
+
     return applyUpdate(user.id, parsed.data);
+  }
+
+  // Editing someone else: the Admin can edit anyone. A Head can only edit
+  // employees within their own team, and can never change a role.
+  const managedRole = teamRoleForManager(session.user.role);
+  if (managedRole) {
+    if (user.role !== managedRole) {
+      return NextResponse.json(
+        { error: "You can only manage employees in your own team" },
+        { status: 403 }
+      );
+    }
   }
 
   const body = await req.json();
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 });
+  }
+
+  if (managedRole && parsed.data.role !== undefined) {
+    return NextResponse.json({ error: "Only an Admin can change an employee's role" }, { status: 403 });
   }
 
   return applyUpdate(user.id, parsed.data);

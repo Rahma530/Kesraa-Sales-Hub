@@ -24,7 +24,7 @@ export async function GET() {
     const onlineUsers = await prisma.user.findMany({
       where: {
         lastActiveAt: { gte: twoMinutesAgo },
-        role: { in: [Role.SALES, Role.TELE_SALES, Role.HEAD_OF_SALES, Role.ADMIN] },
+        role: { in: [Role.SALES, Role.TELE_SALES, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES, Role.ADMIN] },
       },
       select: {
         id: true,

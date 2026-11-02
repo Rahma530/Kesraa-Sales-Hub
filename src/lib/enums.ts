@@ -1,6 +1,7 @@
 export enum Role {
   ADMIN = "ADMIN",
   HEAD_OF_SALES = "HEAD_OF_SALES",
+  HEAD_OF_TELE_SALES = "HEAD_OF_TELE_SALES",
   TELE_SALES = "TELE_SALES",
   SALES = "SALES"
 }

@@ -23,7 +23,7 @@ export async function POST() {
 
     const admins = await prisma.user.findMany({
       where: {
-        role: { in: [Role.ADMIN, Role.HEAD_OF_SALES] },
+        role: { in: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES] },
         isActive: true,
       },
       select: { id: true },

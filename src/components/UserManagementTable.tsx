@@ -20,6 +20,7 @@ export interface UserRow {
 const ROLE_OPTIONS = [
   { value: "ADMIN", label: "Admin" },
   { value: "HEAD_OF_SALES", label: "Head of Sales" },
+  { value: "HEAD_OF_TELE_SALES", label: "Head of Tele-Sales" },
   { value: "TELE_SALES", label: "Tele-Sales" },
   { value: "SALES", label: "Sales" },
 ];
@@ -27,10 +28,15 @@ const ROLE_OPTIONS = [
 export default function UserManagementTable({
   users,
   currentUserId,
+  managedRole,
 }: {
   users: UserRow[];
   currentUserId: string;
+  /** null = this viewer is an Admin (unrestricted). A role string = this
+   *  viewer is a Head who can only see/manage that team. */
+  managedRole: string | null;
 }) {
+  const isAdmin = managedRole === null;
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -42,7 +48,7 @@ export default function UserManagementTable({
     username: "",
     email: "",
     phone: "",
-    role: "TELE_SALES",
+    role: managedRole ?? "TELE_SALES",
   });
   const [createError, setCreateError] = useState<string | null>(null);
   const [createdInviteLink, setCreatedInviteLink] = useState<string | null>(null);
@@ -263,7 +269,7 @@ export default function UserManagementTable({
               </div>
 
               {/* Three dots menu */}
-              {u.id !== currentUserId && (
+              {u.id !== currentUserId && (isAdmin || u.needsActivation) && (
                 <div className="relative">
                   <button
                     onClick={() => setMenuOpenId(menuOpenId === u.id ? null : u.id)}
@@ -288,16 +294,18 @@ export default function UserManagementTable({
                           {resendingId === u.id ? "Generating..." : "Resend Invite Link"}
                         </button>
                       )}
-                      <button
-                        onClick={() => deleteUser(u.id)}
-                        className="w-full text-right px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors flex items-center gap-2 font-medium"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18"></path>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                        Delete Permanently
-                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => deleteUser(u.id)}
+                          className="w-full text-right px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10 transition-colors flex items-center gap-2 font-medium"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                          Delete Permanently
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -359,6 +367,7 @@ export default function UserManagementTable({
                   user={u}
                   busy={busy}
                   isSelf={u.id === currentUserId}
+                  isAdmin={isAdmin}
                   onUpdate={(body) => patchUser(u.id, body)}
                 />
               </div>
@@ -436,17 +445,23 @@ export default function UserManagementTable({
                 value={newUser.phone}
                 onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
               />
-              <select
-                className="input-field w-full text-sm bg-[#0f1523] py-3"
-                value={newUser.role}
-                onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-              >
-                {ROLE_OPTIONS.map((r) => (
-                  <option key={r.value} value={r.value}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
+              {isAdmin ? (
+                <select
+                  className="input-field w-full text-sm bg-[#0f1523] py-3"
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                >
+                  {ROLE_OPTIONS.map((r) => (
+                    <option key={r.value} value={r.value}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="input-field w-full text-sm bg-[#0f1523] py-3 text-slate-400">
+                  Role: {ROLE_OPTIONS.find((r) => r.value === managedRole)?.label ?? managedRole}
+                </div>
+              )}
 
               <p className="text-xs text-slate-500 -mt-1 flex items-center gap-1.5">
                 <Link2 size={12} /> An invite link will be generated so the employee can set their own password.
@@ -543,6 +558,11 @@ export default function UserManagementTable({
                     <p className="text-xs text-slate-500 flex items-center gap-1.5">
                       <Link2 size={12} /> No password column — each employee gets an invite link to set their own.
                     </p>
+                    {!isAdmin && (
+                      <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                        <AlertTriangle size={12} /> Every row will be added as {ROLE_OPTIONS.find((r) => r.value === managedRole)?.label ?? managedRole}, whatever the sheet's Role column says.
+                      </p>
+                    )}
                   </div>
 
                   <button
@@ -606,11 +626,13 @@ function UserActions({
   user,
   busy,
   isSelf,
+  isAdmin,
   onUpdate,
 }: {
   user: UserRow;
   busy: boolean;
   isSelf: boolean;
+  isAdmin: boolean;
   onUpdate: (body: any) => void;
 }) {
   const [role, setRole] = useState(user.role);
@@ -697,31 +719,33 @@ function UserActions({
 
       {/* Left Column: Settings */}
       <div className="flex flex-col gap-6">
-        {/* Role */}
-        <div className="bg-[#121826] p-6 rounded-3xl border border-white/5">
-          <p className="text-sm font-semibold text-white mb-4">Change Role</p>
-          <div className="flex flex-col gap-4">
-            <select
-              className="input-field w-full text-sm bg-[#0f1523] py-3"
-              value={role}
-              disabled={isSelf}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              {ROLE_OPTIONS.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-            <button
-              disabled={busy || role === user.role || isSelf}
-              onClick={() => onUpdate({ role })}
-              className="btn-primary w-full py-3 text-sm"
-            >
-              Save Role
-            </button>
+        {/* Role — Admin only; a Head cannot change roles */}
+        {isAdmin && (
+          <div className="bg-[#121826] p-6 rounded-3xl border border-white/5">
+            <p className="text-sm font-semibold text-white mb-4">Change Role</p>
+            <div className="flex flex-col gap-4">
+              <select
+                className="input-field w-full text-sm bg-[#0f1523] py-3"
+                value={role}
+                disabled={isSelf}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                {ROLE_OPTIONS.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                disabled={busy || role === user.role || isSelf}
+                onClick={() => onUpdate({ role })}
+                className="btn-primary w-full py-3 text-sm"
+              >
+                Save Role
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Password */}
         <div className="bg-[#121826] p-6 rounded-3xl border border-white/5">
