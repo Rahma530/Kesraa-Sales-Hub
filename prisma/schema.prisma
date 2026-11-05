@@ -168,9 +168,23 @@ model Meeting {
   result String? // نتيجة الـ Meeting
   notes  String?
 
-  recordingUrl String? // رابط التسجيل
-  transcript   String? // التفريغ الصوتي (السكريبت)
-  aiAnalysis   String? // تحليل الذكاء الاصطناعي
+  // The real Google Meet link created via Calendar API when this meeting
+  // was scheduled (the "Create Meeting" button), and the Google Calendar
+  // event id it belongs to (useful for looking the event back up, e.g. to
+  // reschedule or cancel it).
+  meetingLink     String?
+  calendarEventId String?
+
+  // Fireflies' own id for the bot session we asked to join meetingLink
+  // (via the addToLiveMeeting mutation). This is what the incoming webhook
+  // reports back, and what we use to fetch the finished transcript/summary.
+  firefliesMeetingId String?
+
+  recordingUrl String? // رابط معاينة التسجيل/التفريغ في داشبورد Fireflies
+  transcript   String? // التفريغ الصوتي الكامل (Transcript) من Fireflies
+  aiAnalysis   String? // الملخص الأصلي (إنجليزي) من Fireflies
+  aiTranslation     String? // ترجمة الملخص للعربي (عبر Gemini)
+  aiRecommendations String? // اقتراحات المتابعة المقترحة من الـ AI (عبر Gemini)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -179,6 +193,7 @@ model Meeting {
   @@index([ownerId])
   @@index([scheduledAt])
   @@index([status])
+  @@index([firefliesMeetingId])
 }
 
 // Full audit trail — every action on a lead, visible to Admin/Head of Sales

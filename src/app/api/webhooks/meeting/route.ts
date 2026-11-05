@@ -1,94 +1,136 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import crypto from "crypto";
+import {
+  verifyFirefliesSignature,
+  getFirefliesTranscript,
+  extractOurMeetingId,
+  joinTranscriptText,
+} from "@/lib/fireflies";
+import { translateAndRecommend } from "@/lib/gemini";
 
-// This webhook receives data from an AI Notetaker (e.g. Fireflies.ai, Fathom)
-// once a meeting ends, and attaches the recording/transcript/summary to the
-// matching Lead's latest Meeting.
+// This webhook receives real events from Fireflies.ai (Webhooks V2) once a
+// meeting we created via /api/leads/[id]/meeting/create-link has been
+// recorded and summarized, and attaches the real transcript/summary/AI
+// translation+recommendations to the matching Lead's Meeting.
 //
-// SECURITY: this endpoint is public (the AI tool has no login of its own),
-// so it's protected by a shared secret instead — set AI_WEBHOOK_SECRET in
-// .env and configure the exact same value in the AI tool's webhook settings
-// (as a custom header, e.g. "x-webhook-secret: <value>", or as a
-// "?secret=<value>" query parameter if the tool only supports that).
-// Without a matching secret, any request is rejected before touching the
-// database — this stops anyone who merely discovers the URL from writing
-// fake meeting data onto a real customer's record.
-function isAuthorized(req: NextRequest): boolean {
-  const expected = process.env.AI_WEBHOOK_SECRET;
-
-  // Fail closed: if the secret isn't configured, refuse every request
-  // rather than silently accepting unauthenticated ones.
-  if (!expected) return false;
-
-  const provided =
-    req.headers.get("x-webhook-secret") ?? req.nextUrl.searchParams.get("secret") ?? "";
-
-  const expectedBuf = Buffer.from(expected);
-  const providedBuf = Buffer.from(provided);
-
-  // Constant-time comparison so response timing can't leak the secret.
-  if (expectedBuf.length !== providedBuf.length) return false;
-  return crypto.timingSafeEqual(expectedBuf, providedBuf);
-}
-
+// Confirmed empirically against a live test delivery (webhook.site,
+// 2026-11-04) and against Fireflies' own docs for Webhooks V2:
+//   { "event": "meeting.summarized", "timestamp": <ms>, "meeting_id": "<id>" }
+// signed with header "x-hub-signature: sha256=<hex HMAC-SHA256 of raw body>"
+//
+// SECURITY: verifyFirefliesSignature() checks that signature against
+// FIREFLIES_WEBHOOK_SECRET (the same "Signing Secret" configured on
+// Fireflies' Webhooks page) using a constant-time comparison — this is what
+// stops anyone who merely discovers this URL from writing fake meeting data
+// onto a real customer's record.
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // IMPORTANT: read the raw text body (not req.json()) — the HMAC signature
+  // is computed over the exact raw bytes Fireflies sent. Parsing to JSON
+  // and re-stringifying would not reliably reproduce the same bytes.
+  const rawBody = await req.text();
+  const signature = req.headers.get("x-hub-signature");
+
+  if (!verifyFirefliesSignature(rawBody, signature)) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+  }
+
+  let payload: { event?: string; meeting_id?: string };
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  // Fireflies sends a "test" event when the webhook URL is first saved in
+  // its dashboard — acknowledge it so the test shows green, but there's
+  // nothing to do with it.
+  if (payload.event === "test") {
+    return NextResponse.json({ success: true, note: "Test event acknowledged" });
+  }
+
+  // We only care once the AI summary is ready — that's what gives us the
+  // meeting `title` we need to match this recording back to our own
+  // Meeting row (see extractOurMeetingId). "meeting.transcribed" fires
+  // earlier with the raw transcript only; we don't act on it to avoid
+  // doing this work twice.
+  if (payload.event !== "meeting.summarized") {
+    return NextResponse.json({ success: true, note: `Ignored event: ${payload.event}` });
+  }
+
+  const firefliesMeetingId = payload.meeting_id;
+  if (!firefliesMeetingId) {
+    return NextResponse.json({ error: "Missing meeting_id in payload" }, { status: 400 });
   }
 
   try {
-    const payload = await req.json();
-
-    // Example payload structure from AI tools:
-    // {
-    //   "meeting_id": "12345",
-    //   "attendees": ["customer@example.com", "sales@ourcompany.com"],
-    //   "recording_url": "https://...",
-    //   "transcript": "Customer: Hello\nSales: Hi...",
-    //   "summary": "The customer is interested in the premium plan.",
-    //   "lead_id": "cmus64kh60000w961psgnxyo9" // Ideally passed in custom data
-    // }
-
-    const leadId = payload.lead_id;
-
-    if (!leadId || typeof leadId !== "string") {
-      return NextResponse.json({ error: "Missing lead_id in payload" }, { status: 400 });
+    // 1) Fetch the real transcript + summary from Fireflies' API.
+    const transcript = await getFirefliesTranscript(firefliesMeetingId);
+    if (!transcript) {
+      console.error(`Webhook: could not fetch Fireflies transcript ${firefliesMeetingId}`);
+      return NextResponse.json({ error: "Could not fetch transcript from Fireflies" }, { status: 502 });
     }
 
-    // Find the latest meeting for this lead
-    const latestMeeting = await prisma.meeting.findFirst({
-      where: { leadId },
-      orderBy: { createdAt: "desc" },
+    // 2) Recover which of OUR Meeting rows this belongs to, from the title
+    // we set ourselves when inviting the bot (buildMeetingTitle).
+    const ourMeetingId = extractOurMeetingId(transcript.title);
+    if (!ourMeetingId) {
+      console.error(
+        `Webhook: Fireflies meeting ${firefliesMeetingId} has no recognizable LeadRef in its title: "${transcript.title}"`
+      );
+      return NextResponse.json(
+        { error: "Could not match this recording to a lead (no LeadRef in title)" },
+        { status: 404 }
+      );
+    }
+
+    const meeting = await prisma.meeting.findUnique({
+      where: { id: ourMeetingId },
+      include: { lead: true },
+    });
+    if (!meeting) {
+      console.error(`Webhook: no Meeting row found for id ${ourMeetingId} (from Fireflies title)`);
+      return NextResponse.json({ error: "Matched meeting id does not exist" }, { status: 404 });
+    }
+
+    // 3) Translate the summary to Arabic and generate follow-up
+    // recommendations via Gemini. If this fails, we still save the real
+    // transcript/summary — translation is a bonus, not a blocker.
+    const transcriptText = joinTranscriptText(transcript.sentences);
+    const aiResult = await translateAndRecommend({
+      leadName: meeting.lead.name,
+      summaryOverview: transcript.summary?.overview ?? "",
+      summaryBulletGist: transcript.summary?.bullet_gist ?? "",
+      actionItems: transcript.summary?.action_items ?? "",
+      transcriptText,
     });
 
-    if (!latestMeeting) {
-      return NextResponse.json({ error: "No meeting found for this lead" }, { status: 404 });
-    }
-
-    // Update the meeting with AI data
+    // 4) Save everything to the matched Meeting record.
     await prisma.meeting.update({
-      where: { id: latestMeeting.id },
+      where: { id: meeting.id },
       data: {
-        recordingUrl: typeof payload.recording_url === "string" ? payload.recording_url : undefined,
-        transcript: typeof payload.transcript === "string" ? payload.transcript : undefined,
-        aiAnalysis: typeof payload.summary === "string" ? payload.summary : undefined,
-        status: "DONE", // Automatically mark as done when AI sends the report
+        firefliesMeetingId,
+        recordingUrl: transcript.transcript_url ?? undefined,
+        transcript: transcriptText || undefined,
+        aiAnalysis: transcript.summary?.overview ?? undefined,
+        aiTranslation: aiResult.success ? aiResult.result?.translationArabic : undefined,
+        aiRecommendations: aiResult.success ? aiResult.result?.recommendations : undefined,
+        status: "DONE",
       },
     });
 
-    // Add a system activity for the manager to see
     await prisma.activity.create({
       data: {
-        leadId,
-        userId: latestMeeting.ownerId,
+        leadId: meeting.leadId,
+        userId: meeting.ownerId,
         type: "AI_MEETING_ANALYSIS",
-        message: "The meeting recording and AI analysis have been saved",
+        message: aiResult.success
+          ? "The meeting recording, transcript, and AI translation/recommendations have been saved."
+          : `The meeting recording and transcript have been saved (AI translation failed: ${aiResult.error ?? "unknown error"}).`,
       },
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Webhook error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
