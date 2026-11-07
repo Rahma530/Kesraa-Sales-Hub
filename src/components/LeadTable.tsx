@@ -788,6 +788,9 @@ export default function LeadTable({
                       <button
                         onClick={(e) => {
                           e.preventDefault();
+                          // Just opens Google Meet's "new meeting" page — no
+                          // backend call here. Use "Create Meeting" above for
+                          // a real link with the AI recording bot invited.
                           window.open("https://meet.google.com/new", "_blank");
                         }}
                         className="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-xl w-10 flex items-center justify-center transition-colors"
@@ -808,6 +811,9 @@ export default function LeadTable({
                       <button
                         onClick={(e) => {
                           e.preventDefault();
+                          // Opens a real, free Jitsi room and remembers the
+                          // link for this lead's notes. No fake AI data is
+                          // written here anymore.
                           const jitsiUrl = `https://meet.jit.si/Telesales_${lead.phone}_${Math.floor(Date.now() / 1000)}`;
                           localStorage.setItem(`jitsi_${lead.id}`, jitsiUrl);
                           window.open(jitsiUrl, "_blank");
