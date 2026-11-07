@@ -725,6 +725,7 @@ export default function AdminCustomersClient({
           salesTeam={salesTeam as any}
           employees={employees as any}
           allowExport={true}
+          canHoldMeetings
         />
       )}
     </div>

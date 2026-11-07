@@ -133,6 +133,7 @@ export default function LeadTable({
   employees,
   isSalesView,
   allowExport,
+  canHoldMeetings,
 }: {
   leads: LeadRow[];
   showAssignee?: boolean;
@@ -142,6 +143,12 @@ export default function LeadTable({
   employees?: { id: string; name: string; role: string }[];
   isSalesView?: boolean;
   allowExport?: boolean;
+  // Only the employee who actually holds the meeting (Sales, or Admin/Heads
+  // reviewing on their behalf) should see the "join a meeting now" buttons.
+  // Tele-Sales schedules a meeting date and hands the lead off to Sales via
+  // the Transfer modal — they never join the meeting themselves, so these
+  // buttons stay hidden for them.
+  canHoldMeetings?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -149,13 +156,6 @@ export default function LeadTable({
   const [modalMode, setModalMode] = useState<"edit" | "details" | "status" | "task" | "transfer" | "meeting-result" | "upload-contract">("details");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  // AI Invite Modal
-  const [aiInviteModalOpen, setAiInviteModalOpen] = useState(false);
-  const [aiInviteLeadId, setAiInviteLeadId] = useState<string | null>(null);
-  const [aiInviteProvider, setAiInviteProvider] = useState<string>("");
-  const [aiInviteUrl, setAiInviteUrl] = useState("");
-  const [aiInviteLoading, setAiInviteLoading] = useState(false);
 
   // WhatsApp modal
   const [waModalOpen, setWaModalOpen] = useState(false);
@@ -714,51 +714,50 @@ export default function LeadTable({
                   >
                     Details
                   </button>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setAiInviteProvider("Google Meet");
-                      setAiInviteLeadId(lead.id);
-                      setAiInviteUrl("");
-                      setAiInviteModalOpen(true);
-                      window.open("https://meet.google.com/new", "_blank");
-                    }}
-                    className="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-xl w-10 flex items-center justify-center transition-colors"
-                    title="Google Meeting"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-                  </button>
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setAiInviteProvider("Zoom");
-                      setAiInviteLeadId(lead.id);
-                      setAiInviteUrl("");
-                      setAiInviteModalOpen(true);
-                      window.open("https://zoom.us/meeting/schedule", "_blank");
-                    }}
-                    className="bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 rounded-xl w-10 flex items-center justify-center transition-colors"
-                    title="Zoom Meeting"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 10.655V8.5A1.5 1.5 0 0 0 14.5 7h-11A1.5 1.5 0 0 0 2 8.5v8A1.5 1.5 0 0 0 3.5 18h11a1.5 1.5 0 0 0 1.5-1.5v-2.155l4.636 3.161A.5.5 0 0 0 22 17.094V7.906a.5.5 0 0 0-.78-.415L16 10.655z"/></svg>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      const jitsiUrl = `https://meet.jit.si/Telesales_${lead.phone}_${Math.floor(Date.now() / 1000)}`;
-                      localStorage.setItem(`jitsi_${lead.id}`, jitsiUrl);
-                      call(`/api/leads/${lead.id}/invite-ai`, "POST", {
-                        meetingUrl: jitsiUrl
-                      }).then(() => {
-                        setTimeout(() => window.location.reload(), 1000); // Reload to show AI data
-                      }).catch(() => {});
-                      window.open(jitsiUrl, "_blank");
-                    }}
-                    className="bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent-soft rounded-xl w-10 flex items-center justify-center transition-colors"
-                    title="Jitsi (Automatic Meeting)"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15.6 11.6L22 7v10l-6.4-4.5v-1z"/><circle cx="8" cy="12" r="5"/></svg>
-                  </button>
+                  {canHoldMeetings && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Just opens Google Meet's "new meeting" page — no
+                          // backend call here. The real meeting recording/
+                          // summary arrives later from the notetaker tool via
+                          // the /api/webhooks/meeting integration, not from
+                          // clicking this button.
+                          window.open("https://meet.google.com/new", "_blank");
+                        }}
+                        className="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-xl w-10 flex items-center justify-center transition-colors"
+                        title="Google Meeting"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          window.open("https://zoom.us/meeting/schedule", "_blank");
+                        }}
+                        className="bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 rounded-xl w-10 flex items-center justify-center transition-colors"
+                        title="Zoom Meeting"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 10.655V8.5A1.5 1.5 0 0 0 14.5 7h-11A1.5 1.5 0 0 0 2 8.5v8A1.5 1.5 0 0 0 3.5 18h11a1.5 1.5 0 0 0 1.5-1.5v-2.155l4.636 3.161A.5.5 0 0 0 22 17.094V7.906a.5.5 0 0 0-.78-.415L16 10.655z"/></svg>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Opens a real, free Jitsi room and remembers the
+                          // link for this lead's notes. No fake AI data is
+                          // written here anymore.
+                          const jitsiUrl = `https://meet.jit.si/Telesales_${lead.phone}_${Math.floor(Date.now() / 1000)}`;
+                          localStorage.setItem(`jitsi_${lead.id}`, jitsiUrl);
+                          window.open(jitsiUrl, "_blank");
+                        }}
+                        className="bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent-soft rounded-xl w-10 flex items-center justify-center transition-colors"
+                        title="Jitsi (Free Meeting Room)"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15.6 11.6L22 7v10l-6.4-4.5v-1z"/><circle cx="8" cy="12" r="5"/></svg>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );
@@ -839,55 +838,6 @@ export default function LeadTable({
                   </button>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* AI Invite Modal */}
-      {aiInviteModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
-          <div className="bg-[#0f1523] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden">
-            <div className="p-5 border-b border-white/10 flex justify-between items-center bg-accent-deep/20">
-              <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                <Bot size={18} className="text-accent-soft" /> Invite Bot to {aiInviteProvider}
-              </h3>
-              <button onClick={() => setAiInviteModalOpen(false)} className="text-slate-400 hover:text-white transition-colors"><X size={18} /></button>
-            </div>
-            <div className="p-6">
-              <p className="text-slate-300 text-sm mb-4 leading-relaxed">
-                The {aiInviteProvider} page opened in a new window.
-                After creating the meeting there, please copy the link and paste it here to invite the bot to record the call:
-              </p>
-              <input
-                type="text"
-                dir="ltr"
-                className="w-full bg-[#0e1320] border border-white/10 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-accent mb-4"
-                placeholder="https://meet.google.com/xxx-xxxx-xxx"
-                value={aiInviteUrl}
-                onChange={(e) => setAiInviteUrl(e.target.value)}
-              />
-              <button
-                onClick={async () => {
-                  if (!aiInviteUrl.trim() || !aiInviteLeadId) return;
-                  setAiInviteLoading(true);
-                  try {
-                    await fetch(`/api/leads/${aiInviteLeadId}/invite-ai`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ meetingUrl: aiInviteUrl })
-                    });
-                    setAiInviteModalOpen(false);
-                    setTimeout(() => window.location.reload(), 1000);
-                  } catch (e) {
-                    setAiInviteLoading(false);
-                  }
-                }}
-                disabled={aiInviteLoading || !aiInviteUrl.trim()}
-                className="w-full bg-accent hover:bg-accent text-white font-bold py-3 rounded-xl disabled:opacity-50 transition-colors"
-              >
-                {aiInviteLoading ? "Inviting bot..." : "Invite Bot Now"}
-              </button>
             </div>
           </div>
         </div>

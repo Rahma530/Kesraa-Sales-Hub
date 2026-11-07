@@ -104,7 +104,7 @@ export default function SalesClient({ leads }: { leads: any[] }) {
         ))}
       </div>
 
-      <LeadTable leads={displayedLeads} isSalesView={true} />
+      <LeadTable leads={displayedLeads} isSalesView={true} canHoldMeetings />
     </div>
   );
 }
