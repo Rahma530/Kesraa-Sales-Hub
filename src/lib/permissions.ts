@@ -35,6 +35,11 @@ export const PERMISSIONS = {
   // تسجيل نتيجة الميتينج — Sales بشكل أساسي، وكمان Tele-Sales لو الليد لسه معاه
   RECORD_MEETING_RESULT: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES, Role.SALES, Role.TELE_SALES] as Role[],
 
+  // إنشاء رابط اجتماع فعلي (Google Meet) ودعوة بوت التسجيل — Sales فقط،
+  // لأنهم هما اللي بيدخلوا الاجتماع فعليًا. Tele-Sales بيحدد تاريخ وبس
+  // (SCHEDULE_MEETING) وبيحول الليد لـ Sales، مش بيدخل الميتينج.
+  HOLD_MEETING: [Role.ADMIN, Role.HEAD_OF_SALES, Role.SALES] as Role[],
+
   // تعديل بيانات العميل (اسم/هاتف/إيميل/شركة/احتياج/ملاحظات)
   EDIT_LEAD_DETAILS: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES, Role.TELE_SALES, Role.SALES] as Role[],
 
