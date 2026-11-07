@@ -100,7 +100,7 @@ export default function NotificationBell() {
   return (
     <div className="relative" ref={wrapperRef}>
       <div 
-        className="cursor-pointer hover:bg-white/5 p-2 rounded-full transition-colors relative mr-4"
+        className="cursor-pointer hover:bg-white/5 p-2 rounded-full transition-colors relative"
         onClick={() => setIsOpen(!isOpen)}
       >
         <Bell size={24} className="text-slate-200" />
