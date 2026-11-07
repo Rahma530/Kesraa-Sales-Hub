@@ -570,8 +570,8 @@ export default function LeadTable({
                       <User size={20} />
                     </div>
                     <div className="min-w-0 flex-1 overflow-hidden">
-                      <h3 className="font-bold text-white text-[15px] truncate" title={lead.name}>{lead.name}</h3>
-                      <p className="text-[11px] text-slate-400 mt-0.5 truncate" title={lead.company || ""}>{lead.company || "—"}</p>
+                      <h3 dir="auto" className="font-bold text-white text-[15px] truncate text-right" title={lead.name}>{lead.name}</h3>
+                      <p dir="auto" className="text-[11px] text-slate-400 mt-0.5 truncate text-right" title={lead.company || ""}>{lead.company || "—"}</p>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2.5">

@@ -65,7 +65,7 @@ export default function OnlineUsers({ currentUserRole }: { currentUserRole?: str
   return (
     <div className="relative" ref={wrapperRef}>
       <div 
-        className="cursor-pointer hover:bg-white/5 p-2 rounded-full transition-colors relative mr-2"
+        className="cursor-pointer hover:bg-white/5 p-2 rounded-full transition-colors relative"
         onClick={() => setIsOpen(!isOpen)}
         title="Employees currently online"
       >

@@ -382,7 +382,7 @@ export default function ChatBox() {
   return (
     <div className="relative" ref={wrapperRef}>
       <div 
-        className="cursor-pointer hover:bg-white/5 p-2 rounded-xl transition-colors relative mr-2 flex items-center justify-center"
+        className="cursor-pointer hover:bg-white/5 p-2 rounded-xl transition-colors relative flex items-center justify-center"
         onClick={() => setIsOpen(!isOpen)}
         title="Team Chats"
       >
