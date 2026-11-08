@@ -5,6 +5,7 @@ import {
   getFirefliesTranscript,
   extractOurMeetingId,
   joinTranscriptText,
+  deleteFirefliesTranscript,
 } from "@/lib/fireflies";
 import { translateAndRecommend } from "@/lib/gemini";
 
@@ -128,6 +129,18 @@ export async function POST(req: NextRequest) {
           : `The meeting recording and transcript have been saved (AI translation failed: ${aiResult.error ?? "unknown error"}).`,
       },
     });
+
+    // 5) We've safely copied everything we need (transcript text, summary,
+    // translation, recommendations) into our own database above, so free
+    // up the Fireflies free-plan storage quota immediately instead of
+    // letting every recording sit there. Best-effort: if this fails, the
+    // data we actually care about is already saved either way.
+    const deleteResult = await deleteFirefliesTranscript(firefliesMeetingId);
+    if (!deleteResult.success) {
+      console.error(
+        `Webhook: saved meeting ${meeting.id} successfully, but could not delete it from Fireflies (${deleteResult.error}) — it'll still count against Fireflies storage until removed manually.`
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

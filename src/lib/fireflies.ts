@@ -177,6 +177,57 @@ export async function getFirefliesTranscript(meetingId: string): Promise<Firefli
   }
 }
 
+// --- Freeing up Fireflies storage once we've saved our own copy ----------
+//
+// We only use Fireflies' free plan as a transient processing step — the
+// real transcript text, summary, and AI translation/recommendations all
+// get saved into OUR OWN database (see the webhook handler). There's no
+// reason to also leave the recording sitting in Fireflies' 400-min/team
+// free storage cap, which real day-to-day usage would blow through fast.
+// So the webhook deletes each transcript from Fireflies right after it has
+// safely copied everything it needs out of it.
+//
+// Rate-limited by Fireflies to 10 requests/minute — fine for our volume.
+export async function deleteFirefliesTranscript(meetingId: string): Promise<{ success: boolean; error?: string }> {
+  const apiKey = process.env.FIREFLIES_API_KEY;
+  if (!apiKey) {
+    return { success: false, error: "Fireflies isn't configured on the server" };
+  }
+
+  try {
+    const res = await fetch(FIREFLIES_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        query: `
+          mutation DeleteTranscript($id: String!) {
+            deleteTranscript(id: $id) {
+              id
+            }
+          }
+        `,
+        variables: { id: meetingId },
+      }),
+    });
+
+    const json = await res.json().catch(() => null);
+
+    if (!res.ok || json?.errors?.length) {
+      const message = json?.errors?.[0]?.message || `HTTP ${res.status}`;
+      console.error("deleteFirefliesTranscript: Fireflies returned an error", message);
+      return { success: false, error: message };
+    }
+
+    return { success: true };
+  } catch (e) {
+    console.error("deleteFirefliesTranscript: request to Fireflies failed", e);
+    return { success: false, error: "Failed to reach Fireflies" };
+  }
+}
+
 // --- Matching the meeting back to our own Lead ----------------------------
 //
 // We control the title at invite time (inviteFirefliesBot above), so we
