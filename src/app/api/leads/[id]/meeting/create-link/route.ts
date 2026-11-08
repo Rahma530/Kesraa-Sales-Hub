@@ -61,6 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const calendarResult = await createCalendarMeeting({
     title: buildMeetingTitle(meeting.id, lead.name),
     attendeeEmail: lead.email,
+    salesRepEmail: session.user.email,
   });
 
   if (!calendarResult.success || !calendarResult.meeting) {
