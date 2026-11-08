@@ -555,7 +555,7 @@ export default function LeadTable({
           {leads.length === 0 ? "No leads yet" : "No results match your search"}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
           {filtered.map((lead) => {
             const latestActivity = lead.activities?.[0];
             const isSelected = openId === lead.id;
@@ -570,7 +570,7 @@ export default function LeadTable({
                       <User size={20} />
                     </div>
                     <div className="min-w-0 flex-1 overflow-hidden">
-                      <h3 dir="auto" className="font-bold text-white text-[15px] leading-snug break-words text-right" title={lead.name}>{lead.name}</h3>
+                      <h3 dir="auto" className="font-bold text-white text-[15px] truncate text-right" title={lead.name}>{lead.name}</h3>
                       <p dir="auto" className="text-[11px] text-slate-400 mt-0.5 truncate text-right" title={lead.company || ""}>{lead.company || "—"}</p>
                     </div>
                   </div>
