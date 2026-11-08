@@ -1599,10 +1599,10 @@ function LeadActions({
           </div>
 
           <div className="space-y-1 pt-2">
-            <p className="text-xs text-amber-400 font-semibold flex items-center gap-1.5"><FileText size={14} /> Notes on what happened after the meeting (saved to the lead's file)</p>
+            <p className="text-xs text-amber-400 font-semibold flex items-center gap-1.5"><FileText size={14} /> Additional notes about the lead&apos;s interest (saved to the lead&apos;s file)</p>
             <textarea
               rows={3}
-              placeholder="Meeting outcome, lead's reaction, any information important for Sales..."
+              placeholder="Lead's interest level, background info, anything important for Sales to know before the meeting..."
               className="input-field text-sm resize-none py-3 w-full border-amber-500/30 focus:border-amber-500/60"
               value={meetingResultNotes}
               onChange={(e) => setMeetingResultNotes(e.target.value)}
