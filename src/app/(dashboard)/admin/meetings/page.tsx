@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
@@ -51,7 +52,12 @@ export default async function MeetingsReportPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {completedMeetings.map((meeting) => (
-              <div key={meeting.id} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors flex flex-col h-full relative overflow-hidden group">
+              <Link
+                key={meeting.id}
+                href={meeting.lead ? `/leads/${meeting.lead.id}` : "#"}
+                className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 hover:border-accent/30 hover:bg-white/[0.04] transition-colors flex flex-col h-full relative overflow-hidden group cursor-pointer"
+              >
+                {/* clicking a card goes to that lead's full dashboard page */}
                 <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500/50"></div>
                 
                 <div className="flex justify-between items-start mb-3">
@@ -84,7 +90,7 @@ export default async function MeetingsReportPage() {
                   <span className="flex items-center gap-1.5"><Calendar size={14} /> Original Meeting Time:</span>
                   <span className="text-slate-400">{formatDateTime(meeting.scheduledAt)}</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import DashboardShell from "@/components/DashboardShell";
 import StatusBadge from "@/components/StatusBadge";
 import TierBadge from "@/components/TierBadge";
-import { User, Phone, Mail, Building2, Calendar, PlayCircle, Bot, ClipboardList } from "lucide-react";
+import { User, Phone, Mail, Building2, Calendar, Bot, ClipboardList } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -123,15 +123,9 @@ export default async function LeadDashboardPage({ params }: { params: { id: stri
                     </p>
                   )}
 
-                  {meeting.recordingUrl && (
-                    <a
-                      href={meeting.recordingUrl}
-                      target="_blank"
-                      className="flex items-center justify-center gap-2 bg-accent/20 hover:bg-accent/30 text-accent-soft py-2 rounded-lg text-[12px] font-bold transition-colors mb-3"
-                    >
-                      <PlayCircle size={14} /> Watch Meeting Recording
-                    </a>
-                  )}
+                  {/* No "watch recording" link — we delete the recording from
+                      Fireflies right after saving our own copy (storage cleanup),
+                      so that link would just 404 once processing is done. */}
 
                   {(meeting.aiTranslation || meeting.aiAnalysis || meeting.aiRecommendations) && (
                     <div className="border-t border-white/5 pt-3 space-y-3">
