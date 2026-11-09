@@ -58,6 +58,13 @@ const tooltipStyle = {
   direction: "rtl" as const,
 };
 
+// Recharts colors each tooltip line (name + value) with that series' own
+// fill/stroke by default, which for some of our bars/slices is dark and
+// nearly invisible against the dark tooltip background. Force a light,
+// always-readable color instead, regardless of the series' own color.
+const tooltipItemStyle = { color: "#e9d9fb" };
+const tooltipLabelStyle = { color: "#ffffff", fontWeight: 700, marginBottom: 4 };
+
 export function StatusBarChart({ data }: { data: { status: string; count: number }[] }) {
   const chartData = data.map((d) => ({ name: STATUS_LABELS[d.status] ?? d.status, count: d.count }));
   return (
@@ -66,7 +73,7 @@ export function StatusBarChart({ data }: { data: { status: string; count: number
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
         <XAxis dataKey="name" tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} interval={0} angle={-25} textAnchor="end" height={60} />
         <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} domain={[0, (max: number) => Math.ceil(max * 1.2) || 1]} />
-        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+        <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
         <Bar dataKey="count" fill={COLORS.accent} radius={[6, 6, 0, 0]}>
           <LabelList dataKey="count" position="top" fill="#ffffff" fontSize={12} fontWeight={700} />
         </Bar>
@@ -109,7 +116,7 @@ export function TierPieChart({ data }: { data: { tier: string; count: number }[]
           ))}
         </Pie>
         <Legend wrapperStyle={{ fontSize: "13px", color: "#d8cdee", fontWeight: 600 }} />
-        <Tooltip contentStyle={tooltipStyle} />
+        <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} />
       </PieChart>
     </ResponsiveContainer>
   );
@@ -126,7 +133,7 @@ export function TeamPerformanceChart({
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
         <XAxis dataKey="name" tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} />
         <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} domain={[0, (max: number) => Math.ceil(max * 1.2) || 1]} />
-        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+        <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
         <Bar dataKey="count" radius={[6, 6, 0, 0]}>
           <LabelList dataKey="count" position="top" fill="#ffffff" fontSize={12} fontWeight={700} />
           {data.map((entry) => (
@@ -151,7 +158,7 @@ export function LeadsOverTimeChart({ data }: { data: { date: string; count: numb
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
         <XAxis dataKey="date" tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} />
         <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} />
-        <Tooltip contentStyle={tooltipStyle} />
+        <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} />
         <Area type="monotone" dataKey="count" stroke={COLORS.accent} fill="url(#leadsGradient)" strokeWidth={2} />
       </AreaChart>
     </ResponsiveContainer>

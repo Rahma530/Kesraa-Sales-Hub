@@ -13,6 +13,10 @@ export default function DashboardNav({ role }: { role: string }) {
     links.push({ href: "/admin/customers", label: "Lead Management" });
     links.push({ href: "/admin/sheets", label: "Sheets Management" });
     links.push({ href: "/admin/activity", label: "Employee Monitoring" });
+  }
+  // Post-Meeting Report is Sales-only content (Tele-Sales never holds
+  // meetings), so Head of Tele-Sales doesn't get this link.
+  if (role === "ADMIN" || role === "HEAD_OF_SALES") {
     links.push({ href: "/admin/meetings", label: "Post-Meeting Report" });
   }
   if (role === "ADMIN" || role === "HEAD_OF_SALES" || role === "HEAD_OF_TELE_SALES") {

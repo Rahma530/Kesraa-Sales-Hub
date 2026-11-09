@@ -2,7 +2,7 @@ import { ActivityType } from "@/lib/enums";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import { can } from "@/lib/permissions";
+import { can, teamRoleForManager } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import DashboardShell from "@/components/DashboardShell";
 
@@ -41,6 +41,12 @@ export default async function ActivityLogPage({
   const type = searchParams.type;
   const where: any = {};
   if (type && Object.keys(TYPE_LABELS).includes(type)) where.type = type;
+
+  // A Head only sees their own team's activity (Head of Tele-Sales → only
+  // what Tele-Sales employees did, Head of Sales → only Sales). Admin is
+  // unrestricted (teamRoleForManager returns null for them).
+  const managedRole = teamRoleForManager(session.user.role);
+  if (managedRole) where.user = { role: managedRole };
 
   const activities = await prisma.activity.findMany({
     where,

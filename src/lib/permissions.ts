@@ -18,6 +18,10 @@ export const PERMISSIONS = {
   VIEW_TEAM_PERFORMANCE: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES] as Role[],
   VIEW_FULL_ACTIVITY_LOG: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES] as Role[],
 
+  // تقرير ما بعد الاجتماع — خاص بفريق Sales بس (زي HOLD_MEETING)، لأن
+  // Tele-Sales/Head of Tele-Sales أصلاً ملهمش دخل بالاجتماعات نفسها
+  VIEW_MEETINGS_REPORT: [Role.ADMIN, Role.HEAD_OF_SALES] as Role[],
+
   // إدارة المستخدمين الكاملة (إنشاء/تعديل/حذف أي حساب وأي دور) — الأدمن بس
   MANAGE_USERS: [Role.ADMIN] as Role[],
 

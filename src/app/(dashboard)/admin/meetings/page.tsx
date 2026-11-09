@@ -23,7 +23,7 @@ function formatDateTime(date: Date) {
 export default async function MeetingsReportPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
-  if (!can(session.user.role, "VIEW_FULL_ACTIVITY_LOG")) redirect("/unauthorized");
+  if (!can(session.user.role, "VIEW_MEETINGS_REPORT")) redirect("/unauthorized");
 
   const completedMeetings = await prisma.meeting.findMany({
     where: {
