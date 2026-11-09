@@ -21,7 +21,6 @@ import {
   Phone,
   Link2,
   Bot,
-  PlayCircle,
   MessageCircle,
   Smartphone,
   X,
@@ -687,16 +686,14 @@ export default function LeadTable({
                           {lead.meetings[0].result && <p className="text-[11px] text-slate-300 leading-relaxed bg-[#0b101a] p-2.5 rounded-lg border border-white/5">{lead.meetings[0].result}</p>}
                         </div>
 
-                        {(lead.meetings[0].recordingUrl || lead.meetings[0].aiAnalysis || lead.meetings[0].transcript) && (
+                        {(lead.meetings[0].aiAnalysis || lead.meetings[0].aiTranslation || lead.meetings[0].transcript) && (
                           <div className="border-t border-emerald-500/20 pt-3 space-y-3">
-                            <h4 className="text-xs font-bold text-emerald-300 flex items-center gap-1"><Bot size={14} /> AI Recording & Analysis</h4>
-                            
-                            {lead.meetings[0].recordingUrl && (
-                              <a href={lead.meetings[0].recordingUrl} target="_blank" className="flex items-center justify-center gap-2 bg-accent/20 hover:bg-accent/30 text-accent-soft py-2 rounded-lg text-[11px] font-bold transition-colors">
-                                <PlayCircle size={14} /> Watch Meeting Recording
-                              </a>
-                            )}
-                            
+                            <h4 className="text-xs font-bold text-emerald-300 flex items-center gap-1"><Bot size={14} /> AI Analysis</h4>
+
+                            {/* No "watch recording" link — we delete the recording from
+                                Fireflies right after saving our own copy (storage cleanup),
+                                so that link would just 404 once processing is done. */}
+
                             {/* Show the Gemini-corrected Arabic summary as the primary
                                 summary. Only fall back to Fireflies' raw (English,
                                 uncorrected) summary when Gemini hasn't produced one yet —
@@ -806,21 +803,6 @@ export default function LeadTable({
                         title="Zoom Meeting (manual, no recording)"
                       >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 10.655V8.5A1.5 1.5 0 0 0 14.5 7h-11A1.5 1.5 0 0 0 2 8.5v8A1.5 1.5 0 0 0 3.5 18h11a1.5 1.5 0 0 0 1.5-1.5v-2.155l4.636 3.161A.5.5 0 0 0 22 17.094V7.906a.5.5 0 0 0-.78-.415L16 10.655z"/></svg>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          // Opens a real, free Jitsi room and remembers the
-                          // link for this lead's notes. No fake AI data is
-                          // written here anymore.
-                          const jitsiUrl = `https://meet.jit.si/Telesales_${lead.phone}_${Math.floor(Date.now() / 1000)}`;
-                          localStorage.setItem(`jitsi_${lead.id}`, jitsiUrl);
-                          window.open(jitsiUrl, "_blank");
-                        }}
-                        className="bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent-soft rounded-xl w-10 flex items-center justify-center transition-colors"
-                        title="Jitsi (manual, no recording)"
-                      >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15.6 11.6L22 7v10l-6.4-4.5v-1z"/><circle cx="8" cy="12" r="5"/></svg>
                       </button>
                     </>
                   )}
@@ -1162,12 +1144,6 @@ function LeadActions({
           }
         })
         .catch(() => {});
-        
-      // Auto-fill Jitsi link if it exists
-      const savedJitsi = localStorage.getItem(`jitsi_${lead.id}`);
-      if (savedJitsi && !meetingNotes.includes(savedJitsi)) {
-        setMeetingNotes(prev => prev ? `${prev}\n\nInstant meeting link: ${savedJitsi}` : `Instant meeting link: ${savedJitsi}`);
-      }
     }
   }, [mode, allowTransfer, lead.id]); // only re-run when mode changes
 
