@@ -4,20 +4,22 @@
 // Requires:
 //   GEMINI_API_KEY — get a free key at https://aistudio.google.com/apikey
 //                     (no Google Workspace or billing account needed)
-//   GEMINI_MODEL   — optional, defaults to "gemini-2.5-flash" below. That
-//                     model is confirmed (as of Nov 2026) to still be on
-//                     Google's free tier with generous limits. If Google
-//                     retires it or you'd rather use whatever their newest
-//                     free "flash" model is, open https://aistudio.google.com
-//                     → "Get API key" page, which lists the current free
-//                     models by name, and set GEMINI_MODEL to that name —
-//                     no code change needed.
+//   GEMINI_MODEL   — optional, defaults to "gemini-3.8-flash" below. Google
+//                     retired access to "gemini-2.5-flash" for accounts that
+//                     hadn't already used it (confirmed Nov 2026 — API error:
+//                     "This model models/gemini-2.5-flash is no longer
+//                     available to new users ... use models/gemini-3.8-flash"),
+//                     so if Google retires this one too, or you'd rather use
+//                     whatever their newest free "flash" model is, open
+//                     https://aistudio.google.com → "Get API key" page, which
+//                     lists the current free models by name, and set
+//                     GEMINI_MODEL to that name — no code change needed.
 //
 // Endpoint shape (Google's long-stable public REST API):
 //   POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}
 
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-const DEFAULT_MODEL = "gemini-2.5-flash";
+const DEFAULT_MODEL = "gemini-3.8-flash";
 
 export interface MeetingAiResult {
   translationArabic: string;
@@ -50,7 +52,12 @@ export async function translateAndRecommend(params: {
   const transcriptExcerpt = params.transcriptText.slice(0, 12000);
 
   const prompt = `
-أنت مساعد مبيعات. تحتاج تحليل اجتماع مبيعات باللغة الإنجليزية (ملخص + تفريغ جزئي) وإعادة صياغته بالعربية للموظف.
+أنت مساعد مبيعات. تحتاج تحليل اجتماع مبيعات (ملخص + تفريغ جزئي) وإعادة صياغته بالعربية للموظف.
+
+مهم جدًا: التفريغ الصوتي ده جاي من speech-to-text لمكالمة حقيقية، فممكن يكون فيه:
+- خلط بين كلام عربي وكلمات إنجليزية في نفس الجملة (code-switching طبيعي في مكالمات المبيعات).
+- كلمات مش واضحة أو غلط بسبب جودة الصوت (زي الأخطاء الإملائية في نص مكتوب بسرعة).
+قبل ما تلخص، افهم المعنى المقصود وصحّح الكلمات الغامضة أو الغلط لأقرب كلمة صح في السياق (بالظبط زي ما تصحح فقرة فيها أخطاء إملائية) — من غير ما تنوّه أو تعلّق على التصحيح، بس استخدم المعنى الصح في الملخص النهائي. لو جزء كامل مش مفهوم خالص وملوش معنى واضح من السياق، تجاهله بدل ما تخترع معنى.
 
 اسم العميل: ${params.leadName}
 
@@ -68,7 +75,7 @@ ${transcriptExcerpt || "(transcript unavailable)"}
 
 المطلوب: رجّع النتيجة كـ JSON فقط، بدون أي نص إضافي قبله أو بعده، بالشكل ده بالضبط:
 {
-  "translationArabic": "ترجمة عربية واضحة ومختصرة لملخص الاجتماع (3-6 جمل)",
+  "translationArabic": "ملخص عربي نظيف وواضح للاجتماع (3-6 جمل)، بعد تصحيح أي كلام غامض أو مخلوط باللغة الإنجليزية لأقرب معنى صحيح",
   "recommendations": "اقتراحات متابعة عملية وواضحة لموظف المبيعات بالعربي، كنقاط مرقمة"
 }
 `.trim();

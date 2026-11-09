@@ -570,7 +570,7 @@ export default function LeadTable({
                       <User size={20} />
                     </div>
                     <div className="min-w-0 flex-1 overflow-hidden">
-                      <h3 dir="auto" className="font-bold text-white text-[15px] truncate text-right" title={lead.name}>{lead.name}</h3>
+                      <Link href={`/leads/${lead.id}`} dir="auto" className="font-bold text-white text-[15px] truncate text-right block hover:text-accent-soft hover:underline transition-colors" title={lead.name}>{lead.name}</Link>
                       <p dir="auto" className="text-[11px] text-slate-400 mt-0.5 truncate text-right" title={lead.company || ""}>{lead.company || "—"}</p>
                     </div>
                   </div>
@@ -697,20 +697,24 @@ export default function LeadTable({
                               </a>
                             )}
                             
-                            {lead.meetings[0].aiAnalysis && (
+                            {/* Show the Gemini-corrected Arabic summary as the primary
+                                summary. Only fall back to Fireflies' raw (English,
+                                uncorrected) summary when Gemini hasn't produced one yet —
+                                e.g. still processing, or the Gemini call failed. The raw
+                                transcript is intentionally not shown here (too noisy for
+                                a quick glance); it's available on the lead's full page. */}
+                            {lead.meetings[0].aiTranslation ? (
+                              <div>
+                                <p className="text-[10px] text-slate-400 mb-1" dir="rtl">الملخص:</p>
+                                <div dir="rtl" className="text-[11px] text-slate-300 leading-relaxed bg-[#0b101a] p-2.5 rounded-lg border border-white/5 whitespace-pre-wrap max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+                                  {lead.meetings[0].aiTranslation}
+                                </div>
+                              </div>
+                            ) : lead.meetings[0].aiAnalysis && (
                               <div>
                                 <p className="text-[10px] text-slate-400 mb-1">Summary & Analysis:</p>
                                 <div className="text-[11px] text-slate-300 leading-relaxed bg-[#0b101a] p-2.5 rounded-lg border border-white/5 whitespace-pre-wrap max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
                                   {lead.meetings[0].aiAnalysis}
-                                </div>
-                              </div>
-                            )}
-
-                            {lead.meetings[0].aiTranslation && (
-                              <div>
-                                <p className="text-[10px] text-slate-400 mb-1" dir="rtl">الملخص بالعربي:</p>
-                                <div dir="rtl" className="text-[11px] text-slate-300 leading-relaxed bg-[#0b101a] p-2.5 rounded-lg border border-white/5 whitespace-pre-wrap max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
-                                  {lead.meetings[0].aiTranslation}
                                 </div>
                               </div>
                             )}
@@ -724,14 +728,9 @@ export default function LeadTable({
                               </div>
                             )}
 
-                            {lead.meetings[0].transcript && (
-                              <div>
-                                <p className="text-[10px] text-slate-400 mb-1">Full Transcript:</p>
-                                <div className="text-[11px] text-slate-300 leading-relaxed bg-[#0b101a] p-2.5 rounded-lg border border-white/5 whitespace-pre-wrap max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
-                                  {lead.meetings[0].transcript}
-                                </div>
-                              </div>
-                            )}
+                            <Link href={`/leads/${lead.id}`} className="block text-center text-[11px] text-accent-soft hover:underline pt-1">
+                              عرض كل الاجتماعات والتفاصيل الكاملة
+                            </Link>
                           </div>
                         )}
                       </div>
