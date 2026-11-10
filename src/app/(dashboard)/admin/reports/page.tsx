@@ -46,8 +46,11 @@ export default async function ReportsPage() {
     }),
     prisma.lead.count(),
     prisma.lead.count({ where: { status: "TRANSFERRED_TO_SALES" } }),
-    prisma.lead.count({ where: { status: "CLOSED_WON" } }),
-    prisma.lead.count({ where: { status: "CLOSED_LOST" } }),
+    // A deal can be closed from the Tele-Sales `status` field (Admin/Head
+    // closing on an employee's behalf) or from `salesStatus` (the normal
+    // case: Sales closes it themselves) — count both.
+    prisma.lead.count({ where: { OR: [{ status: "CLOSED_WON" }, { salesStatus: "CLOSED_WON" }] } }),
+    prisma.lead.count({ where: { OR: [{ status: "CLOSED_LOST" }, { salesStatus: "CLOSED_LOST" }] } }),
   ]);
 
   const statusData = statusGroups
