@@ -65,13 +65,70 @@ const tooltipStyle = {
 const tooltipItemStyle = { color: "#e9d9fb" };
 const tooltipLabelStyle = { color: "#ffffff", fontWeight: 700, marginBottom: 4 };
 
+// A rotated axis tick that starts a clear gap below the axis line (dy)
+// before rotating, instead of recharts' default of anchoring the text right
+// at the tick mark — which otherwise reads as if the label sits inside/on
+// the axis rather than clearly under it.
+function RotatedAxisTick({
+  x,
+  y,
+  payload,
+  angle,
+  fontSize,
+}: {
+  x: number;
+  y: number;
+  payload: { value: string };
+  angle: number;
+  fontSize: number;
+}) {
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={14}
+        textAnchor="end"
+        fill="#d8cdee"
+        fontSize={fontSize}
+        fontWeight={600}
+        transform={`rotate(${angle})`}
+      >
+        {payload.value}
+      </text>
+    </g>
+  );
+}
+
+// Custom Legend content for the Tier pie chart — gives explicit, readable
+// spacing between legend items and between each color swatch and its label
+// (recharts' default Legend packs these close together).
+function TierLegend({ payload }: { payload?: { value: string; color: string }[] }) {
+  if (!payload) return null;
+  return (
+    <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-2 list-none p-0">
+      {payload.map((entry) => (
+        <li key={entry.value} className="flex items-center gap-2 text-[13px] font-semibold" style={{ color: "#d8cdee" }}>
+          <span className="inline-block h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
+          {entry.value}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function StatusBarChart({ data }: { data: { status: string; count: number }[] }) {
   const chartData = data.map((d) => ({ name: STATUS_LABELS[d.status] ?? d.status, count: d.count }));
   return (
     <ResponsiveContainer width="100%" height={340}>
       <BarChart data={chartData} margin={{ top: 28, right: 8, left: -20, bottom: 24 }} barCategoryGap="30%">
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-        <XAxis dataKey="name" tick={{ fill: "#d8cdee", fontSize: 11, fontWeight: 600 }} interval={0} angle={-40} textAnchor="end" height={90} />
+        <XAxis
+          dataKey="name"
+          tick={(props: any) => <RotatedAxisTick {...props} angle={-40} fontSize={11} />}
+          interval={0}
+          height={90}
+        />
         <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} domain={[0, (max: number) => Math.ceil(max * 1.2) || 1]} />
         <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
         <Bar dataKey="count" fill={COLORS.accent} radius={[6, 6, 0, 0]}>
@@ -115,7 +172,7 @@ export function TierPieChart({ data }: { data: { tier: string; count: number }[]
             <Cell key={entry.name} fill={TIER_COLORS[entry.name] ?? COLORS.accent} />
           ))}
         </Pie>
-        <Legend wrapperStyle={{ fontSize: "13px", color: "#d8cdee", fontWeight: 600 }} />
+        <Legend content={<TierLegend />} />
         <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} />
       </PieChart>
     </ResponsiveContainer>
@@ -158,10 +215,8 @@ export function LeadsOverTimeChart({ data }: { data: { date: string; count: numb
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
         <XAxis
           dataKey="date"
-          tick={{ fill: "#d8cdee", fontSize: 11, fontWeight: 600 }}
+          tick={(props: any) => <RotatedAxisTick {...props} angle={-35} fontSize={10} />}
           interval="preserveStartEnd"
-          angle={-35}
-          textAnchor="end"
           height={55}
         />
         <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} />
