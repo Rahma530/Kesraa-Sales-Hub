@@ -47,7 +47,10 @@ export default async function AdminDashboard() {
       },
     }),
     prisma.lead.count({ where: { status: "TRANSFERRED_TO_SALES" } }),
-    prisma.lead.count({ where: { status: "CLOSED_WON" } }),
+    // A deal can be closed from the Tele-Sales `status` field (Admin/Head
+    // closing on an employee's behalf) or from `salesStatus` (the normal
+    // case: Sales closes it themselves) — count both.
+    prisma.lead.count({ where: { OR: [{ status: "CLOSED_WON" }, { salesStatus: "CLOSED_WON" }] } }),
     prisma.lead.count({ where: { status: "CLOSED_LOST" } }),
     prisma.lead.groupBy({ by: ["status"], _count: { _all: true } }),
     prisma.lead.groupBy({ by: ["tier"], _count: { _all: true } }),
@@ -100,12 +103,16 @@ export default async function AdminDashboard() {
         where: { userId: emp.id, type: "TRANSFERRED" }
       });
 
-      // Count closed won/lost (Sales metric)
+      // Count closed won (Sales metric). A deal can be closed from the
+      // Tele-Sales `status` field (Admin/Head closing on the employee's
+      // behalf) or from `salesStatus` (the normal case: Sales closes it
+      // themselves) — count both.
       const wonCount = await prisma.lead.count({
-        where: { assignedToId: emp.id, status: "CLOSED_WON" }
+        where: { assignedToId: emp.id, OR: [{ status: "CLOSED_WON" }, { salesStatus: "CLOSED_WON" }] }
       });
-      const enteredMeetingsCount = await prisma.activity.count({
-        where: { userId: emp.id, type: "MEETING" }
+      // Meetings actually held (not just scheduled) by this employee.
+      const enteredMeetingsCount = await prisma.meeting.count({
+        where: { ownerId: emp.id, status: "DONE" }
       });
       const followUpsCount = await prisma.followUp.count({
         where: { createdById: emp.id }

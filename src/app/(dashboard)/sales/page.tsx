@@ -32,8 +32,14 @@ export default async function SalesDashboard() {
         },
       },
     }),
-    prisma.lead.count({ where: { assignedToId: userId, status: "CLOSED_WON" } }),
-    prisma.activity.count({ where: { userId: userId, type: "MEETING" } }),
+    // A deal can be closed either from the lead's Tele-Sales `status` field
+    // (if Admin/Head closes it on the employee's behalf) or from `salesStatus`
+    // (the normal case: the Sales owner closes it themselves) — count both.
+    prisma.lead.count({
+      where: { assignedToId: userId, OR: [{ status: "CLOSED_WON" }, { salesStatus: "CLOSED_WON" }] },
+    }),
+    // Meetings actually held (not just scheduled) by this employee.
+    prisma.meeting.count({ where: { ownerId: userId, status: "DONE" } }),
     prisma.followUp.count({ where: { createdById: userId } }),
     prisma.activity.count({ where: { userId: userId, type: "UPLOAD_CONTRACT" } }),
   ]);

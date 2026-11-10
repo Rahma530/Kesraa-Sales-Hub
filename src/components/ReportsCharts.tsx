@@ -68,10 +68,10 @@ const tooltipLabelStyle = { color: "#ffffff", fontWeight: 700, marginBottom: 4 }
 export function StatusBarChart({ data }: { data: { status: string; count: number }[] }) {
   const chartData = data.map((d) => ({ name: STATUS_LABELS[d.status] ?? d.status, count: d.count }));
   return (
-    <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={chartData} margin={{ top: 28, right: 8, left: -20, bottom: 8 }}>
+    <ResponsiveContainer width="100%" height={340}>
+      <BarChart data={chartData} margin={{ top: 28, right: 8, left: -20, bottom: 24 }} barCategoryGap="30%">
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-        <XAxis dataKey="name" tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} interval={0} angle={-25} textAnchor="end" height={60} />
+        <XAxis dataKey="name" tick={{ fill: "#d8cdee", fontSize: 11, fontWeight: 600 }} interval={0} angle={-40} textAnchor="end" height={90} />
         <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} domain={[0, (max: number) => Math.ceil(max * 1.2) || 1]} />
         <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
         <Bar dataKey="count" fill={COLORS.accent} radius={[6, 6, 0, 0]}>
@@ -147,8 +147,8 @@ export function TeamPerformanceChart({
 
 export function LeadsOverTimeChart({ data }: { data: { date: string; count: number }[] }) {
   return (
-    <ResponsiveContainer width="100%" height={280}>
-      <AreaChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 8 }}>
+    <ResponsiveContainer width="100%" height={320}>
+      <AreaChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 24 }}>
         <defs>
           <linearGradient id="leadsGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={COLORS.accent} stopOpacity={0.5} />
@@ -156,7 +156,14 @@ export function LeadsOverTimeChart({ data }: { data: { date: string; count: numb
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-        <XAxis dataKey="date" tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} />
+        <XAxis
+          dataKey="date"
+          tick={{ fill: "#d8cdee", fontSize: 11, fontWeight: 600 }}
+          interval="preserveStartEnd"
+          angle={-35}
+          textAnchor="end"
+          height={55}
+        />
         <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} />
         <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} />
         <Area type="monotone" dataKey="count" stroke={COLORS.accent} fill="url(#leadsGradient)" strokeWidth={2} />
