@@ -87,26 +87,28 @@ export default async function ReportsPage() {
         <StatCard label="Deal Conversion Rate" value={`${conversionRate}%`} icon={<TrendingUp size={18} />} accent="text-accent-soft" />
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="glass-panel p-5">
-          <p className="mb-4 text-sm font-semibold text-white">Leads by Status</p>
-          <StatusBarChart data={statusData} />
-        </div>
-        <div className="glass-panel p-5">
-          <p className="mb-4 text-sm font-semibold text-white">Leads by Tier</p>
-          <TierPieChart data={tierData} />
-        </div>
+      {/* Full width on its own row — with up to ~10 status categories, a
+          rotated label needs more horizontal room than a half-width panel
+          can give it without overlapping its neighbors. */}
+      <div className="mb-6 glass-panel p-5">
+        <p className="mb-4 text-sm font-semibold text-white">Leads by Status</p>
+        <StatusBarChart data={statusData} />
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="glass-panel p-5">
+          <p className="mb-4 text-sm font-semibold text-white">Leads by Tier</p>
+          <TierPieChart data={tierData} />
+        </div>
+        <div className="glass-panel p-5">
           <p className="mb-4 text-sm font-semibold text-white">Team Performance (Current Lead Count)</p>
           <TeamPerformanceChart data={teamData} />
         </div>
-        <div className="glass-panel p-5">
-          <p className="mb-4 text-sm font-semibold text-white">New Leads, Last 14 Days</p>
-          <LeadsOverTimeChart data={timeSeries} />
-        </div>
+      </div>
+
+      <div className="mb-6 glass-panel p-5">
+        <p className="mb-4 text-sm font-semibold text-white">New Leads, Last 14 Days</p>
+        <LeadsOverTimeChart data={timeSeries} />
       </div>
 
       <div className="glass-panel p-5">
