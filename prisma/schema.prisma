@@ -181,10 +181,14 @@ model Meeting {
   firefliesMeetingId String?
 
   recordingUrl String? // رابط معاينة التسجيل/التفريغ في داشبورد Fireflies
-  transcript   String? // التفريغ الصوتي الكامل (Transcript) من Fireflies
+  transcript   String? // التفريغ الصوتي الكامل (Transcript) الخام من Fireflies، زي ما هو
   aiAnalysis   String? // الملخص الأصلي (إنجليزي) من Fireflies
   aiTranslation     String? // ترجمة الملخص للعربي (عبر Gemini)
   aiRecommendations String? // اقتراحات المتابعة المقترحة من الـ AI (عبر Gemini)
+  // نسخة مصححة من الـ transcript (عبر Gemini) — بتصحح خلط العربي/الإنجليزي
+  // والكلمات الغامضة بسبب جودة الصوت، من غير ما تلخّص أو تختصر المحتوى.
+  // بتتعرض بدل الخام لما تكون موجودة.
+  correctedTranscript String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

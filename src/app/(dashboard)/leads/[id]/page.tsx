@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import DashboardShell from "@/components/DashboardShell";
 import StatusBadge from "@/components/StatusBadge";
 import TierBadge from "@/components/TierBadge";
+import MeetingAskPanel from "@/components/MeetingAskPanel";
 import { User, Phone, Mail, Building2, Calendar, Bot, ClipboardList } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -159,14 +160,24 @@ export default async function LeadDashboardPage({ params }: { params: { id: stri
                       )}
 
                       {meeting.transcript && (
-                        <details>
-                          <summary className="text-[11px] text-slate-500 cursor-pointer hover:text-slate-300">
-                            Show full transcript
-                          </summary>
-                          <div className="text-[11px] text-slate-400 leading-relaxed bg-[#0b101a] p-2.5 rounded-lg border border-white/5 whitespace-pre-wrap mt-2 max-h-64 overflow-y-auto">
-                            {meeting.transcript}
-                          </div>
-                        </details>
+                        <>
+                          <details>
+                            <summary className="text-[11px] text-slate-500 cursor-pointer hover:text-slate-300">
+                              Show full transcript
+                              {meeting.correctedTranscript && (
+                                <span className="text-slate-600"> (مصحح بواسطة AI)</span>
+                              )}
+                            </summary>
+                            <div className="text-[11px] text-slate-400 leading-relaxed bg-[#0b101a] p-2.5 rounded-lg border border-white/5 whitespace-pre-wrap mt-2 max-h-64 overflow-y-auto">
+                              {meeting.correctedTranscript || meeting.transcript}
+                            </div>
+                          </details>
+
+                          {/* Free-form Q&A over this meeting's own transcript —
+                              for going back to a specific point without
+                              re-reading the whole thing. */}
+                          <MeetingAskPanel meetingId={meeting.id} />
+                        </>
                       )}
                     </div>
                   )}

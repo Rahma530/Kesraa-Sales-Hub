@@ -7,7 +7,7 @@ import {
   joinTranscriptText,
   deleteFirefliesTranscript,
 } from "@/lib/fireflies";
-import { translateAndRecommend } from "@/lib/gemini";
+import { translateAndRecommend, correctTranscript } from "@/lib/gemini";
 
 // This webhook receives real events from Fireflies.ai (Webhooks V2) once a
 // meeting we created via /api/leads/[id]/meeting/create-link has been
@@ -105,6 +105,14 @@ export async function POST(req: NextRequest) {
       transcriptText,
     });
 
+    // 3b) Also produce a corrected copy of the FULL transcript (not a
+    // summary) — same wording-correction rule, applied to the whole thing —
+    // so the "full transcript" view shows a corrected, readable copy
+    // instead of the raw speech-to-text output. Best-effort, same as above.
+    const correctionResult = transcriptText
+      ? await correctTranscript({ transcriptText })
+      : { success: false as const, correctedText: undefined };
+
     // 4) Save everything to the matched Meeting record.
     await prisma.meeting.update({
       where: { id: meeting.id },
@@ -112,6 +120,7 @@ export async function POST(req: NextRequest) {
         firefliesMeetingId,
         recordingUrl: transcript.transcript_url ?? undefined,
         transcript: transcriptText || undefined,
+        correctedTranscript: correctionResult.success ? correctionResult.correctedText : undefined,
         aiAnalysis: transcript.summary?.overview ?? undefined,
         aiTranslation: aiResult.success ? aiResult.result?.translationArabic : undefined,
         aiRecommendations: aiResult.success ? aiResult.result?.recommendations : undefined,
