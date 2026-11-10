@@ -65,38 +65,26 @@ const tooltipStyle = {
 const tooltipItemStyle = { color: "#e9d9fb" };
 const tooltipLabelStyle = { color: "#ffffff", fontWeight: 700, marginBottom: 4 };
 
-// A rotated axis tick that starts a clear gap below the axis line (dy)
-// before rotating, instead of recharts' default of anchoring the text right
-// at the tick mark — which otherwise reads as if the label sits inside/on
-// the axis rather than clearly under it.
-function RotatedAxisTick({
+// A plain, horizontal (non-rotated) axis tick with a clear vertical gap
+// below the axis line. Rotated labels kept overlapping their neighbors even
+// at full chart width, so this gives up on rotation entirely — with the
+// status chart now spanning the full page width, a handful of short,
+// horizontal labels fits far more reliably than diagonal text ever did.
+function PlainAxisTick({
   x,
   y,
   payload,
-  angle,
   fontSize,
 }: {
   x: number;
   y: number;
   payload: { value: string };
-  angle: number;
   fontSize: number;
 }) {
   return (
-    <g transform={`translate(${x},${y})`}>
-      <text
-        x={0}
-        y={0}
-        dy={14}
-        textAnchor="end"
-        fill="#d8cdee"
-        fontSize={fontSize}
-        fontWeight={600}
-        transform={`rotate(${angle})`}
-      >
-        {payload.value}
-      </text>
-    </g>
+    <text x={x} y={y} dy={18} textAnchor="middle" fill="#d8cdee" fontSize={fontSize} fontWeight={600}>
+      {payload.value}
+    </text>
   );
 }
 
@@ -120,14 +108,14 @@ function TierLegend({ payload }: { payload?: { value: string; color: string }[] 
 export function StatusBarChart({ data }: { data: { status: string; count: number }[] }) {
   const chartData = data.map((d) => ({ name: STATUS_LABELS[d.status] ?? d.status, count: d.count }));
   return (
-    <ResponsiveContainer width="100%" height={340}>
-      <BarChart data={chartData} margin={{ top: 28, right: 8, left: -20, bottom: 24 }} barCategoryGap="30%">
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={chartData} margin={{ top: 28, right: 8, left: -20, bottom: 16 }} barCategoryGap="30%">
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
         <XAxis
           dataKey="name"
-          tick={(props: any) => <RotatedAxisTick {...props} angle={-40} fontSize={11} />}
+          tick={(props: any) => <PlainAxisTick {...props} fontSize={12} />}
           interval={0}
-          height={90}
+          height={40}
         />
         <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} domain={[0, (max: number) => Math.ceil(max * 1.2) || 1]} />
         <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
@@ -204,8 +192,8 @@ export function TeamPerformanceChart({
 
 export function LeadsOverTimeChart({ data }: { data: { date: string; count: number }[] }) {
   return (
-    <ResponsiveContainer width="100%" height={320}>
-      <AreaChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 24 }}>
+    <ResponsiveContainer width="100%" height={300}>
+      <AreaChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 16 }}>
         <defs>
           <linearGradient id="leadsGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={COLORS.accent} stopOpacity={0.5} />
@@ -215,9 +203,9 @@ export function LeadsOverTimeChart({ data }: { data: { date: string; count: numb
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
         <XAxis
           dataKey="date"
-          tick={(props: any) => <RotatedAxisTick {...props} angle={-35} fontSize={10} />}
-          interval="preserveStartEnd"
-          height={55}
+          tick={(props: any) => <PlainAxisTick {...props} fontSize={11} />}
+          interval={0}
+          height={35}
         />
         <YAxis tick={{ fill: "#d8cdee", fontSize: 12, fontWeight: 600 }} allowDecimals={false} />
         <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} />
