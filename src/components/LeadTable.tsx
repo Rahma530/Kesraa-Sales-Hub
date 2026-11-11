@@ -758,8 +758,12 @@ export default function LeadTable({
                 {/* Actions */}
                 <div className="mt-2 pt-4 flex gap-2 border-t border-white/[0.03]">
                   {/* WhatsApp temporarily disabled — see DashboardNav.tsx for why */}
+                  {/* Same destination as clicking the lead's name — the lead's
+                      own page now has everything (details, edits, actions,
+                      comments) in one place, so this no longer opens the old
+                      separate "details-only" modal. */}
                   <button
-                    onClick={() => { setOpenId(lead.id); setModalMode("details"); }}
+                    onClick={() => router.push(`/leads/${lead.id}`)}
                     className="flex-1 bg-[#1f2937] hover:bg-[#374151] text-slate-300 rounded-xl py-3 text-[13px] transition-colors font-semibold"
                   >
                     Details
