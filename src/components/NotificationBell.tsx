@@ -22,14 +22,14 @@ export default function NotificationBell() {
   const router = useRouter();
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
-  const prevUnreadRef = useRef(0);
-
-  useEffect(() => {
-    if (unreadCount > prevUnreadRef.current) {
-      playNotificationSound();
-    }
-    prevUnreadRef.current = unreadCount;
-  }, [unreadCount]);
+  // DashboardShell (and this bell inside it) is rendered per-page rather
+  // than in a shared layout, so it fully remounts on every page/tab
+  // navigation. null means "we don't know the previous count yet" —
+  // the comparison in fetchNotifications only plays the sound once we
+  // actually have a previous value to compare against, so the first
+  // fetch after any remount never treats pre-existing unread
+  // notifications as newly arrived.
+  const prevUnreadRef = useRef<number | null>(null);
 
   useEffect(() => {
     fetchNotifications();
@@ -58,17 +58,27 @@ export default function NotificationBell() {
       const res = await fetch(`/api/notifications?t=${new Date().getTime()}`);
       if (res.ok) {
         const data = await res.json();
-        const newFetched = data.notifications || [];
-        
+        const newFetched: AppNotification[] = data.notifications || [];
+        const isFirstLoadForThisMount = prevUnreadRef.current === null;
+        const newUnread = newFetched.filter((n) => !n.isRead).length;
+
+        if (!isFirstLoadForThisMount && newUnread > prevUnreadRef.current!) {
+          playNotificationSound();
+        }
+        prevUnreadRef.current = newUnread;
+
         setNotifications((prev) => {
-          const hasNewAssignment = newFetched.some((n: any) => 
-            n.type === "ASSIGNMENT" && !prev.find((p) => p.id === n.id)
-          );
-          
+          // Same reasoning as above: on the first load after a remount,
+          // `prev` is always [], so every existing notification would
+          // otherwise look "new" and trigger a needless refresh.
+          const hasNewAssignment =
+            !isFirstLoadForThisMount &&
+            newFetched.some((n) => n.type === "ASSIGNMENT" && !prev.find((p) => p.id === n.id));
+
           if (hasNewAssignment) {
             setTimeout(() => router.refresh(), 100);
           }
-          
+
           return newFetched;
         });
       }
