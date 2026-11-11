@@ -2,14 +2,13 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Users, UploadCloud } from "lucide-react";
+import { Users } from "lucide-react";
 
 export default function LeadUploadForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const [showManual, setShowManual] = useState(false);
   const [manual, setManual] = useState({ name: "", phone: "", company: "", need: "" });
 
   async function handleFileChosen(e: React.ChangeEvent<HTMLInputElement>) {
@@ -48,6 +47,7 @@ export default function LeadUploadForm() {
 
   async function handleManualAdd() {
     setBusy(true);
+    setResult(null);
     try {
       const res = await fetch("/api/leads", {
         method: "POST",
@@ -67,18 +67,18 @@ export default function LeadUploadForm() {
   }
 
   return (
-    <div className="bg-[#121826] p-6 rounded-3xl border border-white/5 shadow-xl space-y-5">
+    <div className="bg-[#121826] p-6 rounded-3xl border border-white/5 shadow-xl">
+      {/* Header — same layout/classes as the admin "Lead Management &
+          Distribution" panel, so this looks identical across every role. */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-            <Users size={18} className="text-accent" /> Add or Upload Leads
-          </h2>
-          <p className="text-slate-400 text-sm">
-            Upload a CSV file of leads, or add a single lead manually — either way they&apos;re distributed automatically.
-          </p>
+          <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+            <Users size={18} className="text-accent" /> Lead Management & Distribution
+          </h1>
+          <p className="text-slate-400 text-sm">Upload a CSV file and distribute leads to your Sales and Tele-Sales staff.</p>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div>
           <input
             type="file"
             accept=".csv"
@@ -89,26 +89,30 @@ export default function LeadUploadForm() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={busy}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors flex items-center gap-2 disabled:opacity-50 w-full md:w-auto justify-center"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors flex items-center gap-2 disabled:opacity-50"
           >
-            <UploadCloud size={18} />
-            {busy ? "Uploading..." : "Upload CSV File"}
-          </button>
-          <button
-            onClick={() => setShowManual(!showManual)}
-            className="btn-ghost text-sm px-4 py-3 whitespace-nowrap"
-          >
-            {showManual ? "Hide manual form" : "Add manually instead"}
+            {busy ? (
+              "Uploading..."
+            ) : (
+              <>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Upload CSV File
+              </>
+            )}
           </button>
         </div>
       </div>
 
-      <p className="text-xs text-slate-500 -mt-2">
-        Expected columns: name, phone, email, company, need (Arabic column headers are also supported).
-      </p>
-
-      {showManual && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 pt-3 border-t border-white/5">
+      {/* Individual add — always visible alongside the bulk upload above,
+          in the same panel, so both ways to add a lead are available at
+          once rather than one hidden behind a toggle. */}
+      <div className="mt-5 pt-5 border-t border-white/5">
+        <p className="text-sm font-semibold text-slate-300 mb-3">Or add a single lead manually</p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
           <input
             className="input-field text-sm"
             placeholder="Lead Name"
@@ -118,6 +122,7 @@ export default function LeadUploadForm() {
           <input
             className="input-field text-sm"
             placeholder="Phone Number"
+            dir="ltr"
             value={manual.phone}
             onChange={(e) => setManual({ ...manual, phone: e.target.value })}
           />
@@ -135,9 +140,13 @@ export default function LeadUploadForm() {
             Add Lead
           </button>
         </div>
-      )}
+      </div>
 
-      {result && <p className="text-sm text-accent-soft">{result}</p>}
+      <p className="text-xs text-slate-500 mt-4">
+        Expected CSV columns: name, phone, email, company, need (Arabic column headers are also supported).
+      </p>
+
+      {result && <p className="text-sm text-accent-soft mt-2">{result}</p>}
     </div>
   );
 }
