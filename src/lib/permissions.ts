@@ -7,7 +7,7 @@ import { Role } from "@/lib/enums";
  */
 export const PERMISSIONS = {
   // من يقدر يرفع/يضيف ليدز جديدة ويوزعها
-  UPLOAD_LEADS: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES] as Role[],
+  UPLOAD_LEADS: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES, Role.TELE_SALES, Role.SALES] as Role[],
   ADD_LEAD_MANUALLY: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES, Role.TELE_SALES, Role.SALES] as Role[],
 
   // مين يشوف كل الليدز (Admin/Heads) مقابل ليدزه بس (Tele-Sales/Sales)
