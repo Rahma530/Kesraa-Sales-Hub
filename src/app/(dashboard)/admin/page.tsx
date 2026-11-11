@@ -14,6 +14,7 @@ import {
 } from "@/components/ReportsCharts";
 import StaleLeadsChecker from "@/components/StaleLeadsChecker";
 import AdminTodoList from "@/components/AdminTodoList";
+import LeadUploadForm from "@/components/LeadUploadForm";
 
 export default async function AdminDashboard() {
   const session = await getServerSession(authOptions);
@@ -151,6 +152,14 @@ export default async function AdminDashboard() {
   return (
     <DashboardShell title="Admin Dashboard">
       <StaleLeadsChecker />
+
+      {/* Same quick add/upload panel Tele-Sales and Sales see on their own
+          dashboards, so every role has an obvious, immediate way to add a
+          lead without having to go to Lead Management first. The richer
+          column-mapping bulk-upload flow still lives there for larger
+          imports. */}
+      <LeadUploadForm />
+      <div className="h-6" />
 
       <AdminTodoList followUps={todayFollowUps} meetings={todayMeetings} />
 
