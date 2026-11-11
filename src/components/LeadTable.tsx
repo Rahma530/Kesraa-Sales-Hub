@@ -1056,7 +1056,7 @@ export default function LeadTable({
   );
 }
 
-function LeadActions({
+export function LeadActions({
   lead,
   mode,
   busy,
