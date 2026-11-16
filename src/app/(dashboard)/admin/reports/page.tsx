@@ -34,17 +34,20 @@ export default async function ReportsPage() {
     closedWon,
     closedLost,
   ] = await Promise.all([
-    prisma.lead.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.lead.groupBy({ by: ["tier"], _count: { _all: true } }),
+    // Leads still sitting in the Ads Sheet pending-review queue aren't real
+    // assigned leads yet, so they're excluded from every stat here — same
+    // reasoning as hiding them from the Lead Management list.
+    prisma.lead.groupBy({ by: ["status"], where: { currentStage: { not: "PENDING_REVIEW" } }, _count: { _all: true } }),
+    prisma.lead.groupBy({ by: ["tier"], where: { currentStage: { not: "PENDING_REVIEW" } }, _count: { _all: true } }),
     prisma.user.findMany({
       where: { role: { in: [Role.TELE_SALES, Role.SALES] }, isActive: true },
       select: { name: true, role: true, _count: { select: { assignedLeads: true } } },
     }),
     prisma.lead.findMany({
-      where: { createdAt: { gte: since } },
+      where: { createdAt: { gte: since }, currentStage: { not: "PENDING_REVIEW" } },
       select: { createdAt: true },
     }),
-    prisma.lead.count(),
+    prisma.lead.count({ where: { currentStage: { not: "PENDING_REVIEW" } } }),
     prisma.lead.count({ where: { status: "TRANSFERRED_TO_SALES" } }),
     // A deal can be closed from the Tele-Sales `status` field (Admin/Head
     // closing on an employee's behalf) or from `salesStatus` (the normal

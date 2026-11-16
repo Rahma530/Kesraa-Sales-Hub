@@ -20,6 +20,10 @@ export default async function AdminCustomersPage() {
   }
 
   const leads = await prisma.lead.findMany({
+    // Leads pulled from the Ads Sheet but not yet assigned/classified by
+    // Head of Tele-Sales live in the dedicated Ads Leads review queue
+    // instead — showing them here (with no owner yet) would just be noise.
+    where: { currentStage: { not: "PENDING_REVIEW" } },
     include: {
       assignedTo: { select: { id: true, name: true, role: true } },
       followUps: { where: { isCompleted: false }, orderBy: { scheduledDate: "asc" } },

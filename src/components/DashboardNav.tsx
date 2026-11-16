@@ -14,6 +14,11 @@ export default function DashboardNav({ role }: { role: string }) {
     links.push({ href: "/admin/sheets", label: "Sheets Management" });
     links.push({ href: "/admin/activity", label: "Employee Monitoring" });
   }
+  // Ads Sheet import is Tele-Sales-pipeline-entry content, same scoping as
+  // Post-Meeting Report is Sales-only — Head of Sales doesn't get this one.
+  if (role === "ADMIN" || role === "HEAD_OF_TELE_SALES") {
+    links.push({ href: "/admin/ads-leads", label: "Ads Leads" });
+  }
   // Post-Meeting Report is Sales-only content (Tele-Sales never holds
   // meetings), so Head of Tele-Sales doesn't get this link.
   if (role === "ADMIN" || role === "HEAD_OF_SALES") {
