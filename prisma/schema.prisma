@@ -73,6 +73,7 @@ model User {
   receivedMessages ChatMessage[] @relation("ReceivedMessages")
   chatGroups    ChatGroup[]   @relation("GroupCreator")
   groupMemberships ChatGroupMember[]
+  adsSheetConfigUpdates AdsSheetConfig[]
 
   @@index([role])
 }
@@ -89,6 +90,15 @@ model Lead {
   storeUrl       String? // لينك متجر العميل
   socialMediaUrl String? // رابط السوشيال ميديا
   contractUrl    String? // رابط العقد المرفوع
+
+  // Ad-attribution fields — only populated for leads pulled from the
+  // Ads Google Sheet (source = ADS_SHEET). "acquisitionType" is ADS or
+  // ORGANIC (was the lead a paid ad or did it come in on its own),
+  // "platform" is free text (TikTok, Instagram, Facebook, ...) since new
+  // ad platforms show up over time and a fixed enum would need a migration
+  // every time one does.
+  acquisitionType String?
+  platform        String?
 
   status String @default("NEW")
   salesStatus String?
@@ -235,6 +245,21 @@ model UploadBatch {
   leads Lead[]
 
   @@index([status])
+}
+
+// A single-row settings table holding the linked Ads Google Sheet.
+// Always read/written through id = "singleton" (upsert) so there is only
+// ever one active sheet link, which can be swapped at any time from the
+// Ads Leads settings page without redeploying.
+model AdsSheetConfig {
+  id            String    @id @default("singleton")
+  sheetUrl      String
+  updatedById   String
+  updatedBy     User      @relation(fields: [updatedById], references: [id])
+  lastSyncedAt  DateTime?
+  lastSyncCount Int?      // how many new leads the last sync pulled in, for display
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Notification {

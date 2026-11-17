@@ -52,6 +52,14 @@ export const PERMISSIONS = {
 
   // تحديد متابعة كمكتملة
   COMPLETE_FOLLOWUP: [Role.ADMIN, Role.HEAD_OF_SALES, Role.HEAD_OF_TELE_SALES, Role.TELE_SALES, Role.SALES] as Role[],
+
+  // إدارة لينك الـ Ads Google Sheet وعمل Sync يدوي — مقتصرة على Head of
+  // Tele-Sales (صاحبة الفريق اللي بيستقبل الليدز دي) والأدمن
+  MANAGE_ADS_SHEET: [Role.ADMIN, Role.HEAD_OF_TELE_SALES] as Role[],
+
+  // مراجعة قائمة انتظار الليدز الجايين من الـ Ads Sheet، وتوزيعهم +
+  // تصنيفهم (Tier) قبل ما يتحولوا لـ Lead عادي
+  CLASSIFY_PENDING_LEADS: [Role.ADMIN, Role.HEAD_OF_TELE_SALES] as Role[],
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
