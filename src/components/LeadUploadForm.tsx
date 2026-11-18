@@ -4,8 +4,9 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import { Users, X } from "lucide-react";
+import DataUploadButton from "@/components/DataUploadButton";
 
-export default function LeadUploadForm() {
+export default function LeadUploadForm({ canUploadData = false }: { canUploadData?: boolean }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -130,6 +131,7 @@ export default function LeadUploadForm() {
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
           </button>
+          {canUploadData && <DataUploadButton />}
         </div>
       </div>
 

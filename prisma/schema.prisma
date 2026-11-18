@@ -74,6 +74,8 @@ model User {
   chatGroups    ChatGroup[]   @relation("GroupCreator")
   groupMemberships ChatGroupMember[]
   adsSheetConfigUpdates AdsSheetConfig[]
+  teleSalesData         TeleSalesData[]
+  teleSalesDataUploaded TeleSalesData[] @relation("TeleSalesDataCreatedBy")
 
   @@index([role])
 }
@@ -260,6 +262,41 @@ model AdsSheetConfig {
   lastSyncCount Int?      // how many new leads the last sync pulled in, for display
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+// Raw, self-collected contacts a Tele-Sales employee has gathered on her
+// own (separate from Lead entirely — it never converts into one; the team
+// uses two independent upload buttons, Upload Lead and Upload Data). The
+// source workbook has one sheet/tab per employee name, uploaded in bulk;
+// the employee then works through her own rows here, ticking off what
+// actually happened on each call.
+model TeleSalesData {
+  id         String   @id @default(cuid())
+  phone      String
+  storeUrl   String?
+
+  // Checkbox-style call outcome fields, matching the source sheet exactly.
+  answered     Boolean   @default(false)
+  meetingHeld  Boolean   @default(false)
+  followUpDate DateTime?
+  comment      String?
+  comment2     String?
+
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id])
+
+  createdById String
+  createdBy   User    @relation("TeleSalesDataCreatedBy", fields: [createdById], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Re-uploading the same tab twice (or the same contact appearing in two
+  // different syncs) shouldn't duplicate a row for the same owner — but the
+  // same phone number legitimately can appear under two different
+  // employees (each one's own raw data), so the constraint is per-owner.
+  @@unique([ownerId, phone])
+  @@index([ownerId])
 }
 
 model Notification {

@@ -18,6 +18,7 @@ export default function DashboardNav({ role }: { role: string }) {
   // Post-Meeting Report is Sales-only — Head of Sales doesn't get this one.
   if (role === "ADMIN" || role === "HEAD_OF_TELE_SALES") {
     links.push({ href: "/admin/ads-leads", label: "Ads Leads" });
+    links.push({ href: "/admin/data", label: "Data" });
   }
   // Post-Meeting Report is Sales-only content (Tele-Sales never holds
   // meetings), so Head of Tele-Sales doesn't get this link.
@@ -29,6 +30,7 @@ export default function DashboardNav({ role }: { role: string }) {
   }
   if (role === "TELE_SALES") {
     links.push({ href: "/tele-sales", label: "My Dashboard" });
+    links.push({ href: "/tele-sales/data", label: "My Data" });
   }
   if (role === "SALES") {
     links.push({ href: "/sales", label: "My Dashboard" });

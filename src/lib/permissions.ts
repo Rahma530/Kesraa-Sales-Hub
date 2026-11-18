@@ -60,6 +60,11 @@ export const PERMISSIONS = {
   // مراجعة قائمة انتظار الليدز الجايين من الـ Ads Sheet، وتوزيعهم +
   // تصنيفهم (Tier) قبل ما يتحولوا لـ Lead عادي
   CLASSIFY_PENDING_LEADS: [Role.ADMIN, Role.HEAD_OF_TELE_SALES] as Role[],
+
+  // رفع ملف الـ Data (Workbook فيه sheet باسم كل موظفة Tele-Sales)، ومشاهدة
+  // بيانات الفريق كله — مقتصرة على نفس صلاحيات Upload Lead
+  UPLOAD_TELE_SALES_DATA: [Role.ADMIN, Role.HEAD_OF_TELE_SALES] as Role[],
+  VIEW_ALL_TELE_SALES_DATA: [Role.ADMIN, Role.HEAD_OF_TELE_SALES] as Role[],
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

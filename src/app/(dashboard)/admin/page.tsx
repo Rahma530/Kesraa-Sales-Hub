@@ -15,10 +15,11 @@ import {
 import StaleLeadsChecker from "@/components/StaleLeadsChecker";
 import AdminTodoList from "@/components/AdminTodoList";
 import LeadUploadForm from "@/components/LeadUploadForm";
+import { can } from "@/lib/permissions";
 
 export default async function AdminDashboard() {
   const session = await getServerSession(authOptions);
-  
+
   const since = new Date();
   since.setDate(since.getDate() - 13);
   since.setHours(0, 0, 0, 0);
@@ -161,7 +162,7 @@ export default async function AdminDashboard() {
           lead without having to go to Lead Management first. The richer
           column-mapping bulk-upload flow still lives there for larger
           imports. */}
-      <LeadUploadForm />
+      <LeadUploadForm canUploadData={can(session!.user.role, "UPLOAD_TELE_SALES_DATA")} />
       <div className="h-6" />
 
       <AdminTodoList followUps={todayFollowUps} meetings={todayMeetings} />
