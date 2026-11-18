@@ -37,10 +37,7 @@ export default async function AdminDashboard() {
     todayFollowUps,
     todayMeetings,
   ] = await Promise.all([
-    // Leads still sitting in the Ads Sheet pending-review queue aren't real
-    // assigned leads yet, so they're excluded from every stat here — same
-    // reasoning as hiding them from the Lead Management list.
-    prisma.lead.count({ where: { currentStage: { not: "PENDING_REVIEW" } } }),
+    prisma.lead.count(),
     prisma.lead.count({ where: { tier: { in: ["HOT", "COLD"] } } }),
     prisma.meeting.count({
       where: {
@@ -56,8 +53,8 @@ export default async function AdminDashboard() {
     // case: Sales closes it themselves) — count both.
     prisma.lead.count({ where: { OR: [{ status: "CLOSED_WON" }, { salesStatus: "CLOSED_WON" }] } }),
     prisma.lead.count({ where: { status: "CLOSED_LOST" } }),
-    prisma.lead.groupBy({ by: ["status"], where: { currentStage: { not: "PENDING_REVIEW" } }, _count: { _all: true } }),
-    prisma.lead.groupBy({ by: ["tier"], where: { currentStage: { not: "PENDING_REVIEW" } }, _count: { _all: true } }),
+    prisma.lead.groupBy({ by: ["status"], _count: { _all: true } }),
+    prisma.lead.groupBy({ by: ["tier"], _count: { _all: true } }),
     prisma.user.findMany({
       where: { role: { in: [Role.TELE_SALES, Role.SALES] }, isActive: true },
       select: { id: true, name: true, role: true, _count: { select: { assignedLeads: true } } },

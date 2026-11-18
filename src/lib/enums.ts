@@ -38,17 +38,12 @@ export enum LeadSource {
   ADS_SHEET = "ADS_SHEET"
 }
 
-// Lead.acquisitionType — only set on ADS_SHEET leads: was this a paid ad
-// or did the customer come in on their own (organic)?
+// Lead.acquisitionType — only set on ADS_SHEET leads: did the customer
+// reach out to us themselves (WHATSAPP), or did we call them (CALL)?
 export enum LeadAcquisitionType {
-  ADS = "ADS",
-  ORGANIC = "ORGANIC"
+  WHATSAPP = "WHATSAPP",
+  CALL = "CALL"
 }
-
-// Lead.currentStage can also be this value while an ADS_SHEET lead is
-// waiting for Head of Tele-Sales to assign + classify it. Not a Prisma
-// enum (currentStage is a plain String) so it's just a shared constant.
-export const PENDING_REVIEW_STAGE = "PENDING_REVIEW";
 export enum ActivityType {
   STATUS_CHANGE = "STATUS_CHANGE",
   FOLLOWUP_CREATED = "FOLLOWUP_CREATED",

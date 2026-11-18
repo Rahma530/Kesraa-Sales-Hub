@@ -144,12 +144,13 @@ export function mapSheetRowsToLeads(rows: string[][]): AdsSheetLeadRow[] {
       delete lead._link;
     }
 
-    // توحيد "ADS"/"Ads"/"ads" وما شابه لـ ADS، ونفس الكلام لـ ORGANIC —
-    // الشيت بتتكتب فيه القيم يدوي فمحتمل يبقى شكلها مختلف شوية كل مرة.
+    // توحيد "WhatsApp"/"whatsapp"/"WA" وما شابه لـ WHATSAPP، ونفس الكلام
+    // لـ CALL — الشيت بتتكتب فيه القيم يدوي فمحتمل يبقى شكلها مختلف شوية
+    // كل مرة. WHATSAPP = العميل جالنا هو بنفسه، CALL = احنا اللي كلمناه.
     if (lead.acquisitionType) {
       const normalized = lead.acquisitionType.trim().toLowerCase();
-      if (normalized.startsWith("ad")) lead.acquisitionType = "ADS";
-      else if (normalized.startsWith("org")) lead.acquisitionType = "ORGANIC";
+      if (normalized.startsWith("whatsapp") || normalized === "wa") lead.acquisitionType = "WHATSAPP";
+      else if (normalized.startsWith("call")) lead.acquisitionType = "CALL";
     }
 
     result.push(lead as AdsSheetLeadRow);
