@@ -9,6 +9,8 @@ interface RawLeadInput {
   need?: string;
   storeUrl?: string;
   socialMediaUrl?: string;
+  acquisitionType?: string;
+  platform?: string;
 }
 
 // عدد الصفوف اللي بتتعالج مع بعض في كل دفعة داخلية.
@@ -99,6 +101,8 @@ export async function distributeLeads(
           need: lead.need || null,
           storeUrl: lead.storeUrl || null,
           socialMediaUrl: lead.socialMediaUrl || null,
+          acquisitionType: lead.acquisitionType || null,
+          platform: lead.platform || null,
           source,
           ...(tier ? { tier } : {}),
           createdById,
