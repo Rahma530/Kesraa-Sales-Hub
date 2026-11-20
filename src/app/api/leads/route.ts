@@ -9,6 +9,13 @@ import { z } from "zod";
 import { distributeLeads } from "@/lib/lead-distribution";
 
 // GET /api/leads — management sees all leads, employees only see their own
+//
+// Paginated: returns { leads, total, page, pageSize, totalPages } rather
+// than a bare array, so the caller can render page controls and an
+// accurate "N results" count without having to load everything. This
+// backs the Lead Management (admin/customers) page's server-side
+// pagination — see that page for why loading every Lead in one response
+// stopped being workable once the lead volume grew large.
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,11 +23,16 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") ?? undefined;
   const tier = searchParams.get("tier") ?? undefined;
+  const assignedToId = searchParams.get("assignedToId") ?? undefined;
   const q = searchParams.get("q")?.trim() ?? undefined;
+
+  const pageSize = Math.min(Math.max(Number(searchParams.get("pageSize")) || 50, 1), 100);
+  const page = Math.max(Number(searchParams.get("page")) || 1, 1);
 
   const where: any = {};
   if (status) where.status = status;
   if (tier) where.tier = tier;
+  if (assignedToId) where.assignedToId = assignedToId;
   if (q) {
     where.OR = [
       { name: { contains: q, mode: "insensitive" } },
@@ -34,17 +46,28 @@ export async function GET(req: NextRequest) {
     where.assignedToId = session.user.id;
   }
 
-  const leads = await prisma.lead.findMany({
-    where,
-    include: {
-      assignedTo: { select: { id: true, name: true, role: true } },
-      followUps: { orderBy: { scheduledDate: "asc" }, where: { isCompleted: false } },
-      meetings: { orderBy: { scheduledAt: "desc" }, take: 1 },
-    },
-    orderBy: { updatedAt: "desc" },
-  });
+  const [leads, total] = await Promise.all([
+    prisma.lead.findMany({
+      where,
+      include: {
+        assignedTo: { select: { id: true, name: true, role: true } },
+        followUps: { orderBy: { scheduledDate: "asc" }, where: { isCompleted: false } },
+        meetings: { orderBy: { scheduledAt: "desc" }, take: 1 },
+      },
+      orderBy: { updatedAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.lead.count({ where }),
+  ]);
 
-  return NextResponse.json(leads);
+  return NextResponse.json({
+    leads,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(Math.ceil(total / pageSize), 1),
+  });
 }
 
 const createLeadSchema = z.object({
