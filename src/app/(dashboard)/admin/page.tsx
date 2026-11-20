@@ -62,6 +62,10 @@ export default async function AdminDashboard() {
     prisma.lead.findMany({
       where: { createdAt: { gte: since } },
       select: { createdAt: true },
+      // Naturally bounded to a 14-day window and a single scalar field
+      // already, but a defensive cap costs nothing and avoids relying on
+      // "the window is always small" as the only safety net.
+      take: 20000,
     }),
     prisma.followUp.findMany({
       where: {
@@ -89,42 +93,87 @@ export default async function AdminDashboard() {
     }),
   ]);
 
-  const teamWithActions = await Promise.all(
-    team.map(async (emp) => {
-      // Find all unique leads this employee has interacted with
-      const distinctLeads = await prisma.activity.findMany({
-        where: { userId: emp.id },
-        distinct: ['leadId'],
-        select: { leadId: true },
-      });
-      const actionCount = distinctLeads.length;
+  // IMPORTANT: this used to run 6 separate queries *per employee* in a
+  // loop (team.map(async (emp) => { ...6 awaits... })) — with 20-30
+  // employees, that's 120-180 sequential round-trips to the database on
+  // every single load of this page, each one holding a pooled connection
+  // while it runs. Same category of problem as the notifications fix:
+  // not "too much data", but "too many separate queries that should have
+  // been one". Below, each metric is computed once, for every employee at
+  // the same time (via groupBy, or a single findMany with `distinct` for
+  // the one case groupBy can't express directly), then looked up per
+  // employee from a Map — 6 queries total, regardless of team size.
+  const teamIds = team.map((t) => t.id);
 
-      // Count transferred to sales (Tele-Sales metric)
-      const transferredCount = await prisma.activity.count({
-        where: { userId: emp.id, type: "TRANSFERRED" }
-      });
+  const [
+    distinctLeadRows,
+    transferredGroups,
+    wonGroups,
+    enteredMeetingsGroups,
+    followUpsGroups,
+    uploadedContractsGroups,
+  ] = await Promise.all([
+    // groupBy can't do "count distinct leadId per userId" directly, so we
+    // still need the actual (userId, leadId) pairs — but as ONE query for
+    // the whole team instead of one findMany per employee.
+    prisma.activity.findMany({
+      where: { userId: { in: teamIds } },
+      distinct: ["userId", "leadId"],
+      select: { userId: true, leadId: true },
+    }),
+    prisma.activity.groupBy({
+      by: ["userId"],
+      where: { userId: { in: teamIds }, type: "TRANSFERRED" },
+      _count: { _all: true },
+    }),
+    // A deal can be closed from the Tele-Sales `status` field (Admin/Head
+    // closing on the employee's behalf) or from `salesStatus` (the normal
+    // case: Sales closes it themselves) — count both.
+    prisma.lead.groupBy({
+      by: ["assignedToId"],
+      where: {
+        assignedToId: { in: teamIds },
+        OR: [{ status: "CLOSED_WON" }, { salesStatus: "CLOSED_WON" }],
+      },
+      _count: { _all: true },
+    }),
+    // Meetings actually held (not just scheduled).
+    prisma.meeting.groupBy({
+      by: ["ownerId"],
+      where: { ownerId: { in: teamIds }, status: "DONE" },
+      _count: { _all: true },
+    }),
+    prisma.followUp.groupBy({
+      by: ["createdById"],
+      where: { createdById: { in: teamIds } },
+      _count: { _all: true },
+    }),
+    prisma.activity.groupBy({
+      by: ["userId"],
+      where: { userId: { in: teamIds }, type: "UPLOAD_CONTRACT" },
+      _count: { _all: true },
+    }),
+  ]);
 
-      // Count closed won (Sales metric). A deal can be closed from the
-      // Tele-Sales `status` field (Admin/Head closing on the employee's
-      // behalf) or from `salesStatus` (the normal case: Sales closes it
-      // themselves) — count both.
-      const wonCount = await prisma.lead.count({
-        where: { assignedToId: emp.id, OR: [{ status: "CLOSED_WON" }, { salesStatus: "CLOSED_WON" }] }
-      });
-      // Meetings actually held (not just scheduled) by this employee.
-      const enteredMeetingsCount = await prisma.meeting.count({
-        where: { ownerId: emp.id, status: "DONE" }
-      });
-      const followUpsCount = await prisma.followUp.count({
-        where: { createdById: emp.id }
-      });
-      const uploadedContractsCount = await prisma.activity.count({
-        where: { userId: emp.id, type: "UPLOAD_CONTRACT" }
-      });
+  const actionCountByUserId = new Map<string, number>();
+  for (const row of distinctLeadRows) {
+    actionCountByUserId.set(row.userId, (actionCountByUserId.get(row.userId) ?? 0) + 1);
+  }
+  const transferredByUserId = new Map(transferredGroups.map((g) => [g.userId, g._count._all]));
+  const wonByUserId = new Map(wonGroups.map((g) => [g.assignedToId as string, g._count._all]));
+  const enteredMeetingsByUserId = new Map(enteredMeetingsGroups.map((g) => [g.ownerId, g._count._all]));
+  const followUpsByUserId = new Map(followUpsGroups.map((g) => [g.createdById, g._count._all]));
+  const uploadedContractsByUserId = new Map(uploadedContractsGroups.map((g) => [g.userId, g._count._all]));
 
-      return { ...emp, actionCount, transferredCount, wonCount, enteredMeetingsCount, followUpsCount, uploadedContractsCount };
-    })
-  );
+  const teamWithActions = team.map((emp) => ({
+    ...emp,
+    actionCount: actionCountByUserId.get(emp.id) ?? 0,
+    transferredCount: transferredByUserId.get(emp.id) ?? 0,
+    wonCount: wonByUserId.get(emp.id) ?? 0,
+    enteredMeetingsCount: enteredMeetingsByUserId.get(emp.id) ?? 0,
+    followUpsCount: followUpsByUserId.get(emp.id) ?? 0,
+    uploadedContractsCount: uploadedContractsByUserId.get(emp.id) ?? 0,
+  }));
 
   const statusData = statusGroups
     .map((g) => ({ status: g.status, count: g._count._all }))

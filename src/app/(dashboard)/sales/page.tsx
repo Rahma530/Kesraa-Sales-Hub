@@ -11,7 +11,7 @@ export default async function SalesDashboard() {
   const session = await getServerSession(authOptions);
   const userId = session!.user.id;
 
-  const [myLeads, meetingsToday, closedWon, enteredMeetings, followUpsScheduled, uploadedContracts] = await Promise.all([
+  const [myLeads, totalLeadsCount, meetingsToday, closedWon, enteredMeetings, followUpsScheduled, uploadedContracts] = await Promise.all([
     prisma.lead.findMany({
       where: { assignedToId: userId },
       include: {
@@ -21,7 +21,16 @@ export default async function SalesDashboard() {
         activities: { orderBy: { createdAt: "desc" }, take: 8, include: { user: { select: { name: true } } } },
       },
       orderBy: { updatedAt: "desc" },
+      // Temporary safety cap (most recently updated first) while this
+      // page still loads its list in one shot rather than paginating —
+      // see the Lead Management pagination work for the full fix. Without
+      // this, an employee whose assigned-lead count grows into the
+      // thousands would load all of them, with nested relations, on every
+      // dashboard visit.
+      take: 150,
     }),
+    // The stat card needs the TRUE total, not the capped list length above.
+    prisma.lead.count({ where: { assignedToId: userId } }),
     prisma.meeting.count({
       where: {
         ownerId: userId,
@@ -49,7 +58,7 @@ export default async function SalesDashboard() {
       <FollowUpReminderChecker />
 
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <StatCard label="Total Leads" value={myLeads.length} icon={<Handshake size={18} />} />
+        <StatCard label="Total Leads" value={totalLeadsCount} icon={<Handshake size={18} />} />
         <StatCard label="Today's Meetings" value={meetingsToday} icon={<Calendar size={18} />} accent="text-accent-soft" />
         <StatCard label="Contracts" value={closedWon} icon={<Trophy size={18} />} accent="text-status-won" />
         <StatCard label="Meetings Attended" value={enteredMeetings} icon={<Video size={18} />} accent="text-blue-400" />

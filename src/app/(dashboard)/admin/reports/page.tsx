@@ -43,6 +43,9 @@ export default async function ReportsPage() {
     prisma.lead.findMany({
       where: { createdAt: { gte: since } },
       select: { createdAt: true },
+      // Naturally bounded to a 14-day window and a single scalar field
+      // already, but a defensive cap costs nothing.
+      take: 20000,
     }),
     prisma.lead.count(),
     prisma.lead.count({ where: { status: "TRANSFERRED_TO_SALES" } }),
