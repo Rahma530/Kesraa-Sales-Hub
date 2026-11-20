@@ -2,11 +2,12 @@ import { Role, LeadSource } from "@/lib/enums";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { can, isManagementRole } from "@/lib/permissions";
+import { can } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 import { distributeLeads } from "@/lib/lead-distribution";
+import { buildLeadScopeWhere, applyDatePreset } from "@/lib/lead-scope";
 
 // GET /api/leads — management sees all leads, employees only see their own
 //
@@ -25,26 +26,44 @@ export async function GET(req: NextRequest) {
   const tier = searchParams.get("tier") ?? undefined;
   const assignedToId = searchParams.get("assignedToId") ?? undefined;
   const q = searchParams.get("q")?.trim() ?? undefined;
+  // NEW_LEADS (created within 7 days) / OLD_LEADS (older than 30 days) —
+  // the same presets LeadTable used to apply client-side over the full
+  // in-memory lead list; now applied server-side so they keep working once
+  // the component only ever sees one page at a time.
+  const datePreset = searchParams.get("datePreset") ?? undefined;
 
   const pageSize = Math.min(Math.max(Number(searchParams.get("pageSize")) || 50, 1), 100);
   const page = Math.max(Number(searchParams.get("page")) || 1, 1);
 
-  const where: any = {};
-  if (status) where.status = status;
-  if (tier) where.tier = tier;
-  if (assignedToId) where.assignedToId = assignedToId;
+  // Base visibility: management sees everything, employees see only their
+  // own leads (Tele-Sales also keeps seeing leads they've transferred to
+  // Sales — see buildLeadScopeWhere for why this is an OR, not a plain
+  // assignedToId filter). Combined with the rest of the filters via AND
+  // (rather than reusing top-level `where.OR`) so a search query's OR
+  // doesn't clobber the scope's OR.
+  const scopeWhere = buildLeadScopeWhere(session.user);
+  const andConditions: any[] = [scopeWhere];
+
+  if (status) andConditions.push({ status });
+  if (tier) andConditions.push({ tier });
+  // A caller-supplied assignedToId narrows further within whatever the
+  // employee is already scoped to see; management can use it freely.
+  // "UNASSIGNED" is a sentinel (not a real user id) meaning "has no owner".
+  if (assignedToId === "UNASSIGNED") andConditions.push({ assignedToId: null });
+  else if (assignedToId) andConditions.push({ assignedToId });
   if (q) {
-    where.OR = [
-      { name: { contains: q, mode: "insensitive" } },
-      { phone: { contains: q } },
-      { company: { contains: q, mode: "insensitive" } },
-      { email: { contains: q, mode: "insensitive" } },
-    ];
+    andConditions.push({
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { phone: { contains: q } },
+        { company: { contains: q, mode: "insensitive" } },
+        { email: { contains: q, mode: "insensitive" } },
+      ],
+    });
   }
 
-  if (!isManagementRole(session.user.role)) {
-    where.assignedToId = session.user.id;
-  }
+  let where: any = { AND: andConditions };
+  where = applyDatePreset(where, datePreset);
 
   const [leads, total] = await Promise.all([
     prisma.lead.findMany({

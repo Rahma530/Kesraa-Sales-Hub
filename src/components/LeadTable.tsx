@@ -126,7 +126,7 @@ function formatDateTime(iso: string) {
 }
 
 export default function LeadTable({
-  leads,
+  leads = [],
   showAssignee,
   allowTransfer,
   canDelete,
@@ -135,8 +135,13 @@ export default function LeadTable({
   isSalesView,
   allowExport,
   canHoldMeetings,
+  serverPaginate,
+  pageSize = 24,
+  assignedToId,
 }: {
-  leads: LeadRow[];
+  // Required unless serverPaginate is set, in which case the component
+  // fetches its own data from /api/leads and this prop is ignored.
+  leads?: LeadRow[];
   showAssignee?: boolean;
   allowTransfer?: boolean;
   canDelete?: boolean;
@@ -150,6 +155,19 @@ export default function LeadTable({
   // the lead off to Sales via the Transfer modal — they never join the
   // meeting themselves, so these buttons stay hidden for them.
   canHoldMeetings?: boolean;
+  // When true, LeadTable owns its own data: it fetches a page at a time
+  // from /api/leads (search/status/assignee/date-filter and all), instead
+  // of receiving a full `leads` array and filtering it client-side. This
+  // is additive and opt-in specifically so the Lead Management page's
+  // "Lead Follow-up" tab can get its own independent pagination without
+  // touching how Sales/Tele-Sales dashboards use this same component
+  // (they keep passing a full `leads` array, unchanged).
+  serverPaginate?: boolean;
+  pageSize?: number;
+  // Only meaningful with serverPaginate — scopes the fetch to one
+  // employee's leads (used nowhere today, but mirrors the ?assignedToId
+  // param /api/leads already supports, for a future per-employee view).
+  assignedToId?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -263,6 +281,91 @@ export default function LeadTable({
   }, [searchParams, router]);
   const [dateFilter, setDateFilter] = useState("ALL");
 
+  // --- serverPaginate mode: this component fetches its own page of leads
+  // from /api/leads instead of relying on the `leads` prop. Kept entirely
+  // separate from the client-side `filtered`/`counts` logic below (which
+  // still runs, unused, in this mode — harmless since `leads` defaults to
+  // an empty array) so Sales/Tele-Sales call sites that don't pass
+  // serverPaginate are completely unaffected.
+  const [svLeads, setSvLeads] = useState<LeadRow[]>([]);
+  const [svTotal, setSvTotal] = useState(0);
+  const [svPage, setSvPage] = useState(1);
+  const [svTotalPages, setSvTotalPages] = useState(1);
+  const [svLoading, setSvLoading] = useState(false);
+  const [svCounts, setSvCounts] = useState<Record<string, number>>({ ALL: 0 });
+  const [svSearch, setSvSearch] = useState(""); // debounced copy of `search`
+
+  useEffect(() => {
+    if (!serverPaginate) return;
+    const t = setTimeout(() => setSvSearch(search), 350);
+    return () => clearTimeout(t);
+  }, [search, serverPaginate]);
+
+  // Reset to page 1 whenever a filter changes (not when just the page itself changes).
+  useEffect(() => {
+    if (!serverPaginate) return;
+    setSvPage(1);
+  }, [svSearch, filterStatus, filterAssignee, dateFilter, serverPaginate]);
+
+  const fetchServerPage = async () => {
+    setSvLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("page", String(svPage));
+      params.set("pageSize", String(pageSize));
+      if (filterStatus !== "ALL") params.set("status", filterStatus);
+      if (svSearch.trim()) params.set("q", svSearch.trim());
+      if (dateFilter !== "ALL") params.set("datePreset", dateFilter);
+      if (filterAssignee !== "ALL") params.set("assignedToId", filterAssignee);
+      else if (assignedToId) params.set("assignedToId", assignedToId);
+
+      const res = await fetch(`/api/leads?${params.toString()}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Failed to load leads");
+
+      setSvLeads(data.leads ?? []);
+      setSvTotal(data.total ?? 0);
+      setSvTotalPages(data.totalPages ?? 1);
+    } catch (e: any) {
+      showToast(e.message ?? "Failed to load leads", "error");
+    } finally {
+      setSvLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!serverPaginate) return;
+    fetchServerPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverPaginate, svPage, svSearch, filterStatus, filterAssignee, dateFilter, assignedToId]);
+
+  const fetchServerCounts = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (svSearch.trim()) params.set("q", svSearch.trim());
+      if (dateFilter !== "ALL") params.set("datePreset", dateFilter);
+      if (filterAssignee !== "ALL") params.set("assignedToId", filterAssignee);
+      else if (assignedToId) params.set("assignedToId", assignedToId);
+      const res = await fetch(`/api/leads/status-counts?${params.toString()}`);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) setSvCounts(data.counts ?? { ALL: 0 });
+    } catch {
+      // Non-critical — the tab pills just won't show counts this round.
+    }
+  };
+
+  useEffect(() => {
+    if (!serverPaginate) return;
+    fetchServerCounts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverPaginate, svSearch, filterAssignee, dateFilter, assignedToId]);
+
+  const refetchCurrentPage = () => {
+    if (!serverPaginate) return;
+    fetchServerPage();
+    fetchServerCounts();
+  };
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [newLead, setNewLead] = useState({ name: "", phone: "", company: "", need: "" });
 
@@ -283,7 +386,11 @@ export default function LeadTable({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "An error occurred");
-      router.refresh();
+      // In serverPaginate mode there's no parent-fed `leads` prop for
+      // router.refresh() to update — this component owns its own fetched
+      // data, so it has to re-fetch its current page itself.
+      if (serverPaginate) refetchCurrentPage();
+      else router.refresh();
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("refreshNotifications"));
       }
@@ -311,7 +418,8 @@ export default function LeadTable({
       setCreateMeetingLink(data.meetingLink ?? null);
       setCreateMeetingWarning(data.recordingWarning ?? null);
       setCreateMeetingResultOpen(true);
-      router.refresh();
+      if (serverPaginate) refetchCurrentPage();
+      else router.refresh();
     } catch (e: any) {
       setCreateMeetingError(e.message ?? "Failed to create the meeting");
       showToast(e.message ?? "Failed to create the meeting", "error");
@@ -338,15 +446,17 @@ export default function LeadTable({
     TRANSFERRED_TO_SALES: leads.filter(l => l.status === "TRANSFERRED_TO_SALES").length,
   }), [leads]);
 
+  const effectiveCounts = serverPaginate ? svCounts : counts;
+
   const tabs = [
-    { id: "ALL", label: "All", count: counts.ALL, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-white/10 text-slate-300" },
-    { id: "NEW", label: "New", count: counts.NEW, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-blue-500/20 text-blue-400" },
-    { id: "NEEDS_FOLLOWUP", label: "Follow-up", count: counts.NEEDS_FOLLOWUP, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-yellow-500/20 text-yellow-500" },
-    { id: "CONTACTED", label: "Contacted", count: counts.CONTACTED, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-emerald-500/20 text-emerald-500" },
-    { id: "INTERESTED", label: "Interested", count: counts.INTERESTED, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-green-500/20 text-green-400" },
-    { id: "NOT_INTERESTED", label: "Not Interested", count: counts.NOT_INTERESTED, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-red-500/20 text-red-400" },
-    { id: "NO_ANSWER", label: "No Answer", count: counts.NO_ANSWER, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-rose-500/20 text-rose-500" },
-    { id: "TRANSFERRED_TO_SALES", label: "Transferred to Sales", count: counts.TRANSFERRED_TO_SALES, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-purple-500/20 text-purple-400" },
+    { id: "ALL", label: "All", count: effectiveCounts.ALL ?? 0, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-white/10 text-slate-300" },
+    { id: "NEW", label: "New", count: effectiveCounts.NEW ?? 0, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-blue-500/20 text-blue-400" },
+    { id: "NEEDS_FOLLOWUP", label: "Follow-up", count: effectiveCounts.NEEDS_FOLLOWUP ?? 0, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-yellow-500/20 text-yellow-500" },
+    { id: "CONTACTED", label: "Contacted", count: effectiveCounts.CONTACTED ?? 0, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-emerald-500/20 text-emerald-500" },
+    { id: "INTERESTED", label: "Interested", count: effectiveCounts.INTERESTED ?? 0, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-green-500/20 text-green-400" },
+    { id: "NOT_INTERESTED", label: "Not Interested", count: effectiveCounts.NOT_INTERESTED ?? 0, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-red-500/20 text-red-400" },
+    { id: "NO_ANSWER", label: "No Answer", count: effectiveCounts.NO_ANSWER ?? 0, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-rose-500/20 text-rose-500" },
+    { id: "TRANSFERRED_TO_SALES", label: "Transferred to Sales", count: effectiveCounts.TRANSFERRED_TO_SALES ?? 0, bg: "bg-[#182032] text-slate-300 border border-white/5", badge: "bg-purple-500/20 text-purple-400" },
   ];
 
   const filtered = useMemo(() => {
@@ -388,9 +498,18 @@ export default function LeadTable({
     );
   }, [leads, search, filterStatus, filterAssignee, dateFilter]);
 
+  // The leads actually shown in the grid: server-fetched page in
+  // serverPaginate mode (already filtered/sorted by /api/leads), or the
+  // client-side filtered/sorted list otherwise — unchanged from before.
+  const displayLeads = serverPaginate ? svLeads : filtered;
+
   const handleExport = () => {
+    // In serverPaginate mode `displayLeads` is only the current page —
+    // exporting "everything matching the filter" would need a separate
+    // server-side export endpoint, which doesn't exist yet. Flagged to
+    // the user; for now this exports the page currently on screen.
     const headers = ["Name", "Phone", "Status", "Tier", "Employee", "Date", "Company", "Need"];
-    const csvData = filtered.map(l => [
+    const csvData = displayLeads.map(l => [
       l.name,
       l.phone,
       (isSalesView ? SALES_STATUS_OPTIONS : STATUS_LABELS_FOR_SELECT).find(s => s.value === (isSalesView ? l.salesStatus : l.status))?.label || l.status,
@@ -444,7 +563,7 @@ export default function LeadTable({
         {/* Title & Count */}
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold text-white">All Leads</h2>
-          <span className="bg-[#1f2937] text-slate-300 px-3 py-1 rounded-full text-xs font-bold shadow-inner">{leads.length}</span>
+          <span className="bg-[#1f2937] text-slate-300 px-3 py-1 rounded-full text-xs font-bold shadow-inner">{serverPaginate ? svTotal : leads.length}</span>
         </div>
 
         {/* Search & Filters & Add Button */}
@@ -549,13 +668,17 @@ export default function LeadTable({
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {serverPaginate && svLoading ? (
         <div className="p-16 text-center text-sm text-slate-500 bg-[#121826] rounded-2xl border border-white/5">
-          {leads.length === 0 ? "No leads yet" : "No results match your search"}
+          Loading...
+        </div>
+      ) : displayLeads.length === 0 ? (
+        <div className="p-16 text-center text-sm text-slate-500 bg-[#121826] rounded-2xl border border-white/5">
+          {(serverPaginate ? svTotal : leads.length) === 0 ? "No leads yet" : "No results match your search"}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
-          {filtered.map((lead) => {
+          {displayLeads.map((lead) => {
             const latestActivity = lead.activities?.[0];
             const isSelected = openId === lead.id;
             const avatarColor = getAvatarColor(lead.id);
@@ -814,6 +937,43 @@ export default function LeadTable({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination (serverPaginate mode only) — traditional numbered pages, per the user's chosen style for the Lead Management page */}
+      {serverPaginate && svTotalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6 flex-wrap">
+          <button
+            onClick={() => setSvPage(p => Math.max(1, p - 1))}
+            disabled={svPage === 1}
+            className="px-3 py-2 rounded-lg text-sm font-bold bg-[#182032] text-slate-300 border border-white/5 disabled:opacity-40 hover:bg-white/5"
+          >
+            Previous
+          </button>
+          {Array.from({ length: svTotalPages }, (_, i) => i + 1)
+            .filter(p => p === 1 || p === svTotalPages || Math.abs(p - svPage) <= 2)
+            .map((p, idx, arr) => (
+              <Fragment key={p}>
+                {idx > 0 && arr[idx - 1] !== p - 1 && <span className="text-slate-500 px-1">...</span>}
+                <button
+                  onClick={() => setSvPage(p)}
+                  className={`min-w-[2.5rem] px-3 py-2 rounded-lg text-sm font-bold border transition-colors ${
+                    p === svPage
+                      ? "bg-accent text-white border-accent"
+                      : "bg-[#182032] text-slate-300 border-white/5 hover:bg-white/5"
+                  }`}
+                >
+                  {p}
+                </button>
+              </Fragment>
+            ))}
+          <button
+            onClick={() => setSvPage(p => Math.min(svTotalPages, p + 1))}
+            disabled={svPage === svTotalPages}
+            className="px-3 py-2 rounded-lg text-sm font-bold bg-[#182032] text-slate-300 border border-white/5 disabled:opacity-40 hover:bg-white/5"
+          >
+            Next
+          </button>
         </div>
       )}
 
