@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import * as XLSX from "xlsx";
 import StatusBadge from "@/components/StatusBadge";
 import LeadTable from "@/components/LeadTable";
+import DateRangeFilter, { type DateRangeValue } from "@/components/DateRangeFilter";
 import { Search, Users, Download } from "lucide-react";
 
 type Employee = { id: string; name: string; role: string; lastActiveAt?: Date | null };
@@ -58,6 +59,7 @@ export default function AdminCustomersClient({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterEmployee, setFilterEmployee] = useState("ALL");
   const [filterStatus, setFilterStatus] = useState("ALL");
+  const [dateFilter, setDateFilter] = useState<DateRangeValue>({ preset: "ALL" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Bulk selection — hybrid pattern: page-only selection by default, with
@@ -78,12 +80,15 @@ export default function AdminCustomersClient({
     setLdPage(1);
     setSelectedLeads(new Set());
     setSelectAllMatching(false);
-  }, [debouncedSearch, filterEmployee, filterStatus]);
+  }, [debouncedSearch, filterEmployee, filterStatus, dateFilter]);
 
   const currentFilter = {
     status: filterStatus,
     assignedToId: filterEmployee,
     q: debouncedSearch,
+    datePreset: dateFilter.preset,
+    dateFrom: dateFilter.from,
+    dateTo: dateFilter.to,
   };
 
   const fetchLdPage = useCallback(async () => {
@@ -101,6 +106,11 @@ export default function AdminCustomersClient({
         if (filterEmployee !== "ALL") params.set("assignedToId", filterEmployee);
       }
       if (debouncedSearch.trim()) params.set("q", debouncedSearch.trim());
+      if (dateFilter.preset !== "ALL") {
+        params.set("datePreset", dateFilter.preset);
+        if (dateFilter.from) params.set("dateFrom", dateFilter.from);
+        if (dateFilter.to) params.set("dateTo", dateFilter.to);
+      }
 
       const res = await fetch(`/api/leads?${params.toString()}`);
       const data = await res.json().catch(() => ({}));
@@ -114,7 +124,7 @@ export default function AdminCustomersClient({
     } finally {
       setLdLoading(false);
     }
-  }, [ldPage, filterStatus, filterEmployee, debouncedSearch]);
+  }, [ldPage, filterStatus, filterEmployee, debouncedSearch, dateFilter]);
 
   useEffect(() => {
     if (activeTab === "table") fetchLdPage();
@@ -653,6 +663,7 @@ export default function AdminCustomersClient({
             <option value="NOT_INTERESTED">Not Interested</option>
             <option value="TRANSFERRED_TO_SALES">Transferred to Sales</option>
           </select>
+          <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
         </div>
 
         {/* Bulk Actions */}

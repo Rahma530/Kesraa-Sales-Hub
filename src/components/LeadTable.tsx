@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
 import TierBadge from "@/components/TierBadge";
+import DateRangeFilter, { type DateRangeValue } from "@/components/DateRangeFilter";
 import { playNotificationSound } from "@/lib/audio";
 import {
   AlertTriangle,
@@ -123,6 +124,51 @@ function formatDateTime(iso: string) {
   } catch {
     return iso;
   }
+}
+
+// Client-side equivalent of applyDateFilter in src/lib/lead-scope.ts — same
+// preset semantics, applied to an in-memory array instead of a Prisma
+// `where`. Used by LeadTable's non-serverPaginate mode (Sales/Tele-Sales
+// dashboards), which still filters a fully-loaded `leads` array locally.
+function applyClientDateFilter<T extends { createdAt: string }>(list: T[], filter: DateRangeValue): T[] {
+  const { preset, from, to } = filter;
+  if (!preset || preset === "ALL") return list;
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (preset === "NEW_LEADS") {
+    return list.filter((l) => (now.getTime() - new Date(l.createdAt).getTime()) / 86400000 <= 7);
+  }
+  if (preset === "OLD_LEADS") {
+    return list.filter((l) => (now.getTime() - new Date(l.createdAt).getTime()) / 86400000 > 30);
+  }
+  if (preset === "TODAY") {
+    return list.filter((l) => new Date(l.createdAt).getTime() >= startOfToday.getTime());
+  }
+  if (preset === "THIS_WEEK") {
+    const day = startOfToday.getDay();
+    const daysSinceSaturday = (day + 1) % 7;
+    const startOfWeek = new Date(startOfToday.getTime() - daysSinceSaturday * 86400000);
+    return list.filter((l) => new Date(l.createdAt).getTime() >= startOfWeek.getTime());
+  }
+  if (preset === "THIS_MONTH") {
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return list.filter((l) => new Date(l.createdAt).getTime() >= startOfMonth.getTime());
+  }
+  if (preset === "THIS_YEAR") {
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    return list.filter((l) => new Date(l.createdAt).getTime() >= startOfYear.getTime());
+  }
+  if (preset === "CUSTOM") {
+    const fromTime = from ? new Date(from + "T00:00:00").getTime() : -Infinity;
+    const toTime = to ? new Date(to + "T23:59:59.999").getTime() : Infinity;
+    return list.filter((l) => {
+      const t = new Date(l.createdAt).getTime();
+      return t >= fromTime && t <= toTime;
+    });
+  }
+  return list;
 }
 
 export default function LeadTable({
@@ -279,7 +325,7 @@ export default function LeadTable({
       router.replace(window.location.pathname, { scroll: false });
     }
   }, [searchParams, router]);
-  const [dateFilter, setDateFilter] = useState("ALL");
+  const [dateFilter, setDateFilter] = useState<DateRangeValue>({ preset: "ALL" });
 
   // --- serverPaginate mode: this component fetches its own page of leads
   // from /api/leads instead of relying on the `leads` prop. Kept entirely
@@ -315,7 +361,11 @@ export default function LeadTable({
       params.set("pageSize", String(pageSize));
       if (filterStatus !== "ALL") params.set("status", filterStatus);
       if (svSearch.trim()) params.set("q", svSearch.trim());
-      if (dateFilter !== "ALL") params.set("datePreset", dateFilter);
+      if (dateFilter.preset !== "ALL") {
+        params.set("datePreset", dateFilter.preset);
+        if (dateFilter.from) params.set("dateFrom", dateFilter.from);
+        if (dateFilter.to) params.set("dateTo", dateFilter.to);
+      }
       if (filterAssignee !== "ALL") params.set("assignedToId", filterAssignee);
       else if (assignedToId) params.set("assignedToId", assignedToId);
 
@@ -343,7 +393,11 @@ export default function LeadTable({
     try {
       const params = new URLSearchParams();
       if (svSearch.trim()) params.set("q", svSearch.trim());
-      if (dateFilter !== "ALL") params.set("datePreset", dateFilter);
+      if (dateFilter.preset !== "ALL") {
+        params.set("datePreset", dateFilter.preset);
+        if (dateFilter.from) params.set("dateFrom", dateFilter.from);
+        if (dateFilter.to) params.set("dateTo", dateFilter.to);
+      }
       if (filterAssignee !== "ALL") params.set("assignedToId", filterAssignee);
       else if (assignedToId) params.set("assignedToId", assignedToId);
       const res = await fetch(`/api/leads/status-counts?${params.toString()}`);
@@ -473,18 +527,7 @@ export default function LeadTable({
       }
     }
 
-    const now = new Date();
-    if (dateFilter === "NEW_LEADS") {
-      list = list.filter((l) => {
-        const diffDays = (now.getTime() - new Date(l.createdAt).getTime()) / (1000 * 3600 * 24);
-        return diffDays <= 7;
-      });
-    } else if (dateFilter === "OLD_LEADS") {
-      list = list.filter((l) => {
-        const diffDays = (now.getTime() - new Date(l.createdAt).getTime()) / (1000 * 3600 * 24);
-        return diffDays > 30;
-      });
-    }
+    list = applyClientDateFilter(list, dateFilter);
 
     // sort by newest by default
     list = [...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -629,16 +672,8 @@ export default function LeadTable({
                 </div>
               )}
 
-              {/* Sort Dropdown */}
-              <select 
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="bg-[#1e293b] border border-slate-700/50 text-slate-200 text-base rounded-xl px-5 py-3.5 outline-none shadow-sm hover:border-slate-600 transition-colors hidden md:block cursor-pointer"
-              >
-                <option value="ALL">All (Newest First)</option>
-                <option value="NEW_LEADS">New Leads</option>
-                <option value="OLD_LEADS">Older Leads (1mo+)</option>
-              </select>
+              {/* Date filter — day/month/year presets + custom range */}
+              <DateRangeFilter value={dateFilter} onChange={setDateFilter} className="hidden md:flex" />
             </div>
           </div>
 
