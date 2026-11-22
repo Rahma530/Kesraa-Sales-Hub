@@ -45,6 +45,9 @@ export function buildAdminFilterWhere(filter: {
   status?: string | null;
   assignedToId?: string | null;
   q?: string | null;
+  datePreset?: string | null;
+  dateFrom?: string | null;
+  dateTo?: string | null;
 }): any {
   const andConditions: any[] = [];
   if (filter.status && filter.status !== "ALL") {
@@ -64,21 +67,68 @@ export function buildAdminFilterWhere(filter: {
       ],
     });
   }
-  return andConditions.length > 0 ? { AND: andConditions } : {};
+  let where = andConditions.length > 0 ? { AND: andConditions } : {};
+  where = applyDateFilter(where, { preset: filter.datePreset, from: filter.dateFrom, to: filter.dateTo });
+  return where;
 }
 
-/** Applies a NEW_LEADS (created within 7 days) / OLD_LEADS (older than 30 days) preset, matching LeadTable's existing client-side dateFilter semantics. */
-export function applyDatePreset(where: any, datePreset?: string | null) {
-  if (!datePreset || datePreset === "ALL") return where;
+/**
+ * General-purpose date filter for the `createdAt` field — covers both the
+ * original two quick presets (NEW_LEADS/OLD_LEADS, kept for backward
+ * compatibility with LeadTable's existing dropdown) and the newer
+ * calendar-based ones (TODAY/THIS_WEEK/THIS_MONTH/THIS_YEAR) plus a fully
+ * custom range (CUSTOM, with explicit `from`/`to` ISO date strings) — the
+ * day/month/year date-filter feature requested for dashboards and lead
+ * lists. All boundaries are computed in server (UTC) time, consistent
+ * with how NEW_LEADS/OLD_LEADS already worked.
+ */
+export function applyDateFilter(
+  where: any,
+  opts: { preset?: string | null; from?: string | null; to?: string | null }
+) {
+  const { preset, from, to } = opts;
+  if (!preset || preset === "ALL") return where;
 
   const now = new Date();
-  if (datePreset === "NEW_LEADS") {
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (preset === "NEW_LEADS") {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     return { ...where, createdAt: { gte: sevenDaysAgo } };
   }
-  if (datePreset === "OLD_LEADS") {
+  if (preset === "OLD_LEADS") {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     return { ...where, createdAt: { lt: thirtyDaysAgo } };
   }
+  if (preset === "TODAY") {
+    return { ...where, createdAt: { gte: startOfToday } };
+  }
+  if (preset === "THIS_WEEK") {
+    // Week starts Saturday, matching the regional work week.
+    const day = startOfToday.getDay(); // 0=Sun..6=Sat
+    const daysSinceSaturday = (day + 1) % 7;
+    const startOfWeek = new Date(startOfToday.getTime() - daysSinceSaturday * 24 * 60 * 60 * 1000);
+    return { ...where, createdAt: { gte: startOfWeek } };
+  }
+  if (preset === "THIS_MONTH") {
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return { ...where, createdAt: { gte: startOfMonth } };
+  }
+  if (preset === "THIS_YEAR") {
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    return { ...where, createdAt: { gte: startOfYear } };
+  }
+  if (preset === "CUSTOM") {
+    const range: any = {};
+    if (from) range.gte = new Date(from + "T00:00:00");
+    if (to) range.lte = new Date(to + "T23:59:59.999");
+    if (Object.keys(range).length === 0) return where;
+    return { ...where, createdAt: range };
+  }
   return where;
+}
+
+/** @deprecated use applyDateFilter — kept so nothing importing the old name breaks. */
+export function applyDatePreset(where: any, datePreset?: string | null) {
+  return applyDateFilter(where, { preset: datePreset });
 }

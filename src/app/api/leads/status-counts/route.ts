@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { buildLeadScopeWhere, applyDatePreset } from "@/lib/lead-scope";
+import { buildLeadScopeWhere, applyDateFilter } from "@/lib/lead-scope";
 
 const STATUS_VALUES = [
   "NEW",
@@ -30,6 +30,8 @@ export async function GET(req: NextRequest) {
   const assignedToId = searchParams.get("assignedToId") ?? undefined;
   const q = searchParams.get("q")?.trim() ?? undefined;
   const datePreset = searchParams.get("datePreset") ?? undefined;
+  const dateFrom = searchParams.get("dateFrom") ?? undefined;
+  const dateTo = searchParams.get("dateTo") ?? undefined;
 
   const andConditions: any[] = [buildLeadScopeWhere(session.user)];
   if (assignedToId === "UNASSIGNED") andConditions.push({ assignedToId: null });
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
   }
 
   let baseWhere: any = { AND: andConditions };
-  baseWhere = applyDatePreset(baseWhere, datePreset);
+  baseWhere = applyDateFilter(baseWhere, { preset: datePreset, from: dateFrom, to: dateTo });
 
   const [total, groups] = await Promise.all([
     prisma.lead.count({ where: baseWhere }),

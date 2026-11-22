@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 import { distributeLeads } from "@/lib/lead-distribution";
-import { buildLeadScopeWhere, applyDatePreset } from "@/lib/lead-scope";
+import { buildLeadScopeWhere, applyDateFilter } from "@/lib/lead-scope";
 
 // GET /api/leads — management sees all leads, employees only see their own
 //
@@ -26,11 +26,11 @@ export async function GET(req: NextRequest) {
   const tier = searchParams.get("tier") ?? undefined;
   const assignedToId = searchParams.get("assignedToId") ?? undefined;
   const q = searchParams.get("q")?.trim() ?? undefined;
-  // NEW_LEADS (created within 7 days) / OLD_LEADS (older than 30 days) —
-  // the same presets LeadTable used to apply client-side over the full
-  // in-memory lead list; now applied server-side so they keep working once
-  // the component only ever sees one page at a time.
+  // datePreset: ALL/NEW_LEADS/OLD_LEADS/TODAY/THIS_WEEK/THIS_MONTH/THIS_YEAR/CUSTOM.
+  // dateFrom/dateTo (YYYY-MM-DD) are only used when datePreset=CUSTOM.
   const datePreset = searchParams.get("datePreset") ?? undefined;
+  const dateFrom = searchParams.get("dateFrom") ?? undefined;
+  const dateTo = searchParams.get("dateTo") ?? undefined;
 
   const pageSize = Math.min(Math.max(Number(searchParams.get("pageSize")) || 50, 1), 100);
   const page = Math.max(Number(searchParams.get("page")) || 1, 1);
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
   }
 
   let where: any = { AND: andConditions };
-  where = applyDatePreset(where, datePreset);
+  where = applyDateFilter(where, { preset: datePreset, from: dateFrom, to: dateTo });
 
   const [leads, total] = await Promise.all([
     prisma.lead.findMany({
