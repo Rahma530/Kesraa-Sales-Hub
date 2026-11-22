@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect, useCallback } from "react";
 import * as XLSX from "xlsx";
 import StatusBadge from "@/components/StatusBadge";
-import TierBadge from "@/components/TierBadge";
 import LeadTable from "@/components/LeadTable";
 import { Search, Users, Download } from "lucide-react";
 
@@ -21,40 +19,106 @@ type Lead = {
   createdAt: string;
 };
 
+const LD_PAGE_SIZE = 20;
+
 export default function AdminCustomersClient({
-  initialLeads,
   employees,
   salesTeam,
   canDelete,
 }: {
-  initialLeads: Lead[];
   employees: Employee[];
   salesTeam: Employee[];
   canDelete: boolean;
 }) {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"table" | "cards">("table");
-  const [leads, setLeads] = useState<Lead[]>(initialLeads);
-  const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
-  const [assignTarget, setAssignTarget] = useState("");
+
+  // --- "Lead Distribution (Table)" tab — its own, fully independent
+  // server-side pagination/fetch. Deliberately NOT shared with the "Lead
+  // Follow-up" tab's LeadTable (which fetches its own page via its
+  // serverPaginate prop below) — each tab keeps its own filters and its
+  // own page, per the explicit instruction that the two tabs must not
+  // show the same loaded page of data.
+  const [ldLeads, setLdLeads] = useState<Lead[]>([]);
+  const [ldTotal, setLdTotal] = useState(0);
+  const [ldPage, setLdPage] = useState(1);
+  const [ldTotalPages, setLdTotalPages] = useState(1);
+  const [ldLoading, setLdLoading] = useState(false);
+
   const [isUploading, setIsUploading] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    setLeads(initialLeads);
-  }, [initialLeads]);
-  
   // Custom Modal State
   const [modal, setModal] = useState<{ isOpen: boolean; title: string; message: string; type: "alert" | "confirm"; onConfirm?: () => void }>({ isOpen: false, title: "", message: "", type: "alert" });
-  
+
   const showAlert = (title: string, message: string) => setModal({ isOpen: true, title, message, type: "alert" });
   const showConfirm = (title: string, message: string, onConfirm: () => void) => setModal({ isOpen: true, title, message, type: "confirm", onConfirm });
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterEmployee, setFilterEmployee] = useState("ALL");
   const [filterStatus, setFilterStatus] = useState("ALL");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Bulk selection — hybrid pattern: page-only selection by default, with
+  // an explicit, deliberately-clicked opt-in to act on every lead matching
+  // the current filter (not just the page on screen). Any explicit
+  // per-row (de)select drops back to page-only selection.
+  const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
+  const [selectAllMatching, setSelectAllMatching] = useState(false);
+  const [assignTarget, setAssignTarget] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // Reset to page 1 and drop any "select all matching" state whenever a filter changes.
+  useEffect(() => {
+    setLdPage(1);
+    setSelectedLeads(new Set());
+    setSelectAllMatching(false);
+  }, [debouncedSearch, filterEmployee, filterStatus]);
+
+  const currentFilter = {
+    status: filterStatus,
+    assignedToId: filterEmployee,
+    q: debouncedSearch,
+  };
+
+  const fetchLdPage = useCallback(async () => {
+    setLdLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("page", String(ldPage));
+      params.set("pageSize", String(LD_PAGE_SIZE));
+      // The status dropdown doubles as an "Unassigned Only" filter — that
+      // maps to assignedToId=UNASSIGNED on the API, not a status value.
+      if (filterStatus === "UNASSIGNED") {
+        params.set("assignedToId", "UNASSIGNED");
+      } else {
+        if (filterStatus !== "ALL") params.set("status", filterStatus);
+        if (filterEmployee !== "ALL") params.set("assignedToId", filterEmployee);
+      }
+      if (debouncedSearch.trim()) params.set("q", debouncedSearch.trim());
+
+      const res = await fetch(`/api/leads?${params.toString()}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to load leads");
+
+      setLdLeads(data.leads ?? []);
+      setLdTotal(data.total ?? 0);
+      setLdTotalPages(data.totalPages ?? 1);
+    } catch (error: any) {
+      showAlert("Error", "An error occurred while loading leads: " + error.message);
+    } finally {
+      setLdLoading(false);
+    }
+  }, [ldPage, filterStatus, filterEmployee, debouncedSearch]);
+
+  useEffect(() => {
+    if (activeTab === "table") fetchLdPage();
+  }, [activeTab, fetchLdPage]);
 
   // Upload Preview State
   const [previewData, setPreviewData] = useState<{
@@ -89,7 +153,7 @@ export default function AdminCustomersClient({
         const workbook = XLSX.read(data, { type: "binary" });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        
+
         const rawJson: any[] = XLSX.utils.sheet_to_json(sheet);
         if (rawJson.length === 0) {
           showAlert("Error", "The file is empty or contains no data.");
@@ -99,8 +163,8 @@ export default function AdminCustomersClient({
 
         const sampleRow = rawJson[0];
         const keys = Object.keys(sampleRow);
-        
-        const findKey = (keywords: string[]) => keys.find(k => 
+
+        const findKey = (keywords: string[]) => keys.find(k =>
           keywords.some(kw => k.toLowerCase().includes(kw.toLowerCase()))
         );
 
@@ -126,7 +190,7 @@ export default function AdminCustomersClient({
         }
 
         if (!nameKey) {
-          nameKey = keys.find(k => 
+          nameKey = keys.find(k =>
             k !== phoneKey && k !== companyKey && k !== needKey && isNaN(Number(sampleRow[k])) && String(sampleRow[k] || "").length > 2
           ) || "";
         }
@@ -213,7 +277,7 @@ export default function AdminCustomersClient({
         showAlert("Success", `${data.count} leads were uploaded and automatically distributed to Tele-Sales staff!`);
       }
 
-      router.refresh();
+      fetchLdPage();
     } catch (error: any) {
       showAlert("Error", "An error occurred during upload: " + error.message);
     } finally {
@@ -221,10 +285,11 @@ export default function AdminCustomersClient({
     }
   };
 
+  const selectedCount = selectAllMatching ? ldTotal : selectedLeads.size;
 
   // Bulk Assign
   const handleBulkAssign = async () => {
-    if (selectedLeads.size === 0) return showAlert("Notice", "Please select leads first.");
+    if (selectedCount === 0) return showAlert("Notice", "Please select leads first.");
     if (!assignTarget) return showAlert("Notice", "Please select an employee.");
 
     setIsAssigning(true);
@@ -232,28 +297,26 @@ export default function AdminCustomersClient({
       const res = await fetch("/api/admin/leads/bulk-assign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          leadIds: Array.from(selectedLeads),
-          employeeId: assignTarget,
-        }),
+        body: JSON.stringify(
+          selectAllMatching
+            ? { filter: currentFilter, employeeId: assignTarget }
+            : { leadIds: Array.from(selectedLeads), employeeId: assignTarget }
+        ),
       });
 
       if (!res.ok) throw new Error(await res.text());
-      
-      if (assignTarget === "AUTO") {
-        showAlert("Success", `${selectedLeads.size} leads were distributed equally among Tele-Sales staff!`);
-        // For auto, we wait for router.refresh since we don't know exactly who got what, but we can clear them from UNASSIGNED
-      } else {
-        showAlert("Success", `${selectedLeads.size} leads were transferred to the employee successfully!`);
-        // Optimistic update
-        const emp = employees.find(e => e.id === assignTarget);
-        if (emp) {
-          setLeads(prev => prev.map(l => selectedLeads.has(l.id) ? { ...l, assignedTo: emp, status: emp.role === "SALES" ? "TRANSFERRED_TO_SALES" : l.status } : l));
-        }
-      }
+
+      showAlert(
+        "Success",
+        assignTarget === "AUTO"
+          ? `${selectedCount} leads were distributed equally among Tele-Sales staff!`
+          : `${selectedCount} leads were transferred to the employee successfully!`
+      );
+
       setSelectedLeads(new Set());
+      setSelectAllMatching(false);
       setAssignTarget("");
-      router.refresh();
+      fetchLdPage();
     } catch (error: any) {
       showAlert("Error", "An error occurred during the transfer: " + error.message);
     } finally {
@@ -263,23 +326,25 @@ export default function AdminCustomersClient({
 
   // Bulk Delete
   const handleBulkDelete = () => {
-    if (selectedLeads.size === 0) return showAlert("Notice", "Please select leads first.");
+    if (selectedCount === 0) return showAlert("Notice", "Please select leads first.");
 
-    showConfirm("Confirm Delete", `Are you sure you want to permanently delete ${selectedLeads.size} leads?`, async () => {
+    showConfirm("Confirm Delete", `Are you sure you want to permanently delete ${selectedCount} leads? This cannot be undone.`, async () => {
       setIsDeleting(true);
       try {
         const res = await fetch("/api/admin/leads/bulk-delete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ leadIds: Array.from(selectedLeads) }),
+          body: JSON.stringify(
+            selectAllMatching ? { filter: currentFilter } : { leadIds: Array.from(selectedLeads) }
+          ),
         });
 
         if (!res.ok) throw new Error(await res.text());
-        
+
         showAlert("Success", `Leads deleted successfully!`);
         setSelectedLeads(new Set());
-        router.refresh();
-        setLeads(leads.filter(l => !selectedLeads.has(l.id)));
+        setSelectAllMatching(false);
+        fetchLdPage();
       } catch (error: any) {
         showAlert("Error", "An error occurred while deleting: " + error.message);
       } finally {
@@ -288,45 +353,32 @@ export default function AdminCustomersClient({
     });
   };
 
-  const toggleSelectAll = (filteredList: Lead[]) => {
-    if (selectedLeads.size === filteredList.length) {
+  // Page-only select-all (the default, safe tier of the hybrid pattern).
+  const togglePageSelectAll = () => {
+    if (selectedLeads.size === ldLeads.length && !selectAllMatching) {
       setSelectedLeads(new Set());
     } else {
-      setSelectedLeads(new Set(filteredList.map(l => l.id)));
+      setSelectedLeads(new Set(ldLeads.map(l => l.id)));
+      setSelectAllMatching(false);
     }
   };
 
   const toggleSelect = (id: string) => {
+    setSelectAllMatching(false);
     const next = new Set(selectedLeads);
     if (next.has(id)) next.delete(id);
     else next.add(id);
     setSelectedLeads(next);
   };
 
-  // Filtering
-  const filteredLeads = leads.filter(l => {
-    if (filterStatus !== "ALL" && filterStatus !== "UNASSIGNED") {
-      if (l.status !== filterStatus) return false;
-    }
-    if (filterStatus === "UNASSIGNED" && l.assignedTo) return false;
-    
-    if (filterEmployee !== "ALL") {
-      if (filterEmployee === "UNASSIGNED" && l.assignedTo) return false;
-      if (filterEmployee !== "UNASSIGNED" && l.assignedTo?.id !== filterEmployee) return false;
-    }
-    
-    if (search) {
-      const q = search.toLowerCase();
-      if (!l.name.toLowerCase().includes(q) && !l.phone.includes(q)) return false;
-    }
-    return true;
-  });
-
+  // Exporting "everything matching the filter" isn't available without a
+  // separate server-side export job once the full list isn't loaded in
+  // memory — this exports just the page currently on screen for now.
   const handleExport = () => {
-    if (filteredLeads.length === 0) return showAlert("Notice", "No data to export.");
+    if (ldLeads.length === 0) return showAlert("Notice", "No data to export.");
 
     const headers = ["Name", "Phone Number", "Company", "Status", "Tier", "Assigned Employee", "Date Added"];
-    const csvData = filteredLeads.map(l => [
+    const csvData = ldLeads.map(l => [
       l.name,
       l.phone,
       l.company || "",
@@ -335,16 +387,16 @@ export default function AdminCustomersClient({
       l.assignedTo?.name || "Unassigned",
       new Date(l.createdAt).toLocaleDateString("en-US")
     ]);
-    
-    const csvContent = "\uFEFF" + [headers, ...csvData].map(row => 
+
+    const csvContent = "﻿" + [headers, ...csvData].map(row =>
       row.map(item => `"${(item || "").toString().replace(/"/g, '""')}"`).join(",")
     ).join("\n");
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Leads_Export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `Leads_Export_Page${ldPage}_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -363,7 +415,7 @@ export default function AdminCustomersClient({
             </p>
             <div className="flex justify-end gap-3">
               {modal.type === "confirm" && (
-                <button 
+                <button
                   onClick={() => setModal({ ...modal, isOpen: false })}
                   className="px-5 py-2 rounded-xl text-sm font-bold text-slate-300 bg-white/5 hover:bg-white/10 transition-colors"
                 >
@@ -517,7 +569,7 @@ export default function AdminCustomersClient({
           </h1>
           <p className="text-slate-400 text-sm">Upload an Excel sheet and distribute leads to your Sales and Tele-Sales staff.</p>
         </div>
-        
+
         <div>
           <input
             type="file"
@@ -526,7 +578,7 @@ export default function AdminCustomersClient({
             ref={fileInputRef}
             onChange={handleFileUpload}
           />
-          <button 
+          <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors flex items-center gap-2 disabled:opacity-50"
@@ -569,7 +621,7 @@ export default function AdminCustomersClient({
         <>
           {/* Action Bar (Filters + Assign) */}
       <div className="bg-[#121826] p-4 rounded-3xl border border-white/5 shadow-lg flex flex-col xl:flex-row gap-4 items-center justify-between">
-        
+
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
           <div className="relative flex-1 min-w-[200px]">
@@ -609,13 +661,13 @@ export default function AdminCustomersClient({
           <button
             onClick={handleExport}
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl shadow-md transition-colors whitespace-nowrap flex items-center gap-2"
-            title="Export the current results to Excel"
+            title="Exports only the page currently on screen"
           >
-            <Download size={14} /> Export Data
+            <Download size={14} /> Export Page
           </button>
 
           <div className="text-sm text-accent-soft font-bold px-2 whitespace-nowrap border-r border-accent/30 pr-3">
-            Selected: {selectedLeads.size}
+            Selected: {selectedCount}
           </div>
           <select
             value={assignTarget} onChange={e => setAssignTarget(e.target.value)}
@@ -629,7 +681,7 @@ export default function AdminCustomersClient({
           </select>
           <button
             onClick={handleBulkAssign}
-            disabled={isAssigning || selectedLeads.size === 0 || !assignTarget}
+            disabled={isAssigning || selectedCount === 0 || !assignTarget}
             className="bg-accent hover:bg-accent text-white font-bold py-2 px-6 rounded-xl shadow-md transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             {isAssigning ? "Processing..." : "Assign"}
@@ -638,7 +690,7 @@ export default function AdminCustomersClient({
           {canDelete && (
             <button
               onClick={handleBulkDelete}
-              disabled={isDeleting || selectedLeads.size === 0}
+              disabled={isDeleting || selectedCount === 0}
               className="bg-rose-500/10 hover:bg-rose-600 text-rose-500 hover:text-white font-bold py-2 px-4 rounded-xl shadow-md transition-colors disabled:opacity-50 whitespace-nowrap border border-rose-500/20 ml-2"
               title="Delete selected leads"
             >
@@ -648,6 +700,33 @@ export default function AdminCustomersClient({
         </div>
       </div>
 
+      {/* "Select all N matching this filter" opt-in banner — only shown
+          once every row on the current page is selected and there's more
+          beyond this page, and only acted on if the employee deliberately
+          clicks it. */}
+      {selectedLeads.size === ldLeads.length && ldLeads.length > 0 && ldTotal > ldLeads.length && !selectAllMatching && (
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl px-4 py-3 text-sm text-amber-300 flex items-center justify-between flex-wrap gap-2">
+          <span>All {ldLeads.length} leads on this page are selected.</span>
+          <button
+            onClick={() => setSelectAllMatching(true)}
+            className="font-bold underline hover:text-amber-200"
+          >
+            Select all {ldTotal} leads matching the current filter
+          </button>
+        </div>
+      )}
+      {selectAllMatching && (
+        <div className="bg-accent/10 border border-accent/20 rounded-2xl px-4 py-3 text-sm text-accent-soft flex items-center justify-between flex-wrap gap-2">
+          <span className="font-bold">All {ldTotal} leads matching the current filter are selected.</span>
+          <button
+            onClick={() => { setSelectAllMatching(false); setSelectedLeads(new Set()); }}
+            className="font-bold underline hover:text-white"
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="bg-[#121826] rounded-3xl border border-white/5 shadow-2xl overflow-hidden">
         <div className="overflow-x-auto">
@@ -655,10 +734,10 @@ export default function AdminCustomersClient({
             <thead className="bg-[#0f1523] text-slate-400 font-semibold border-b border-white/5">
               <tr>
                 <th className="px-6 py-4 w-12">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedLeads.size > 0 && selectedLeads.size === filteredLeads.length}
-                    onChange={() => toggleSelectAll(filteredLeads)}
+                  <input
+                    type="checkbox"
+                    checked={ldLeads.length > 0 && (selectAllMatching || selectedLeads.size === ldLeads.length)}
+                    onChange={togglePageSelectAll}
                     className="w-4 h-4 rounded bg-[#182032] border-white/20 text-accent focus:ring-accent/50 cursor-pointer"
                   />
                 </th>
@@ -671,19 +750,25 @@ export default function AdminCustomersClient({
               </tr>
             </thead>
             <tbody>
-              {filteredLeads.length === 0 ? (
+              {ldLoading ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                    Loading...
+                  </td>
+                </tr>
+              ) : ldLeads.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
                     No leads available with the current filter.
                   </td>
                 </tr>
               ) : (
-                filteredLeads.map(lead => (
+                ldLeads.map(lead => (
                   <tr key={lead.id} onClick={() => toggleSelect(lead.id)} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer group">
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                      <input 
-                        type="checkbox" 
-                        checked={selectedLeads.has(lead.id)}
+                      <input
+                        type="checkbox"
+                        checked={selectAllMatching || selectedLeads.has(lead.id)}
                         onChange={() => toggleSelect(lead.id)}
                         className="w-4 h-4 rounded bg-[#182032] border-white/20 text-accent focus:ring-accent/50 cursor-pointer"
                       />
@@ -715,10 +800,47 @@ export default function AdminCustomersClient({
           </table>
         </div>
       </div>
+
+      {/* Pagination — traditional numbered pages */}
+      {ldTotalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <button
+            onClick={() => setLdPage(p => Math.max(1, p - 1))}
+            disabled={ldPage === 1}
+            className="px-3 py-2 rounded-lg text-sm font-bold bg-[#182032] text-slate-300 border border-white/5 disabled:opacity-40 hover:bg-white/5"
+          >
+            Previous
+          </button>
+          {Array.from({ length: ldTotalPages }, (_, i) => i + 1)
+            .filter(p => p === 1 || p === ldTotalPages || Math.abs(p - ldPage) <= 2)
+            .map((p, idx, arr) => (
+              <span key={p} className="flex items-center gap-2">
+                {idx > 0 && arr[idx - 1] !== p - 1 && <span className="text-slate-500 px-1">...</span>}
+                <button
+                  onClick={() => setLdPage(p)}
+                  className={`min-w-[2.5rem] px-3 py-2 rounded-lg text-sm font-bold border transition-colors ${
+                    p === ldPage
+                      ? "bg-accent text-white border-accent"
+                      : "bg-[#182032] text-slate-300 border-white/5 hover:bg-white/5"
+                  }`}
+                >
+                  {p}
+                </button>
+              </span>
+            ))}
+          <button
+            onClick={() => setLdPage(p => Math.min(ldTotalPages, p + 1))}
+            disabled={ldPage === ldTotalPages}
+            className="px-3 py-2 rounded-lg text-sm font-bold bg-[#182032] text-slate-300 border border-white/5 disabled:opacity-40 hover:bg-white/5"
+          >
+            Next
+          </button>
+        </div>
+      )}
         </>
       ) : (
         <LeadTable
-          leads={leads as any}
+          serverPaginate
           showAssignee
           allowTransfer
           canDelete={canDelete}
@@ -731,4 +853,3 @@ export default function AdminCustomersClient({
     </div>
   );
 }
-

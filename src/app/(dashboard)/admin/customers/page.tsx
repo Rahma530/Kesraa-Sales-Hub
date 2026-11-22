@@ -19,15 +19,12 @@ export default async function AdminCustomersPage() {
     redirect("/");
   }
 
-  const leads = await prisma.lead.findMany({
-    include: {
-      assignedTo: { select: { id: true, name: true, role: true } },
-      followUps: { where: { isCompleted: false }, orderBy: { scheduledDate: "asc" } },
-      meetings: { orderBy: { scheduledAt: "desc" }, take: 1 },
-      activities: { orderBy: { createdAt: "desc" }, take: 8, include: { user: { select: { name: true } } } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  // Leads are no longer fetched in bulk here: both tabs of
+  // AdminCustomersClient (Lead Distribution and Lead Follow-up) now fetch
+  // their own independent, paginated pages from /api/leads client-side.
+  // This used to be the single heaviest unbounded query in the app —
+  // every Lead, with nested assignedTo/followUps/meetings/activities,
+  // loaded on every visit to this page regardless of lead volume.
 
   // Fetch all employees (Sales & TeleSales)
   const employees = await prisma.user.findMany({
@@ -50,9 +47,8 @@ export default async function AdminCustomersPage() {
 
   return (
     <DashboardShell title="Lead Management">
-      <AdminCustomersClient 
-        initialLeads={JSON.parse(JSON.stringify(leads))} 
-        employees={JSON.parse(JSON.stringify(employees))} 
+      <AdminCustomersClient
+        employees={JSON.parse(JSON.stringify(employees))}
         salesTeam={JSON.parse(JSON.stringify(salesTeam))}
         canDelete={session.user.role === "ADMIN"}
       />
