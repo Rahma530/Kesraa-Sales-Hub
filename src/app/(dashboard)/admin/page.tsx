@@ -199,7 +199,7 @@ export default async function AdminDashboard() {
   const conversionRate = totalLeads > 0 ? ((closedWon / totalLeads) * 100).toFixed(1) : "0";
 
   return (
-    <DashboardShell title="Admin Dashboard">
+    <DashboardShell title="لوحة تحكم الإدارة">
       <StaleLeadsChecker />
 
       {/* Same quick add/upload panel Tele-Sales and Sales see on their own
@@ -213,40 +213,40 @@ export default async function AdminDashboard() {
       <AdminTodoList followUps={todayFollowUps} meetings={todayMeetings} />
 
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-6">
-        <StatCard label="Total Leads" value={totalLeads} icon={<ClipboardList size={18} />} />
+        <StatCard label="إجمالي الـ Leads" value={totalLeads} icon={<ClipboardList size={18} />} />
         <StatCard label="Hot / Cold" value={hotGold} icon={<Flame size={18} />} accent="text-status-hot" />
-        <StatCard label="Meetings Today" value={meetingsToday} icon={<Calendar size={18} />} />
-        <StatCard label="Transferred" value={transferred} icon={<Handshake size={18} />} />
-        <StatCard label="Contracts" value={closedWon} icon={<CheckCircle2 size={18} />} accent="text-status-won" />
-        <StatCard label="Conversion Rate" value={`${conversionRate}%`} icon={<TrendingUp size={18} />} accent="text-accent-soft" />
+        <StatCard label="اجتماعات اليوم" value={meetingsToday} icon={<Calendar size={18} />} />
+        <StatCard label="تم التحويل" value={transferred} icon={<Handshake size={18} />} />
+        <StatCard label="العقود" value={closedWon} icon={<CheckCircle2 size={18} />} accent="text-status-won" />
+        <StatCard label="نسبة التحويل" value={`${conversionRate}%`} icon={<TrendingUp size={18} />} accent="text-accent-soft" />
       </div>
 
       {/* Full width on its own row — with up to ~10 status categories, a
           rotated label needs more horizontal room than a half-width panel
           can give it without overlapping its neighbors. */}
       <div className="mb-6 glass-panel p-5">
-        <p className="mb-4 text-sm font-semibold text-white">Leads by Status</p>
+        <p className="mb-4 text-sm font-semibold text-white">الـ Leads حسب Status</p>
         <StatusBarChart data={statusData} />
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="glass-panel p-5">
-          <p className="mb-4 text-sm font-semibold text-white">Leads by Tier</p>
+          <p className="mb-4 text-sm font-semibold text-white">الـ Leads حسب Tier</p>
           <TierPieChart data={tierData} />
         </div>
         <div className="glass-panel p-5">
-          <p className="mb-4 text-sm font-semibold text-white">Team Performance (Current Lead Count)</p>
+          <p className="mb-4 text-sm font-semibold text-white">أداء الفريق (عدد الـ Leads الحالي)</p>
           <TeamPerformanceChart data={teamData} />
         </div>
       </div>
 
       <div className="mb-6 glass-panel p-5">
-        <p className="mb-4 text-sm font-semibold text-white">New Leads, Last 14 Days</p>
+        <p className="mb-4 text-sm font-semibold text-white">Leads جديدة، آخر 14 يوم</p>
         <LeadsOverTimeChart data={timeSeries} />
       </div>
 
       <div className="mb-6 glass-panel p-5">
-        <p className="mb-4 text-sm font-semibold text-white">Team Performance Details (Action Tracking)</p>
+        <p className="mb-4 text-sm font-semibold text-white">تفاصيل أداء الفريق (تتبع الإجراءات)</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {teamWithActions.map((emp) => (
             <div key={emp.name} className="rounded-xl bg-white/[0.03] p-4 border border-white/5 relative overflow-hidden group hover:border-white/10 transition">
@@ -259,11 +259,11 @@ export default async function AdminDashboard() {
               <div className="flex flex-col gap-3 mt-3 pt-3 border-t border-white/5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] text-slate-500 font-medium">Total Received</p>
+                    <p className="text-[10px] text-slate-500 font-medium">الإجمالي المُستلم</p>
                     <p className="text-lg font-bold text-white mt-0.5">{emp._count.assignedLeads}</p>
                   </div>
                   <div className="text-left">
-                    <p className="text-[10px] text-emerald-500/80 font-medium">Action Taken</p>
+                    <p className="text-[10px] text-emerald-500/80 font-medium">تم اتخاذ إجراء</p>
                     <p className="text-lg font-bold text-emerald-400 mt-0.5">{emp.actionCount}</p>
                   </div>
                 </div>
@@ -271,17 +271,17 @@ export default async function AdminDashboard() {
                 <div className="flex items-center justify-between border-t border-white/[0.02] pt-2">
                   {emp.role === "TELE_SALES" ? (
                     <div className="text-right w-full">
-                      <p className="text-[10px] text-purple-500/80 font-medium">Transferred to Sales</p>
+                      <p className="text-[10px] text-purple-500/80 font-medium">تم التحويل لـ Sales</p>
                       <p className="text-lg font-bold text-purple-400 mt-0.5">{emp.transferredCount}</p>
                     </div>
                   ) : (
                     <>
                       <div className="text-right">
-                        <p className="text-[10px] text-emerald-500/80 font-medium">Contracts</p>
+                        <p className="text-[10px] text-emerald-500/80 font-medium">العقود</p>
                         <p className="text-lg font-bold text-emerald-400 mt-0.5">{emp.wonCount}</p>
                       </div>
                       <div className="text-left">
-                        <p className="text-[10px] text-blue-500/80 font-medium">Meetings Held</p>
+                        <p className="text-[10px] text-blue-500/80 font-medium">اجتماعات تمت</p>
                         <p className="text-lg font-bold text-blue-400 mt-0.5">{emp.enteredMeetingsCount}</p>
                       </div>
                     </>
@@ -291,11 +291,11 @@ export default async function AdminDashboard() {
                 {emp.role === "SALES" && (
                   <div className="flex items-center justify-between border-t border-white/[0.02] pt-2">
                     <div className="text-right">
-                      <p className="text-[10px] text-amber-500/80 font-medium">Follow-ups Scheduled</p>
+                      <p className="text-[10px] text-amber-500/80 font-medium">Follow-ups مجدولة</p>
                       <p className="text-lg font-bold text-amber-400 mt-0.5">{emp.followUpsCount}</p>
                     </div>
                     <div className="text-left">
-                      <p className="text-[10px] text-accent/80 font-medium">Contracts Uploaded</p>
+                      <p className="text-[10px] text-accent/80 font-medium">عقود مرفوعة</p>
                       <p className="text-lg font-bold text-accent-soft mt-0.5">{emp.uploadedContractsCount}</p>
                     </div>
                   </div>

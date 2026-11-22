@@ -20,7 +20,7 @@ export default function AdminTodoList({ followUps, meetings }: { followUps: any[
         leadId: f.lead.id,
         leadName: f.lead.name,
         leadPhone: f.lead.phone,
-        assignedTo: f.lead.assignedTo?.name || "Unassigned",
+        assignedTo: f.lead.assignedTo?.name || "غير معيّن",
         type: "FOLLOWUP",
         date: d,
         notes: f.notes,
@@ -35,7 +35,7 @@ export default function AdminTodoList({ followUps, meetings }: { followUps: any[
         leadId: m.lead.id,
         leadName: m.lead.name,
         leadPhone: m.lead.phone,
-        assignedTo: m.lead.assignedTo?.name || "Unassigned",
+        assignedTo: m.lead.assignedTo?.name || "غير معيّن",
         type: "MEETING",
         date: d,
         notes: m.notes,
@@ -56,8 +56,8 @@ export default function AdminTodoList({ followUps, meetings }: { followUps: any[
         <div className="flex items-center gap-3">
           <CheckCircle2 size={28} className="text-emerald-400" />
           <div>
-            <h3 className="text-emerald-400 font-bold text-lg">No tasks or meetings scheduled for today</h3>
-            <p className="text-slate-400 text-sm">The team has no pending tasks today.</p>
+            <h3 className="text-emerald-400 font-bold text-lg">لا توجد مهام أو اجتماعات مجدولة اليوم</h3>
+            <p className="text-slate-400 text-sm">لا يوجد مهام معلّقة للفريق النهاردة.</p>
           </div>
         </div>
       </div>
@@ -74,10 +74,10 @@ export default function AdminTodoList({ followUps, meetings }: { followUps: any[
         <div className="flex items-center gap-3">
           <span className="bg-accent/20 text-accent-soft p-2.5 rounded-xl"><Eye size={20} /></span>
           <div>
-            <h3 className="text-xl font-bold text-white">Team Task Monitoring (Today)</h3>
+            <h3 className="text-xl font-bold text-white">متابعة مهام الفريق (النهاردة)</h3>
             <p className="text-slate-400 text-sm">
-              {filteredTasks.length} tasks remaining in total
-              {overdueCount > 0 && <span className="text-rose-400 font-bold"> ({overdueCount} of them overdue!)</span>}
+              {filteredTasks.length} مهمة متبقية إجمالاً
+              {overdueCount > 0 && <span className="text-rose-400 font-bold"> ({overdueCount} منهم متأخر!)</span>}
             </p>
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function AdminTodoList({ followUps, meetings }: { followUps: any[
           onChange={(e) => setFilterEmployee(e.target.value)}
           className="bg-[#182032] border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-accent/50"
         >
-          <option value="ALL">All Employees</option>
+          <option value="ALL">كل الموظفين</option>
           {uniqueEmployees.map(emp => (
             <option key={emp} value={emp}>{emp}</option>
           ))}
@@ -102,15 +102,15 @@ export default function AdminTodoList({ followUps, meetings }: { followUps: any[
             <div key={task.id} className={`p-4 rounded-2xl border transition-all ${task.isOverdue ? 'bg-rose-500/10 border-rose-500/30' : 'bg-[#182032] border-white/10'}`}>
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${isMeeting ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                  {isMeeting ? <><Handshake size={11} /> Meeting</> : <><Phone size={11} /> Call</>}
+                  {isMeeting ? <><Handshake size={11} /> اجتماع</> : <><Phone size={11} /> مكالمة</>}
                 </span>
                 <span className={`text-[10px] font-bold flex items-center gap-1 ${task.isOverdue ? 'text-rose-400' : 'text-slate-400'}`}>
-                  {task.isOverdue ? <><AlertTriangle size={11} /> Overdue ({timeString})</> : timeString}
+                  {task.isOverdue ? <><AlertTriangle size={11} /> متأخر ({timeString})</> : timeString}
                 </span>
               </div>
-              
+
               <div className="mb-2 border-b border-white/5 pb-2">
-                <p className="text-xs text-slate-500 mb-1">Assigned Employee:</p>
+                <p className="text-xs text-slate-500 mb-1">الموظف المسؤول:</p>
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center text-white"><User size={11} /></div>
                   <span className="text-sm font-bold text-white">{task.assignedTo}</span>
@@ -129,7 +129,7 @@ export default function AdminTodoList({ followUps, meetings }: { followUps: any[
         })}
         {filteredTasks.length === 0 && (
           <div className="col-span-full text-center py-8 text-slate-500 text-sm">
-            No tasks match the selected filter
+            لا توجد مهام مطابقة للفلتر المحدد
           </div>
         )}
       </div>
