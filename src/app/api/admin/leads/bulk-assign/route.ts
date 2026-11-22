@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { buildAdminFilterWhere } from "@/lib/lead-scope";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -10,9 +11,23 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { leadIds, employeeId } = await req.json();
-    
-    if (!leadIds || !Array.isArray(leadIds) || !employeeId) {
+    const body = await req.json();
+    const { employeeId } = body;
+    let leadIds: string[] = Array.isArray(body.leadIds) ? body.leadIds : [];
+
+    // "Select all N matching the current filter" — the client sends the
+    // filter instead of every id (there could be thousands). Resolve the
+    // matching ids here, server-side, right before acting on them, so the
+    // action always matches what the filter means right now.
+    if (!leadIds.length && body.filter) {
+      const matching = await prisma.lead.findMany({
+        where: buildAdminFilterWhere(body.filter),
+        select: { id: true },
+      });
+      leadIds = matching.map((l) => l.id);
+    }
+
+    if (!leadIds.length || !employeeId) {
       return NextResponse.json({ error: "Invalid data format" }, { status: 400 });
     }
 
