@@ -12,15 +12,25 @@ export async function GET() {
     const userId = session.user.id;
 
     // Fetch DB notifications
+    //
+    // NOTE: this endpoint is polled every ~10s by every open tab
+    // (NotificationBell), so it must stay cheap and bounded. Without a
+    // `take` limit, an account that has accumulated a large backlog of
+    // unread notifications (e.g. from repeated test data imports) would
+    // have this query — and the JSON response — grow without bound,
+    // turning a lightweight poll into a multi-second, multi-megabyte
+    // request on every single cycle. 50 is far more than a notification
+    // dropdown ever needs to show at once.
     const dbNotifs = await (prisma as any).notification.findMany({
       where: { userId, isRead: false },
       orderBy: { createdAt: "desc" },
+      take: 50,
     });
 
     // Fetch pending follow-ups for today or earlier
     const endOfToday = new Date();
     endOfToday.setHours(23, 59, 59, 999);
-    
+
     const pendingFollowUps = await prisma.followUp.findMany({
       where: {
         createdById: userId,
@@ -29,6 +39,7 @@ export async function GET() {
       },
       include: { lead: { select: { name: true } } },
       orderBy: { scheduledDate: "asc" },
+      take: 50,
     });
 
     // Transform follow-ups into notification format
@@ -42,11 +53,13 @@ export async function GET() {
       link: f.lead?.name ? `?search=${encodeURIComponent(f.lead.name)}&status=NEEDS_FOLLOWUP` : null,
     }));
 
-    const allNotifications = [...dbNotifs, ...followUpNotifs].sort((a, b) => {
-      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return bTime - aTime;
-    });
+    const allNotifications = [...dbNotifs, ...followUpNotifs]
+      .sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bTime - aTime;
+      })
+      .slice(0, 50);
 
     return NextResponse.json({ notifications: allNotifications });
   } catch (error) {

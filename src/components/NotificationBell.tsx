@@ -17,26 +17,35 @@ export type AppNotification = {
 
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
   // DashboardShell (and this bell inside it) is rendered per-page rather
   // than in a shared layout, so it fully remounts on every page/tab
   // navigation. null means "we don't know the previous count yet" —
-  // the comparison in fetchNotifications only plays the sound once we
+  // the comparison in checkUnreadCount only plays the sound once we
   // actually have a previous value to compare against, so the first
-  // fetch after any remount never treats pre-existing unread
+  // check after any remount never treats pre-existing unread
   // notifications as newly arrived.
   const prevUnreadRef = useRef<number | null>(null);
 
+  // IMPORTANT: this used to re-fetch the *entire* notification list (every
+  // row, no limit) every 10 seconds, in every open tab — that was the
+  // multi-megabyte, multi-second request that was starving the database's
+  // connection pool. The full list only matters once the dropdown is
+  // actually opened, or once we know (from the cheap count below) that
+  // something genuinely changed. So the 10s poll now hits a lightweight
+  // /count endpoint (a fast indexed COUNT, no row data), and only triggers
+  // a full fetchNotifications() when the number actually goes up.
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 10000); // Check every 10 seconds for real-time feel
+    fetchNotifications(); // once, so the dropdown has content if opened immediately
+    checkUnreadCount();
+    const interval = setInterval(checkUnreadCount, 10000);
     const handleRefresh = () => fetchNotifications();
     window.addEventListener("refreshNotifications", handleRefresh);
-    
+
     return () => {
       clearInterval(interval);
       window.removeEventListener("refreshNotifications", handleRefresh);
@@ -53,27 +62,39 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const checkUnreadCount = async () => {
+    try {
+      const res = await fetch(`/api/notifications/count?t=${new Date().getTime()}`);
+      if (res.ok) {
+        const data = await res.json();
+        const newCount: number = data.unreadCount ?? 0;
+        const isFirstCheckForThisMount = prevUnreadRef.current === null;
+
+        if (!isFirstCheckForThisMount && newCount > prevUnreadRef.current!) {
+          // Something new actually arrived — now it's worth paying for the
+          // full list (and the sound/refresh that go with it).
+          playNotificationSound();
+          fetchNotifications();
+        }
+        prevUnreadRef.current = newCount;
+        setUnreadCount(newCount);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const fetchNotifications = async () => {
     try {
       const res = await fetch(`/api/notifications?t=${new Date().getTime()}`);
       if (res.ok) {
         const data = await res.json();
         const newFetched: AppNotification[] = data.notifications || [];
-        const isFirstLoadForThisMount = prevUnreadRef.current === null;
-        const newUnread = newFetched.filter((n) => !n.isRead).length;
-
-        if (!isFirstLoadForThisMount && newUnread > prevUnreadRef.current!) {
-          playNotificationSound();
-        }
-        prevUnreadRef.current = newUnread;
 
         setNotifications((prev) => {
-          // Same reasoning as above: on the first load after a remount,
-          // `prev` is always [], so every existing notification would
-          // otherwise look "new" and trigger a needless refresh.
-          const hasNewAssignment =
-            !isFirstLoadForThisMount &&
-            newFetched.some((n) => n.type === "ASSIGNMENT" && !prev.find((p) => p.id === n.id));
+          const hasNewAssignment = newFetched.some(
+            (n) => n.type === "ASSIGNMENT" && !prev.find((p) => p.id === n.id)
+          );
 
           if (hasNewAssignment) {
             setTimeout(() => router.refresh(), 100);
@@ -90,6 +111,7 @@ export default function NotificationBell() {
   const handleNotificationClick = async (notif: AppNotification) => {
     if (!notif.isRead) {
       setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
       try {
         await fetch("/api/notifications/mark-read", {
           method: "POST",
@@ -100,18 +122,29 @@ export default function NotificationBell() {
         console.error(e);
       }
     }
-    
+
     if (notif.link) {
       router.push(notif.link);
       setIsOpen(false);
     }
   };
 
+  const handleToggleOpen = () => {
+    const nextOpen = !isOpen;
+    setIsOpen(nextOpen);
+    if (nextOpen) {
+      // Always refresh the list contents right as it's opened, so it's
+      // never more than a click away from being current — without that
+      // costing anything on every 10s poll in between opens.
+      fetchNotifications();
+    }
+  };
+
   return (
     <div className="relative" ref={wrapperRef}>
-      <div 
+      <div
         className="cursor-pointer hover:bg-white/5 p-2 rounded-full transition-colors relative"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggleOpen}
       >
         <Bell size={24} className="text-slate-200" />
         {unreadCount > 0 && (
