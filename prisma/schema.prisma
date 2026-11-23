@@ -275,6 +275,16 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead])
+  @@index([type, link])
+}
+
+// Single-row-per-key table used to throttle expensive background checks
+// (e.g. the stale-leads scan) so they run at most once per interval,
+// regardless of how many tabs/users trigger them. DB-backed (not
+// in-memory) so the throttle holds across serverless instances too.
+model SystemCheckState {
+  key       String   @id
+  lastRunAt DateTime
 }
 
 model ChatMessage {
